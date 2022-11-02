@@ -1,4 +1,4 @@
-/*	$NetBSD: pmap.c,v 1.144 2022/10/28 06:22:26 skrll Exp $	*/
+/*	$NetBSD: pmap.c,v 1.147 2022/10/30 14:08:09 riastradh Exp $	*/
 
 /*
  * Copyright (c) 2017 Ryo Shimizu <ryo@nerv.org>
@@ -27,7 +27,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: pmap.c,v 1.144 2022/10/28 06:22:26 skrll Exp $");
+__KERNEL_RCSID(0, "$NetBSD: pmap.c,v 1.147 2022/10/30 14:08:09 riastradh Exp $");
 
 #include "opt_arm_debug.h"
 #include "opt_cpuoptions.h"
@@ -1012,7 +1012,7 @@ pmap_icache_sync_range(pmap_t pm, vaddr_t sva, vaddr_t eva)
 			cpu_icache_sync_range(va, len);
 		} else {
 			/*
-			 * change to accessible temporally
+			 * change to accessible temporarily
 			 * to do cpu_icache_sync_range()
 			 */
 			struct pmap_asid_info * const pai = PMAP_PAI(pm,
@@ -1410,9 +1410,7 @@ pmap_protect(struct pmap *pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 #ifdef UVMHIST
 		pt_entry_t opte;
 #endif
-		struct vm_page *pg;
 		struct pmap_page *pp;
-		paddr_t pa;
 		uint32_t mdattr;
 		bool executable;
 
@@ -1428,24 +1426,30 @@ pmap_protect(struct pmap *pm, vaddr_t sva, vaddr_t eva, vm_prot_t prot)
 			continue;
 		}
 
-		pa = lxpde_pa(pte);
-		pg = PHYS_TO_VM_PAGE(pa);
-		if (pg != NULL) {
-			pp = VM_PAGE_TO_PP(pg);
-			PMAP_COUNT(protect_managed);
-		} else {
+		if ((pte & LX_BLKPAG_OS_WIRED) == 0) {
+			const paddr_t pa = lxpde_pa(pte);
+			struct vm_page *const pg = PHYS_TO_VM_PAGE(pa);
+
+			if (pg != NULL) {
+				pp = VM_PAGE_TO_PP(pg);
+				PMAP_COUNT(protect_managed);
+			} else {
 #ifdef __HAVE_PMAP_PV_TRACK
-			pp = pmap_pv_tracked(pa);
+				pp = pmap_pv_tracked(pa);
 #ifdef PMAPCOUNTERS
-			if (pp != NULL)
-				PMAP_COUNT(protect_pvmanaged);
-			else
-				PMAP_COUNT(protect_unmanaged);
+				if (pp != NULL)
+					PMAP_COUNT(protect_pvmanaged);
+				else
+					PMAP_COUNT(protect_unmanaged);
 #endif
 #else
+				pp = NULL;
+				PMAP_COUNT(protect_unmanaged);
+#endif /* __HAVE_PMAP_PV_TRACK */
+			}
+		} else {	/* kenter */
 			pp = NULL;
 			PMAP_COUNT(protect_unmanaged);
-#endif /* __HAVE_PMAP_PV_TRACK */
 		}
 
 		if (pp != NULL) {

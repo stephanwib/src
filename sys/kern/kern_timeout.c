@@ -1,4 +1,4 @@
-/*	$NetBSD: kern_timeout.c,v 1.70 2022/06/29 22:27:01 riastradh Exp $	*/
+/*	$NetBSD: kern_timeout.c,v 1.73 2022/10/29 00:19:21 riastradh Exp $	*/
 
 /*-
  * Copyright (c) 2003, 2006, 2007, 2008, 2009, 2019 The NetBSD Foundation, Inc.
@@ -59,7 +59,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: kern_timeout.c,v 1.70 2022/06/29 22:27:01 riastradh Exp $");
+__KERNEL_RCSID(0, "$NetBSD: kern_timeout.c,v 1.73 2022/10/29 00:19:21 riastradh Exp $");
 
 /*
  * Timeouts are kept in a hierarchical timing wheel.  The c_time is the
@@ -74,7 +74,7 @@ __KERNEL_RCSID(0, "$NetBSD: kern_timeout.c,v 1.70 2022/06/29 22:27:01 riastradh 
  * We use the fact that any element added to the queue must be added with
  * a positive time.  That means that any element `to' on the queue cannot
  * be scheduled to timeout further in time than INT_MAX, but c->c_time can
- * be positive or negative so comparing it with anything is dangerous. 
+ * be positive or negative so comparing it with anything is dangerous.
  * The only way we can use the c->c_time value in any predictable way is
  * when we calculate how far in the future `to' will timeout - "c->c_time
  * - c->c_cpu->cc_ticks".  The result will always be positive for future
@@ -96,6 +96,7 @@ __KERNEL_RCSID(0, "$NetBSD: kern_timeout.c,v 1.70 2022/06/29 22:27:01 riastradh 
 #include <sys/intr.h>
 #include <sys/cpu.h>
 #include <sys/kmem.h>
+#include <sys/sdt.h>
 
 #ifdef DDB
 #include <machine/db_machdep.h>
@@ -180,6 +181,7 @@ struct callout_cpu {
 	struct callout_circq cc_wheel[BUCKETS];	/* Queues of timeouts */
 	char		cc_name1[12];
 	char		cc_name2[12];
+	struct cpu_info	*cc_cpu;
 };
 
 #ifdef DDB
@@ -192,6 +194,57 @@ static void	callout_wait(callout_impl_t *, void *, kmutex_t *);
 
 static struct callout_cpu callout_cpu0 __cacheline_aligned;
 static void *callout_sih __read_mostly;
+
+SDT_PROBE_DEFINE2(sdt, kernel, callout, init,
+    "struct callout *"/*ch*/,
+    "unsigned"/*flags*/);
+SDT_PROBE_DEFINE1(sdt, kernel, callout, destroy,
+    "struct callout *"/*ch*/);
+SDT_PROBE_DEFINE4(sdt, kernel, callout, setfunc,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/);
+SDT_PROBE_DEFINE5(sdt, kernel, callout, schedule,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/,
+    "int"/*ticks*/);
+SDT_PROBE_DEFINE6(sdt, kernel, callout, migrate,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/,
+    "struct cpu_info *"/*ocpu*/,
+    "struct cpu_info *"/*ncpu*/);
+SDT_PROBE_DEFINE4(sdt, kernel, callout, entry,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/);
+SDT_PROBE_DEFINE4(sdt, kernel, callout, return,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/);
+SDT_PROBE_DEFINE5(sdt, kernel, callout, stop,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/,
+    "bool"/*expired*/);
+SDT_PROBE_DEFINE4(sdt, kernel, callout, halt,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/);
+SDT_PROBE_DEFINE5(sdt, kernel, callout, halt__done,
+    "struct callout *"/*ch*/,
+    "void (*)(void *)"/*func*/,
+    "void *"/*arg*/,
+    "unsigned"/*flags*/,
+    "bool"/*expired*/);
 
 static inline kmutex_t *
 callout_lock(callout_impl_t *c)
@@ -270,6 +323,7 @@ callout_init_cpu(struct cpu_info *ci)
 	evcnt_attach_dynamic(&cc->cc_ev_block, EVCNT_TYPE_MISC,
 	    NULL, "callout", cc->cc_name2);
 
+	cc->cc_cpu = ci;
 	ci->ci_data.cpu_callout = cc;
 }
 
@@ -286,6 +340,8 @@ callout_init(callout_t *cs, u_int flags)
 	struct callout_cpu *cc;
 
 	KASSERT((flags & ~CALLOUT_FLAGMASK) == 0);
+
+	SDT_PROBE2(sdt, kernel, callout, init,  cs, flags);
 
 	cc = curcpu()->ci_data.cpu_callout;
 	c->c_func = NULL;
@@ -308,6 +364,8 @@ void
 callout_destroy(callout_t *cs)
 {
 	callout_impl_t *c = (callout_impl_t *)cs;
+
+	SDT_PROBE1(sdt, kernel, callout, destroy,  cs);
 
 	KASSERTMSG(c->c_magic == CALLOUT_MAGIC,
 	    "callout %p: c_magic (%#x) != CALLOUT_MAGIC (%#x)",
@@ -338,6 +396,9 @@ callout_schedule_locked(callout_impl_t *c, kmutex_t *lock, int to_ticks)
 {
 	struct callout_cpu *cc, *occ;
 	int old_time;
+
+	SDT_PROBE5(sdt, kernel, callout, schedule,
+	    c, c->c_func, c->c_arg, c->c_flags, to_ticks);
 
 	KASSERT(to_ticks >= 0);
 	KASSERT(c->c_func != NULL);
@@ -377,6 +438,9 @@ callout_schedule_locked(callout_impl_t *c, kmutex_t *lock, int to_ticks)
 		c->c_flags |= CALLOUT_PENDING;
 		CIRCQ_INSERT(&c->c_list, &cc->cc_todo);
 		mutex_spin_exit(cc->cc_lock);
+		SDT_PROBE6(sdt, kernel, callout, migrate,
+		    c, c->c_func, c->c_arg, c->c_flags,
+		    occ->cc_cpu, cc->cc_cpu);
 	}
 	mutex_spin_exit(lock);
 }
@@ -397,6 +461,7 @@ callout_reset(callout_t *cs, int to_ticks, void (*func)(void *), void *arg)
 	KASSERT(func != NULL);
 
 	lock = callout_lock(c);
+	SDT_PROBE4(sdt, kernel, callout, setfunc,  cs, func, arg, c->c_flags);
 	c->c_func = func;
 	c->c_arg = arg;
 	callout_schedule_locked(c, lock, to_ticks);
@@ -454,6 +519,9 @@ callout_stop(callout_t *cs)
 		cc->cc_cancel = c;
 	}
 
+	SDT_PROBE5(sdt, kernel, callout, stop,
+	    c, c->c_func, c->c_arg, c->c_flags, expired);
+
 	mutex_spin_exit(lock);
 
 	return expired;
@@ -482,6 +550,8 @@ callout_halt(callout_t *cs, void *interlock)
 
 	/* Fast path. */
 	lock = callout_lock(c);
+	SDT_PROBE4(sdt, kernel, callout, halt,
+	    c, c->c_func, c->c_arg, c->c_flags);
 	flags = c->c_flags;
 	if ((flags & CALLOUT_PENDING) != 0)
 		CIRCQ_REMOVE(&c->c_list);
@@ -490,6 +560,8 @@ callout_halt(callout_t *cs, void *interlock)
 		callout_wait(c, interlock, lock);
 		return true;
 	}
+	SDT_PROBE5(sdt, kernel, callout, halt__done,
+	    c, c->c_func, c->c_arg, c->c_flags, /*expired*/false);
 	mutex_spin_exit(lock);
 	return false;
 }
@@ -547,7 +619,7 @@ callout_wait(callout_impl_t *c, void *interlock, kmutex_t *lock)
 		}
 
 		/*
-		 * Re-lock the callout and check the state of play again. 
+		 * Re-lock the callout and check the state of play again.
 		 * It's a common design pattern for callouts to re-schedule
 		 * themselves so put a stop to it again if needed.
 		 */
@@ -556,6 +628,9 @@ callout_wait(callout_impl_t *c, void *interlock, kmutex_t *lock)
 			CIRCQ_REMOVE(&c->c_list);
 		c->c_flags &= ~(CALLOUT_PENDING|CALLOUT_FIRED);
 	}
+
+	SDT_PROBE5(sdt, kernel, callout, halt__done,
+	    c, c->c_func, c->c_arg, c->c_flags, /*expired*/true);
 
 	mutex_spin_exit(lock);
 	if (__predict_false(relock != NULL))
@@ -611,6 +686,7 @@ callout_setfunc(callout_t *cs, void (*func)(void *), void *arg)
 	KASSERT(func != NULL);
 
 	lock = callout_lock(c);
+	SDT_PROBE4(sdt, kernel, callout, setfunc,  cs, func, arg, c->c_flags);
 	c->c_func = func;
 	c->c_arg = arg;
 	mutex_spin_exit(lock);
@@ -741,6 +817,7 @@ callout_softclock(void *v)
 	void (*func)(void *);
 	void *arg;
 	int mpsafe, count, ticks, delta;
+	u_int flags __unused;
 	lwp_t *l;
 
 	l = curlwp;
@@ -774,15 +851,18 @@ callout_softclock(void *v)
 		func = c->c_func;
 		arg = c->c_arg;
 		cc->cc_active = c;
+		flags = c->c_flags;
 
 		mutex_spin_exit(cc->cc_lock);
 		KASSERT(func != NULL);
+		SDT_PROBE4(sdt, kernel, callout, entry,  c, func, arg, flags);
 		if (__predict_false(!mpsafe)) {
 			KERNEL_LOCK(1, NULL);
 			(*func)(arg);
 			KERNEL_UNLOCK_ONE(NULL);
 		} else
 			(*func)(arg);
+		SDT_PROBE4(sdt, kernel, callout, return,  c, func, arg, flags);
 		KASSERTMSG(l->l_blcnt == 0,
 		    "callout %p func %p leaked %d biglocks",
 		    c, func, l->l_blcnt);

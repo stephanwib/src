@@ -1,4 +1,4 @@
-/*	$NetBSD: pci_machdep.h,v 1.5 2014/03/29 23:51:02 joerg Exp $	*/
+/*	$NetBSD: pci_machdep.h,v 1.7 2022/10/31 15:57:52 martin Exp $	*/
 
 /*
  * Copyright (c) 1996 Christopher G. Demetriou.  All rights reserved.
@@ -83,6 +83,8 @@ int landisk_pci_conf_hook(void *, int, int, int, pcireg_t);
 	landisk_pci_attach_hook(pa, self, pba)
 #define	pci_intr_map(pa, ihp) \
 	landisk_pci_intr_map(pa, ihp)
+#define	pci_intr_setattr(pa, ihp, attr, data) \
+	landisk_pci_intr_setattr(pa, ihp, attr, data)
 #define	pci_intr_string(v, ih, buf, len) \
 	landisk_pci_intr_string(v, ih, buf, len)
 #define	pci_intr_evcnt(v, ih) \
