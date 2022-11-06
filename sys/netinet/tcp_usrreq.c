@@ -1,4 +1,4 @@
-/*	$NetBSD: tcp_usrreq.c,v 1.236 2022/10/30 08:45:46 ozaki-r Exp $	*/
+/*	$NetBSD: tcp_usrreq.c,v 1.238 2022/11/04 09:01:53 ozaki-r Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -99,7 +99,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: tcp_usrreq.c,v 1.236 2022/10/30 08:45:46 ozaki-r Exp $");
+__KERNEL_RCSID(0, "$NetBSD: tcp_usrreq.c,v 1.238 2022/11/04 09:01:53 ozaki-r Exp $");
 
 #ifdef _KERNEL_OPT
 #include "opt_inet.h"
@@ -473,7 +473,7 @@ tcp_attach(struct socket *so, int proto)
 	so->so_rcv.sb_flags |= SB_AUTOSIZE;
 	so->so_snd.sb_flags |= SB_AUTOSIZE;
 
-	error = in_pcballoc(so, &tcbtable);
+	error = inpcb_create(so, &tcbtable);
 	if (error)
 		goto out;
 	inp = sotoinpcb(so);
@@ -483,7 +483,7 @@ tcp_attach(struct socket *so, int proto)
 		int nofd = so->so_state & SS_NOFDREF;	/* XXX */
 
 		so->so_state &= ~SS_NOFDREF;	/* don't free the socket yet */
-		in_pcbdetach(inp);
+		inpcb_destroy(inp);
 		so->so_state |= nofd;
 		error = ENOBUFS;
 		goto out;
@@ -537,11 +537,11 @@ tcp_accept(struct socket *so, struct sockaddr *nam)
 	 */
 	s = splsoftnet();
 	if (inp->inp_af == AF_INET) {
-		in_setpeeraddr(inp, (struct sockaddr_in *)nam);
+		inpcb_fetch_peeraddr(inp, (struct sockaddr_in *)nam);
 	}
 #ifdef INET6
 	else if (inp->inp_af == AF_INET6) {
-		in6_setpeeraddr(inp, (struct sockaddr_in6 *)nam);
+		in6pcb_fetch_peeraddr(inp, (struct sockaddr_in6 *)nam);
 	}
 #endif
 	tcp_debug_trace(so, tp, ostate, PRU_ACCEPT);
@@ -576,11 +576,11 @@ tcp_bind(struct socket *so, struct sockaddr *nam, struct lwp *l)
 	s = splsoftnet();
 	switch (so->so_proto->pr_domain->dom_family) {
 	case PF_INET:
-		error = in_pcbbind(inp, sin, l);
+		error = inpcb_bind(inp, sin, l);
 		break;
 #ifdef INET6
 	case PF_INET6:
-		error = in6_pcbbind(inp, sin6, l);
+		error = in6pcb_bind(inp, sin6, l);
 		if (!error) {
 			/* mapped addr case */
 			if (IN6_IS_ADDR_V4MAPPED(&in6p_laddr(inp)))
@@ -618,13 +618,13 @@ tcp_listen(struct socket *so, struct lwp *l)
 	 */
 	s = splsoftnet();
 	if (inp->inp_af == AF_INET && inp->inp_lport == 0) {
-		error = in_pcbbind(inp, NULL, l);
+		error = inpcb_bind(inp, NULL, l);
 		if (error)
 			goto release;
 	}
 #ifdef INET6
 	if (inp->inp_af == AF_INET6 && inp->inp_lport == 0) {
-		error = in6_pcbbind(inp, NULL, l);
+		error = in6pcb_bind(inp, NULL, l);
 		if (error)
 			goto release;
 	}
@@ -665,20 +665,20 @@ tcp_connect(struct socket *so, struct sockaddr *nam, struct lwp *l)
 
 	if (inp->inp_af == AF_INET) {
 		if (inp->inp_lport == 0) {
-			error = in_pcbbind(inp, NULL, l);
+			error = inpcb_bind(inp, NULL, l);
 			if (error)
 				goto release;
 		}
-		error = in_pcbconnect(inp, (struct sockaddr_in *)nam, l);
+		error = inpcb_connect(inp, (struct sockaddr_in *)nam, l);
 	}
 #ifdef INET6
 	if (inp->inp_af == AF_INET6) {
 		if (inp->inp_lport == 0) {
-			error = in6_pcbbind(inp, NULL, l);
+			error = in6pcb_bind(inp, NULL, l);
 			if (error)
 				goto release;
 		}
-		error = in6_pcbconnect(inp, (struct sockaddr_in6 *)nam, l);
+		error = in6pcb_connect(inp, (struct sockaddr_in6 *)nam, l);
 		if (!error) {
 			/* mapped addr case */
 			if (IN6_IS_ADDR_V4MAPPED(&in6p_faddr(inp)))
@@ -693,10 +693,10 @@ tcp_connect(struct socket *so, struct sockaddr *nam, struct lwp *l)
 	tp->t_template = tcp_template(tp);
 	if (tp->t_template == 0) {
 		if (inp->inp_af == AF_INET)
-			in_pcbdisconnect(inp);
+			inpcb_disconnect(inp);
 #ifdef INET6
 		else if (inp->inp_af == AF_INET6)
-			in6_pcbdisconnect(inp);
+			in6pcb_disconnect(inp);
 #endif
 		error = ENOBUFS;
 		goto release;
@@ -876,11 +876,11 @@ tcp_peeraddr(struct socket *so, struct sockaddr *nam)
 
 	s = splsoftnet();
 	if (inp->inp_af == AF_INET) {
-		in_setpeeraddr(inp, (struct sockaddr_in *)nam);
+		inpcb_fetch_peeraddr(inp, (struct sockaddr_in *)nam);
 	}
 #ifdef INET6
 	else if (inp->inp_af == AF_INET6) {
-		in6_setpeeraddr(inp, (struct sockaddr_in6 *)nam);
+		in6pcb_fetch_peeraddr(inp, (struct sockaddr_in6 *)nam);
 	}
 #endif
 	tcp_debug_trace(so, tp, ostate, PRU_PEERADDR);
@@ -906,11 +906,11 @@ tcp_sockaddr(struct socket *so, struct sockaddr *nam)
 
 	s = splsoftnet();
 	if (inp->inp_af == AF_INET) {
-		in_setsockaddr(inp, (struct sockaddr_in *)nam);
+		inpcb_fetch_sockaddr(inp, (struct sockaddr_in *)nam);
 	}
 #ifdef INET6
 	if (inp->inp_af == AF_INET6) {
-		in6_setsockaddr(inp, (struct sockaddr_in6 *)nam);
+		in6pcb_fetch_sockaddr(inp, (struct sockaddr_in6 *)nam);
 	}
 #endif
 	tcp_debug_trace(so, tp, ostate, PRU_SOCKADDR);
@@ -1100,7 +1100,7 @@ tcp_purgeif(struct socket *so, struct ifnet *ifp)
 	mutex_enter(softnet_lock);
 	switch (so->so_proto->pr_domain->dom_family) {
 	case PF_INET:
-		in_pcbpurgeif0(&tcbtable, ifp);
+		inpcb_purgeif0(&tcbtable, ifp);
 #ifdef NET_MPSAFE
 		mutex_exit(softnet_lock);
 #endif
@@ -1108,11 +1108,11 @@ tcp_purgeif(struct socket *so, struct ifnet *ifp)
 #ifdef NET_MPSAFE
 		mutex_enter(softnet_lock);
 #endif
-		in_pcbpurgeif(&tcbtable, ifp);
+		inpcb_purgeif(&tcbtable, ifp);
 		break;
 #ifdef INET6
 	case PF_INET6:
-		in6_pcbpurgeif0(&tcbtable, ifp);
+		in6pcb_purgeif0(&tcbtable, ifp);
 #ifdef NET_MPSAFE
 		mutex_exit(softnet_lock);
 #endif
@@ -1120,7 +1120,7 @@ tcp_purgeif(struct socket *so, struct ifnet *ifp)
 #ifdef NET_MPSAFE
 		mutex_enter(softnet_lock);
 #endif
-		in6_pcbpurgeif(&tcbtable, ifp);
+		in6pcb_purgeif(&tcbtable, ifp);
 		break;
 #endif
 	default:
@@ -1419,7 +1419,7 @@ inet4_ident_core(struct in_addr raddr, u_int rport,
 	struct inpcb *inp;
 	struct socket *sockp;
 
-	inp = in_pcblookup_connect(&tcbtable, raddr, rport, laddr, lport, 0);
+	inp = inpcb_lookup(&tcbtable, raddr, rport, laddr, lport, 0);
 
 	if (inp == NULL || (sockp = inp->inp_socket) == NULL)
 		return ESRCH;
@@ -1454,7 +1454,7 @@ inet6_ident_core(struct in6_addr *raddr, u_int rport,
 	struct inpcb *inp;
 	struct socket *sockp;
 
-	inp = in6_pcblookup_connect(&tcbtable, raddr, rport, laddr, lport, 0, 0);
+	inp = in6pcb_lookup(&tcbtable, raddr, rport, laddr, lport, 0, 0);
 
 	if (inp == NULL || (sockp = inp->inp_socket) == NULL)
 		return ESRCH;

@@ -1,4 +1,4 @@
-/*	$NetBSD: portalgo.c,v 1.13 2022/10/28 05:25:36 ozaki-r Exp $	*/
+/*	$NetBSD: portalgo.c,v 1.15 2022/11/04 09:01:53 ozaki-r Exp $	*/
 
 /*
  * Copyright 2011 Vlad Balan
@@ -34,7 +34,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: portalgo.c,v 1.13 2022/10/28 05:25:36 ozaki-r Exp $");
+__KERNEL_RCSID(0, "$NetBSD: portalgo.c,v 1.15 2022/11/04 09:01:53 ozaki-r Exp $");
 
 #ifdef _KERNEL_OPT
 #include "opt_inet.h"
@@ -261,10 +261,10 @@ check_suitable_port(uint16_t port, struct inpcb *inp, kauth_cred_t cred)
 			return false;
 
 		sin.sin_addr = in4p_laddr(inp);
-		pcb = in_pcblookup_port(table, sin.sin_addr, htons(port), 1,
+		pcb = inpcb_lookup_local(table, sin.sin_addr, htons(port), 1,
 		    &vestigial);
 
-		DPRINTF("%s in_pcblookup_port returned %p and "
+		DPRINTF("%s inpcb_lookup_local returned %p and "
 		    "vestigial.valid %d\n",
 		    __func__, pcb, vestigial.valid);
 
@@ -307,7 +307,7 @@ check_suitable_port(uint16_t port, struct inpcb *inp, kauth_cred_t cred)
 		sin6.sin6_addr = in6p_laddr(inp);
 		so = inp->inp_socket;
 
-		/* XXX: this is redundant when called from in6_pcbbind */
+		/* XXX: this is redundant when called from in6pcb_bind */
 		if ((so->so_options & (SO_REUSEADDR|SO_REUSEPORT)) == 0 &&
 		    ((so->so_proto->pr_flags & PR_CONNREQUIRED) == 0 ||
 			(so->so_options & SO_ACCEPTCONN) == 0))
@@ -315,21 +315,21 @@ check_suitable_port(uint16_t port, struct inpcb *inp, kauth_cred_t cred)
 
 #ifdef INET
 		if (IN6_IS_ADDR_V4MAPPED(&sin6.sin6_addr)) {
-			t = in_pcblookup_port(table,
+			t = inpcb_lookup_local(table,
 			    *(struct in_addr *)&sin6.sin6_addr.s6_addr32[3],
 			    htons(port), wild, &vestigial);
 			if (!t && vestigial.valid) {
-				DPRINTF("%s in_pcblookup_port returned "
+				DPRINTF("%s inpcb_lookup_local returned "
 				    "a result\n", __func__);
 				return false;
 			}
 		} else
 #endif
 		{
-			t = in6_pcblookup_port(table, &sin6.sin6_addr,
+			t = in6pcb_lookup_local(table, &sin6.sin6_addr,
 			    htons(port), wild, &vestigial);
 			if (!t && vestigial.valid) {
-				DPRINTF("%s in6_pcblookup_port returned "
+				DPRINTF("%s in6pcb_lookup_local returned "
 				    "a result\n", __func__);
 				return false;
 			}

@@ -1,4 +1,4 @@
-/*	$NetBSD: in_pcb.h,v 1.73 2022/10/28 05:25:36 ozaki-r Exp $	*/
+/*	$NetBSD: in_pcb.h,v 1.76 2022/11/04 09:03:20 ozaki-r Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -101,8 +101,8 @@ struct inpcb {
 	struct	  inpcbtable *inp_table;
 	struct	  inpcbpolicy *inp_sp;	/* security policy */
 	struct route	inp_route;	/* placeholder for routing entry */
-	u_int16_t	inp_fport;	/* foreign port */
-	u_int16_t	inp_lport;	/* local port */
+	in_port_t	inp_fport;	/* foreign port */
+	in_port_t	inp_lport;	/* local port */
 	int	 	inp_flags;	/* generic IP/datagram flags */
 	struct mbuf	*inp_options;	/* IP options */
 	bool		inp_bindportonsend;
@@ -232,8 +232,8 @@ struct inpcbtable {
 	u_long	  inpt_porthash;
 	u_long	  inpt_bindhash;
 	u_long	  inpt_connecthash;
-	u_int16_t inpt_lastport;
-	u_int16_t inpt_lastlow;
+	in_port_t inpt_lastport;
+	in_port_t inpt_lastlow;
 
 	struct vestigial_hooks *vestige;
 };
@@ -250,74 +250,74 @@ struct sockaddr_in;
 struct socket;
 struct vestigial_inpcb;
 
-void	in_losing(struct inpcb *);
-int	in_pcballoc(struct socket *, void *);
-int	in_pcbbindableaddr(const struct inpcb *, struct sockaddr_in *,
+void	inpcb_losing(struct inpcb *);
+int	inpcb_create(struct socket *, void *);
+int	inpcb_bindableaddr(const struct inpcb *, struct sockaddr_in *,
     kauth_cred_t);
-int	in_pcbbind(void *, struct sockaddr_in *, struct lwp *);
-int	in_pcbconnect(void *, struct sockaddr_in *, struct lwp *);
-void	in_pcbdetach(void *);
-void	in_pcbdisconnect(void *);
-void	in_pcbinit(struct inpcbtable *, int, int);
+int	inpcb_bind(void *, struct sockaddr_in *, struct lwp *);
+int	inpcb_connect(void *, struct sockaddr_in *, struct lwp *);
+void	inpcb_destroy(void *);
+void	inpcb_disconnect(void *);
+void	inpcb_init(struct inpcbtable *, int, int);
 struct inpcb *
-	in_pcblookup_port(struct inpcbtable *,
+	inpcb_lookup_local(struct inpcbtable *,
 			  struct in_addr, u_int, int, struct vestigial_inpcb *);
 struct inpcb *
-	in_pcblookup_bind(struct inpcbtable *,
+	inpcb_lookup_bound(struct inpcbtable *,
 	    struct in_addr, u_int);
 struct inpcb *
-	in_pcblookup_connect(struct inpcbtable *,
+	inpcb_lookup(struct inpcbtable *,
 			     struct in_addr, u_int, struct in_addr, u_int,
 			     struct vestigial_inpcb *);
-int	in_pcbnotify(struct inpcbtable *, struct in_addr, u_int,
+int	inpcb_notify(struct inpcbtable *, struct in_addr, u_int,
 	    struct in_addr, u_int, int, void (*)(struct inpcb *, int));
-void	in_pcbnotifyall(struct inpcbtable *, struct in_addr, int,
+void	inpcb_notifyall(struct inpcbtable *, struct in_addr, int,
 	    void (*)(struct inpcb *, int));
-void	in_pcbpurgeif0(struct inpcbtable *, struct ifnet *);
-void	in_pcbpurgeif(struct inpcbtable *, struct ifnet *);
+void	inpcb_purgeif0(struct inpcbtable *, struct ifnet *);
+void	inpcb_purgeif(struct inpcbtable *, struct ifnet *);
 void	in_purgeifmcast(struct ip_moptions *, struct ifnet *);
-void	in_pcbstate(struct inpcb *, int);
-void	in_rtchange(struct inpcb *, int);
-void	in_setpeeraddr(struct inpcb *, struct sockaddr_in *);
-void	in_setsockaddr(struct inpcb *, struct sockaddr_in *);
+void	inpcb_set_state(struct inpcb *, int);
+void	inpcb_rtchange(struct inpcb *, int);
+void	inpcb_fetch_peeraddr(struct inpcb *, struct sockaddr_in *);
+void	inpcb_fetch_sockaddr(struct inpcb *, struct sockaddr_in *);
 struct rtentry *
-	in_pcbrtentry(struct inpcb *);
-void	in_pcbrtentry_unref(struct rtentry *, struct inpcb *);
+	inpcb_rtentry(struct inpcb *);
+void	inpcb_rtentry_unref(struct rtentry *, struct inpcb *);
 
-void	in6_pcbinit(struct inpcbtable *, int, int);
-int	in6_pcbbind(void *, struct sockaddr_in6 *, struct lwp *);
-int	in6_pcbconnect(void *, struct sockaddr_in6 *, struct lwp *);
-void	in6_pcbdetach(struct inpcb *);
-void	in6_pcbdisconnect(struct inpcb *);
-struct	inpcb *in6_pcblookup_port(struct inpcbtable *, struct in6_addr *,
+void	in6pcb_init(struct inpcbtable *, int, int);
+int	in6pcb_bind(void *, struct sockaddr_in6 *, struct lwp *);
+int	in6pcb_connect(void *, struct sockaddr_in6 *, struct lwp *);
+void	in6pcb_destroy(struct inpcb *);
+void	in6pcb_disconnect(struct inpcb *);
+struct	inpcb *in6pcb_lookup_local(struct inpcbtable *, struct in6_addr *,
 				   u_int, int, struct vestigial_inpcb *);
-int	in6_pcbnotify(struct inpcbtable *, const struct sockaddr *,
+int	in6pcb_notify(struct inpcbtable *, const struct sockaddr *,
 	u_int, const struct sockaddr *, u_int, int, void *,
 	void (*)(struct inpcb *, int));
-void	in6_pcbpurgeif0(struct inpcbtable *, struct ifnet *);
-void	in6_pcbpurgeif(struct inpcbtable *, struct ifnet *);
-void	in6_pcbstate(struct inpcb *, int);
-void	in6_rtchange(struct inpcb *, int);
-void	in6_setpeeraddr(struct inpcb *, struct sockaddr_in6 *);
-void	in6_setsockaddr(struct inpcb *, struct sockaddr_in6 *);
+void	in6pcb_purgeif0(struct inpcbtable *, struct ifnet *);
+void	in6pcb_purgeif(struct inpcbtable *, struct ifnet *);
+void	in6pcb_set_state(struct inpcb *, int);
+void	in6pcb_rtchange(struct inpcb *, int);
+void	in6pcb_fetch_peeraddr(struct inpcb *, struct sockaddr_in6 *);
+void	in6pcb_fetch_sockaddr(struct inpcb *, struct sockaddr_in6 *);
 
 /* in in6_src.c */
-int	in6_selecthlim(struct inpcb *, struct ifnet *);
-int	in6_selecthlim_rt(struct inpcb *);
-int	in6_pcbsetport(struct sockaddr_in6 *, struct inpcb *, struct lwp *);
+int	in6pcb_selecthlim(struct inpcb *, struct ifnet *);
+int	in6pcb_selecthlim_rt(struct inpcb *);
+int	in6pcb_set_port(struct sockaddr_in6 *, struct inpcb *, struct lwp *);
 
 extern struct rtentry *
-	in6_pcbrtentry(struct inpcb *);
+	in6pcb_rtentry(struct inpcb *);
 extern void
-	in6_pcbrtentry_unref(struct rtentry *, struct inpcb *);
-extern struct inpcb *in6_pcblookup_connect(struct inpcbtable *,
+	in6pcb_rtentry_unref(struct rtentry *, struct inpcb *);
+extern struct inpcb *in6pcb_lookup(struct inpcbtable *,
 					    const struct in6_addr *, u_int, const struct in6_addr *, u_int, int,
 					    struct vestigial_inpcb *);
-extern struct inpcb *in6_pcblookup_bind(struct inpcbtable *,
+extern struct inpcb *in6pcb_lookup_bound(struct inpcbtable *,
 	const struct in6_addr *, u_int, int);
 
 static inline void
-in_pcb_register_overudp_cb(struct inpcb *inp, pcb_overudp_cb_t cb, void *arg)
+inpcb_register_overudp_cb(struct inpcb *inp, pcb_overudp_cb_t cb, void *arg)
 {
 
 	inp->inp_overudp_cb = cb;

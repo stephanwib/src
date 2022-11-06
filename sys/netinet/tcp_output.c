@@ -1,4 +1,4 @@
-/*	$NetBSD: tcp_output.c,v 1.216 2022/10/28 05:25:36 ozaki-r Exp $	*/
+/*	$NetBSD: tcp_output.c,v 1.218 2022/11/04 09:01:53 ozaki-r Exp $	*/
 
 /*
  * Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
@@ -135,7 +135,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: tcp_output.c,v 1.216 2022/10/28 05:25:36 ozaki-r Exp $");
+__KERNEL_RCSID(0, "$NetBSD: tcp_output.c,v 1.218 2022/11/04 09:01:53 ozaki-r Exp $");
 
 #ifdef _KERNEL_OPT
 #include "opt_inet.h"
@@ -251,7 +251,7 @@ tcp_segsize(struct tcpcb *tp, int *txsegsizep, int *rxsegsizep,
 		goto out;
 	}
 
-	rt = in_pcbrtentry(inp);
+	rt = inpcb_rtentry(inp);
 	so = inp->inp_socket;
 	if (rt == NULL) {
 		goto out;
@@ -298,7 +298,7 @@ tcp_segsize(struct tcpcb *tp, int *txsegsizep, int *rxsegsizep,
 		}
 	}
 #endif
-	in_pcbrtentry_unref(rt, inp);
+	inpcb_rtentry_unref(rt, inp);
  out:
 	/*
 	 * Now we must make room for whatever extra TCP/IP options are in
@@ -1066,11 +1066,11 @@ send:
 	if (flags & TH_SYN) {
 		struct rtentry *synrt;
 
-		synrt = in_pcbrtentry(tp->t_inpcb);
+		synrt = inpcb_rtentry(tp->t_inpcb);
 		tp->snd_nxt = tp->iss;
 		tp->t_ourmss = tcp_mss_to_advertise(synrt != NULL ?
 						    synrt->rt_ifp : NULL, af);
-		in_pcbrtentry_unref(synrt, tp->t_inpcb);
+		inpcb_rtentry_unref(synrt, tp->t_inpcb);
 		if ((tp->t_flags & TF_NOOPT) == 0 && OPT_FITS(TCPOLEN_MAXSEG)) {
 			*optp++ = TCPOPT_MAXSEG;
 			*optp++ = TCPOLEN_MAXSEG;
@@ -1546,7 +1546,7 @@ timer:
 		}
 #ifdef INET6
 		else if (tp->t_inpcb->inp_af == AF_INET6) {
-			ip->ip_ttl = in6_selecthlim(tp->t_inpcb, NULL); /*XXX*/
+			ip->ip_ttl = in6pcb_selecthlim(tp->t_inpcb, NULL); /*XXX*/
 			ip->ip_tos = ecn_tos;	/*XXX*/
 		}
 #endif
@@ -1562,7 +1562,7 @@ timer:
 			 * setsockopt. Also, desired default hop limit might
 			 * be changed via Neighbor Discovery.
 			 */
-			ip6->ip6_hlim = in6_selecthlim_rt(tp->t_inpcb);
+			ip6->ip6_hlim = in6pcb_selecthlim_rt(tp->t_inpcb);
 		}
 		ip6->ip6_flow |= htonl(ecn_tos << 20);
 		/* ip6->ip6_flow = ??? (from template) */

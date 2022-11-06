@@ -1,4 +1,4 @@
-/*	$NetBSD: pmap.h,v 1.24 2022/10/27 06:19:56 skrll Exp $	*/
+/*	$NetBSD: pmap.h,v 1.26 2022/11/03 18:55:07 skrll Exp $	*/
 
 /*
  * Copyright (c) 1992, 1993
@@ -70,6 +70,10 @@
  *
  *	@(#)pmap.h	8.1 (Berkeley) 6/10/93
  */
+
+#ifdef _KERNEL_OPT
+#include "opt_efi.h"
+#endif
 
 #ifndef	_UVM_PMAP_PMAP_H_
 #define	_UVM_PMAP_PMAP_H_

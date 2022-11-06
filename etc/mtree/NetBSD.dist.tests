@@ -1,4 +1,4 @@
-#	$NetBSD: NetBSD.dist.tests,v 1.193 2022/07/21 09:52:48 kre Exp $
+#	$NetBSD: NetBSD.dist.tests,v 1.195 2022/11/04 08:01:42 ozaki-r Exp $
 
 ./usr/libdata/debug/usr/tests
 ./usr/libdata/debug/usr/tests/atf
@@ -158,6 +158,7 @@
 ./usr/libdata/debug/usr/tests/net/mcast
 ./usr/libdata/debug/usr/tests/net/net
 ./usr/libdata/debug/usr/tests/net/sys
+./usr/libdata/debug/usr/tests/net/tcp
 ./usr/libdata/debug/usr/tests/rump
 ./usr/libdata/debug/usr/tests/rump/modautoload
 ./usr/libdata/debug/usr/tests/rump/rumpkern
@@ -382,6 +383,7 @@
 ./usr/tests/net/npf
 ./usr/tests/net/route
 ./usr/tests/net/sys
+./usr/tests/net/tcp
 ./usr/tests/rump
 ./usr/tests/rump/modautoload
 ./usr/tests/rump/rumpkern
