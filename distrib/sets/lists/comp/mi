@@ -1,4 +1,4 @@
-#	$NetBSD: mi,v 1.2425 2022/10/28 05:23:09 ozaki-r Exp $
+#	$NetBSD: mi,v 1.2426 2022/11/10 05:23:09 stephanwib Exp $
 #
 # Note: don't delete entries from here - mark them as "obsolete" instead.
 ./etc/mtree/set.comp				comp-sys-root
@@ -3058,6 +3058,7 @@
 ./usr/include/pci.h				comp-c-include
 ./usr/include/perfuse.h				comp-c-include
 ./usr/include/poll.h				comp-c-include
+./usr/include/sys/port.h            comp-c-include
 ./usr/include/ppath/ppath.h			comp-c-include
 ./usr/include/ppath/ppath_impl.h		comp-c-include
 ./usr/include/prop/plistref.h			comp-c-include
