@@ -35,8 +35,6 @@
 
 #define PORT_MAX_NAME_LENGTH 32
 
-
-typedef int64_t bigtime_t;
 typedef int32_t port_id;
 
 
@@ -54,16 +52,17 @@ typedef struct port_info {
 port_id		create_port(int32_t, const char *);
 port_id		find_port(const char *);
 ssize_t		read_port(port_id, int32_t *, void *,size_t);
-ssize_t		read_port_etc(port_id, int32_t *, void *,	size_t, uint32_t, bigtime_t);
+ssize_t		read_port_etc(port_id, int32_t *, void *,	size_t, uint32_t, int64_t);
 int     	write_port(port_id, int32_t, const void *, size_t);
-int     	write_port_etc(port_id, int32_t, const void *, size_t, uint32_t, bigtime_t);
+int     	write_port_etc(port_id, int32_t, const void *, size_t, uint32_t, int64_t);
 int     	close_port(port_id);
 int     	delete_port(port_id);
 ssize_t		port_buffer_size(port_id);
-ssize_t		port_buffer_size_etc(port_id, uint32_t,	bigtime_t);
-ssize_t		port_count(port_id);
+ssize_t		port_buffer_size_etc(port_id, uint32_t,	int64_t);
+int   		port_count(port_id);
 int     	set_port_owner(port_id, pid_t);
-
+int       get_port_info(port_id , port_info *, size_t);
+int       get_next_port_info(pid_t, uint32 *, port_info *);
 
 #ifdef _KERNEL
 
@@ -72,9 +71,9 @@ int     	set_port_owner(port_id, pid_t);
 #include <sys/condvar.h>
 
 enum flags {
-    B_TIMEOUT               = 0x8,
-    B_RELATIVE_TIMEOUT      = 0x8,
-    B_ABSOLUTE_TIMEOUT      = 0x10
+    PORT_TIMEOUT               = 0x8,
+    PORT_RELATIVE_TIMEOUT      = 0x8,
+    PORT_ABSOLUTE_TIMEOUT      = 0x10
 };
 
 struct kport {

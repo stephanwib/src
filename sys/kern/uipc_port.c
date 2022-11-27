@@ -1,0 +1,943 @@
+/*-
+ * Copyright (c) 2015 The NetBSD Foundation, Inc.
+ * All rights reserved.
+ *
+ * This code is derived from software contributed to The NetBSD Foundation
+ * by Stephan Wiebusch.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/kmem.h>
+#include <sys/port.h>
+#include <sys/proc.h>
+#include <sys/kauth.h>
+#include <sys/syscallargs.h>
+
+/* For reference, not implemented (yet) 
+
+static const size_t PORT_INITIAL_BUF_SIZE = 4 * 1024 * 1024;
+static const size_t PORT_TOTAL_SPACE_LIMIT = 64 * 1024 * 1024;
+static const size_t PORT_PROC_SPACE_LIMIT = 8 * 1024 * 1024;
+static const size_t PORT_BUFFER_GROW_RATE = 4 * 1024 * 1024;
+
+*/
+
+#define PORT_MAX 4096
+#define PORT_MAX_QUEUE_LENGTH 4096
+#define PORT_MAX_MESSAGE_SIZE (256 * 1024)
+#define PORT_MAX_NAME_LENGTH 32
+
+static uint32_t port_max = PORT_MAX;
+static uint32_t nports = 0;
+static port_id port_next_id = 1;
+static kmutex_t kport_mutex;
+
+/* XXX: Only one list for the moment. To prevent contention around kport_mutex, an array of lists/locks is to be added
+ * along with a suitable distribution algorithm. */
+
+LIST_HEAD(kport_list, kport);
+static struct kport_list kport_head = LIST_HEAD_INITIALIZER(&kport_head);
+
+void kport_init(void)
+{
+    mutex_init(&kport_mutex, MUTEX_DEFAULT, IPL_NONE);
+}
+
+
+
+    /*  helper functions  */
+
+static struct kport *
+kport_lookup_byid(port_id id)
+{
+    struct kport *kp;
+
+    KASSERT(mutex_owned(&kport_mutex));
+    LIST_FOREACH(kp, &kport_head, kp_entry)
+    {
+        if (kp->kp_id == id)
+        {
+            mutex_enter(&kp->kp_interlock);
+            return kp;
+        }
+    }
+    return NULL;
+}
+
+static struct kport *
+kport_lookup_byname(const char *name)
+{
+    struct kport *kp;
+
+    KASSERT(mutex_owned(&kport_mutex));
+    LIST_FOREACH(kp, &kport_head, kp_entry)
+    {
+        if (strcmp(kp->kp_name, name) == 0)
+        {
+            mutex_enter(&kp->kp_interlock);
+            return kp;
+        }
+    }
+    return NULL;
+}
+
+static void
+fill_port_info(const struct kport *kp, struct port_info *info)
+{
+    info->port = kp->kp_id;
+    info->pid = kp->kp_owner;
+    (void)strlcpy(info->name, kp->kp_name, PORT_MAX_NAME_LENGTH);
+    info->capacity = kp->kp_qlen;
+    info->queue_count = kp->kp_nmsg;
+    info->total_count = kp->kp_total_count;
+}
+
+
+
+    /* syscall implementation functions */
+
+static int
+kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_id *val)
+{
+    struct kport *ret, *search;
+    kauth_cred_t uc;
+    int error;
+    size_t namelen;
+    char namebuf[PORT_MAX_NAME_LENGTH];
+
+    if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH)
+        return EINVAL;
+
+    error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
+    if (error)
+        return error;
+
+    uc = l->l_cred;
+
+    ret = kmem_zalloc(sizeof(*ret), KM_SLEEP);
+
+    ret->kp_namelen = namelen;
+    ret->kp_name = kmem_alloc(ret->kp_namelen, KM_SLEEP);
+    strlcpy(ret->kp_name, namebuf, namelen);
+    ret->kp_uid = kauth_cred_geteuid(uc);
+    ret->kp_gid = kauth_cred_getegid(uc);
+    ret->kp_owner = l->l_proc->p_pid;
+    ret->kp_state = KP_ACTIVE;
+    ret->kp_nmsg = 0;
+    ret->kp_qlen = queue_length;
+    ret->kp_waiters = 0;
+    SIMPLEQ_INIT(&ret->kp_msgq);
+    mutex_init(&ret->kp_interlock, MUTEX_DEFAULT, IPL_NONE);
+    cv_init(&ret->kp_rdcv, "port_read");
+    cv_init(&ret->kp_wrcv, "port_write");
+
+    mutex_enter(&kport_mutex);
+
+
+    /* 
+     *   Perform checks and update data structures 
+     *   that require kport_mutex to be held
+     */
+
+
+    if (__predict_false(nports >= port_max))
+    {
+        mutex_exit(&kport_mutex);
+        kmem_free(ret->kp_name, ret->kp_namelen);
+        kmem_free(ret, sizeof(*ret));
+
+        return ENFILE;
+    }
+
+    if (__predict_false(search = kport_lookup_byname(namebuf) != NULL))
+    {
+        KASSERT(mutex_owned(&search->kp_interlock);
+        mutex_exit(&search->kp_interlock);
+
+        mutex_exit(&kport_mutex);
+        kmem_free(ret->kp_name, ret->kp_namelen);
+        kmem_free(ret, sizeof(*ret));
+
+        return EEXIST;
+    }
+  
+    while (__predict_false(search = kport_lookup_byid(port_next_id) != NULL))
+    {
+        KASSERT(mutex_owned(&search->kp_interlock);
+        mutex_exit(&search->kp_interlock);
+        port_next_id++;
+    }
+    
+    
+    ret->kp_id = port_next_id;
+    
+    nports++;
+    port_next_id++;
+
+    LIST_INSERT_HEAD(&kport_head, ret, kp_entry);
+
+    mutex_exit(&kport_mutex);
+
+    *val = ret->kp_id;
+
+    return 0;
+}
+
+static int
+kport_close(port_id id)
+{
+    struct kport *port;
+
+    mutex_enter(&kport_mutex);
+    
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+    
+    mutex_exit(&kport_mutex);
+
+    port->kp_state = KP_CLOSED;
+    mutex_exit(&port->kp_interlock);
+
+    return 0;
+}
+
+static int
+kport_delete_physical(struct kport *port)
+{
+    struct kp_msg *msg;
+
+    KASSERT(mutex_owned(&port->kp_interlock));
+
+    KASSERT(!cv_has_waiters(&port->kp_rdcv));
+    KASSERT(!cv_has_waiters(&port->kp_wrcv));
+    cv_destroy(&port->kp_rdcv);
+    cv_destroy(&port->kp_wrcv);
+
+    while (port->kp_nmsg)   /* get rid of eventually outstanding messages */
+    {
+        msg = SIMPLEQ_FIRST(&port->kp_msgq);
+
+        SIMPLEQ_REMOVE_HEAD(&port->kp_msgq, kp_msg_next);
+
+        if (msg->kp_msg_size)
+            kmem_free(msg->kp_msg_buffer, msg->kp_msg_size);
+
+        kmem_free(msg, sizeof(*msg));
+        
+        port->kp_nmsg--;
+    }
+ 
+    mutex_exit(&port->kp_interlock);
+    mutex_destroy(&port->kp_interlock);
+
+    kmem_free(port->kp_name, port->kp_namelen);
+    kmem_free(port, sizeof(*port));
+
+    return 0;
+}
+
+static int
+kport_delete_logical(port_id id)
+{
+    struct kport *port, *kp;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+
+    LIST_FOREACH(kp, &kport_head, kp_entry)
+    {
+        if (kp->kp_id == id)
+        {
+            LIST_REMOVE(kp, kp_entry);
+        }
+    }
+
+    nports--;
+
+    mutex_exit(&kport_mutex);
+
+    if (port->kp_waiters > 0)
+    {
+        port->kp_state = KP_DELETED;
+        cv_broadcast(&port->kp_rdcv);
+        cv_broadcast(&port->kp_wrcv);
+        mutex_exit(&port->kp_interlock);
+    }
+    else
+    {
+        kport_delete_physical(port);
+    }
+    
+    return 0;
+}
+
+static int
+kport_find(const char *name, port_id *id)
+{
+    struct kport *port;
+    char namebuf[PORT_MAX_NAME_LENGTH];
+    size_t namelen;
+    int error;
+
+    error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
+    if (error)
+        return error;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byname(namebuf);
+    mutex_exit(&kport_mutex);
+
+    if (port)
+    {
+        *id = port->kp_id;
+        mutex_exit(&port->kp_interlock);
+
+        return 0;
+    }
+    else
+    {
+        return ENOENT;
+    }
+
+}
+
+static int
+get_port_info(port_id id, struct port_info *p_info_user)
+{
+    struct kport *port;
+    struct port_info p_info_kernel;
+    int error;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    mutex_exit(&kport_mutex);
+
+    error = (port == NULL) ? ENOENT : 0;
+    if (error == 0)
+    {
+        fill_port_info(port, &p_info_kernel);
+        mutex_exit(&port->kp_interlock);
+
+        error = copyout(&p_info_kernel, p_info_user, sizeof(struct port_info));
+    }
+
+    return error;
+}
+
+static int
+get_next_port_info(pid_t pid, uint32_t *_cookie, struct port_info *p_info_user)
+{
+    struct kport *kp;
+    struct port_info p_info_kernel;
+    int error;
+    uint32_t skip, cookie;
+   
+    error = copyin(_cookie, &skip, sizeof(uint32_t));
+    if (error)
+        return error;
+
+    cookie = skip;  /* Keep the initial cookie state, will be incremented for the next run */
+
+    mutex_enter(&kport_mutex);
+   
+    LIST_FOREACH(kp, &kport_head, kp_entry)
+    {
+        if (kp->kp_owner == pid)
+        {
+            if (skip == 0)
+            {
+                mutex_enter(&kp->kp_interlock);
+                mutex_exit(&kport_mutex);
+                fill_port_info(kp, &p_info_kernel);
+                mutex_exit(&kp->kp_interlock);
+                
+                error = copyout(&p_info_kernel, p_info_user, sizeof(struct port_info));
+                if (error)
+                    return error;
+
+                cookie++;
+                error = copyout(&cookie, _cookie, sizeof(uint32_t));
+                if (error)
+                    return error;
+
+                return 0;
+            }
+            else
+            {
+                skip--;
+            }
+        }
+    }
+
+    /* Nothing found */
+
+    mutex_exit(&kport_mutex);
+
+    error = ENOENT;
+    
+    return error;
+}
+
+static int
+port_buffer_size_etc(struct lwp *l, port_id id, uint32_t flags, int64_t timeout, ssize_t *size)
+{
+    struct kport *port;
+    struct kp_msg *msg;
+    // kauth_cred_t uc;
+    int error, t;
+
+    // uc = l->l_cred;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+    mutex_exit(&kport_mutex);
+
+    if (port->kp_state == KP_DELETED)
+    {
+        mutex_exit(&port->kp_interlock);
+        return ENOENT;
+    }
+
+    if (port->kp_nmsg == 0)
+    {
+        if ((flags & PORT_TIMEOUT) && (timeout == 0))
+        {
+            mutex_exit(&port->kp_interlock);
+            return EAGAIN;
+        }
+        else
+        {
+            t = (flags & PORT_TIMEOUT) ? timeout : 0;
+            port->kp_waiters++;
+            error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
+            port->kp_waiters--;
+            if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
+            {
+                kport_delete_physical(port);
+                return ENOENT;
+            }
+            if (error || (port->kp_state == KP_DELETED))
+            {
+                error = (error == EWOULDBLOCK) ? ETIMEDOUT : ENOENT;
+                mutex_exit(&port->kp_interlock);
+                return error;
+            }
+        }
+    }
+
+    msg = SIMPLEQ_FIRST(&port->kp_msgq);
+    *size = msg->kp_msg_size;
+
+    mutex_exit(&port->kp_interlock);
+
+    return 0;
+}
+
+static int
+kport_count(port_id id, int *count)
+{
+    struct kport *port;
+    int error;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    mutex_exit(&kport_mutex);
+
+    error = (port == NULL) ? ENOENT : 0;
+    if (error == 0)
+    {
+        *count = port->kp_nmsg;
+        mutex_exit(&port->kp_interlock);
+    }
+    return error;
+}
+
+static int
+kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size, uint32_t flags, int64_t timeout, ssize_t *bytes_read)
+{
+    struct kport *port;
+    struct kp_msg *msg;
+    // kauth_cred_t uc;
+    int error, copyout_size, t;
+
+    // uc = l->l_cred;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+    mutex_exit(&kport_mutex);
+
+    if (port->kp_state == KP_DELETED)
+    {
+        mutex_exit(&port->kp_interlock);
+        return ENOENT;
+    }
+
+    if (port->kp_nmsg == 0)
+    {
+        if ((flags & PORT_TIMEOUT) && (timeout == 0))
+        {
+            mutex_exit(&port->kp_interlock);
+            return EAGAIN;
+        }
+        else
+        {
+            t = (flags & PORT_TIMEOUT) ? timeout : 0;
+            port->kp_waiters++;
+            error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
+            port->kp_waiters--;
+            if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
+            {
+                kport_delete_physical(port);
+                return ENOENT;
+            }
+            if (error || (port->kp_state == KP_DELETED))
+            {
+                error = (error == EWOULDBLOCK) ? ETIMEDOUT : ENOENT;
+                mutex_exit(&port->kp_interlock);
+                return error;
+            }
+        }
+    }
+
+    msg = SIMPLEQ_FIRST(&port->kp_msgq);
+
+    error = copyout(msg->kp_msg_code, code, sizeof(*code));
+    if (error)
+    {
+        mutex_exit(&port->kp_interlock);
+        return error;
+    }
+
+    copyout_size = MIN(msg->kp_msg_size, size);
+    if (copyout_size) /* message can have zero size or caller provided a zero-size buffer */
+    {
+        error = copyout(msg->kp_msg_buffer, data, copyout_size);
+        if (error)
+        {
+            mutex_exit(&port->kp_interlock);
+            return error;
+        }
+    }
+
+    SIMPLEQ_REMOVE_HEAD(&port->kp_msgq, kp_msg_next);
+
+    if (msg->kp_msg_size)
+        kmem_free(msg->kp_msg_buffer, msg->kp_msg_size);
+
+    kmem_free(msg, sizeof(*msg));
+    
+    port->kp_nmsg--;
+    port->kp_total_count++;
+    cv_signal(&port->kp_rdcv);
+    mutex_exit(&port->kp_interlock);
+
+    *bytes_read = copyout_size;
+
+    return 0;
+}
+
+static int
+set_port_owner(port_id id, pid_t new_pid)
+{
+    struct kport *port;
+    struct proc *new_proc;
+    int error;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+    mutex_exit(&kport_mutex);
+
+
+    if (port->kp_owner == new_pid)
+    {
+        mutex_exit(&port->kp_interlock);
+        return 0;
+    }
+
+    mutex_enter(&proc_lock);
+    new_proc = proc_find(new_pid);
+
+    if (!new_proc)
+    {
+        mutex_exit(&proc_lock);
+        mutex_exit(&port->kp_interlock);
+
+        return ESRCH;
+    }
+
+    /* Everything is valid, change ownership */
+
+    mutex_exit(&proc_lock);
+
+    port->kp_owner = new_pid;
+    mutex_exit(&port->kp_interlock);
+
+    return 0;
+}
+
+
+static int
+kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size, uint32_t flags, int64_t timeout)
+{
+    struct kport *port;
+    struct kp_msg *msg;
+    kauth_cred_t uc;
+    int error, t;
+
+    uc = l->l_cred;
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+    mutex_exit(&kport_mutex);
+
+    if ((port->kp_state == KP_DELETED) || (port->kp_state == KP_CLOSED))
+    {
+        mutex_exit(&port->kp_interlock);
+        return ENOENT;
+    }
+    if (size > PORT_MAX_MESSAGE_SIZE)
+    {
+        mutex_exit(&port->kp_interlock);
+        return EMSGSIZE;
+    }
+    if (port->kp_nmsg == port->kp_qlen)
+    {
+        if ((flags & PORT_TIMEOUT) && (timeout == 0))
+        {
+            mutex_exit(&port->kp_interlock);
+            return EAGAIN;
+        }
+        else
+        {
+            t = (flags & PORT_TIMEOUT) ? timeout : 0;
+            port->kp_waiters++;
+            error = cv_timedwait_sig(&port->kp_rdcv, &port->kp_interlock, mstohz(t));
+            port->kp_waiters--;
+            if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
+            {
+                kport_delete_physical(port);
+                return ENOENT;
+            }
+            if (error || (port->kp_state == KP_DELETED) || (port->kp_state == KP_CLOSED))
+            {
+                error = (error == EWOULDBLOCK) ? ETIMEDOUT : ENOENT;
+                mutex_exit(&port->kp_interlock);
+                return error;
+            }
+        }
+    }
+
+    msg = kmem_zalloc(sizeof(*msg), KM_SLEEP);
+    msg->kp_msg_code = code;
+    msg->kp_msg_size = size;
+    msg->kp_msg_sender_uid = kauth_cred_geteuid(uc);
+    msg->kp_msg_sender_gid = kauth_cred_getegid(uc);
+    msg->kp_msg_sender_pid = l->l_proc->p_pid;
+  
+    if (size)
+    {
+        msg->kp_msg_buffer = kmem_alloc(size, KM_SLEEP);
+
+        error = copyin(data, msg->kp_msg_buffer, size);
+        if (error)
+        {
+            mutex_exit(&port->kp_interlock);
+            kmem_free(msg->kp_msg_buffer, size);
+            kmem_free(msg, sizeof(*msg));
+            return error;
+        }
+    }
+
+    SIMPLEQ_INSERT_TAIL(&port->kp_msgq, msg, kp_msg_next);
+    port->kp_nmsg++;
+    cv_signal(&port->kp_wrcv);
+    mutex_exit(&port->kp_interlock);
+
+    return 0;
+}
+
+
+/* syscall functions */
+
+int sys__create_port(struct lwp *l, const struct sys__create_port_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(int32_t) queue_length;
+            syscallarg(const char *) name;
+       } */
+
+    port_id port;
+    int error;
+
+    error = kport_create(l, SCARG(uap, queue_length), SCARG(uap, name), &port);
+    if (error == 0)
+        *retval = port;
+
+    return error;
+}
+
+int sys__close_port(struct lwp *l, const struct sys__close_port_args *uap, register_t *retval)
+{
+    /* {
+             syscallarg(port_id) port_id;
+    } */
+
+    int error;
+
+    error = kport_close(SCARG(uap, port_id));
+    if (error == 0)
+        *retval = error;
+
+    return error;
+}
+
+int sys__delete_port(struct lwp *l, const struct sys__delete_port_args *uap, register_t *retval)
+{
+    /* {
+             syscallarg(port_id) port_id;
+    } */
+
+    int error;
+
+    error = kport_delete_logical(SCARG(uap, port_id));
+    if (error == 0)
+        *retval = error;
+
+    return error;
+}
+
+int sys__find_port(struct lwp *l, const struct sys__find_port_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(const char *) port_name;
+    } */
+
+    int error, id;
+
+    error = kport_find(SCARG(uap, port_name), &id);
+    if (error == 0)
+        *retval = id;
+    return error;
+}
+
+int sys__get_port_info(struct lwp *l, const struct sys__get_port_info_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id)             port_id;
+            syscallarg(struct *port_info)   info;
+    } */
+
+    int error;
+
+    error = get_port_info(SCARG(uap, port_id), SCARG(uap, info));
+    if (error == 0)
+        *retval = 0;
+    return error;
+}
+
+int sys__get_next_port_info(struct lwp *l, const struct sys__get_next_port_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(pid_t)               pid;
+            syscallarg(uint32_t)            cookie;
+            syscallarg(struct *port_info)   info;
+    } */
+
+    int error;
+
+    error = get_next_port_info(SCARG(uap, pid), SCARG(uap, cookie), SCARG(uap, info));
+    if (error == 0)
+        *retval = 0;
+    return error;
+}
+
+
+int sys__port_buffer_size(struct lwp *l, const struct sys__read_port_etc_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id) port_id;
+    } */
+
+    int error
+    ssize_t size;
+
+    error = port_buffer_size_etc(l, SCARG(uap, port_id), NULL, NULL, &size);
+    if (error == 0)
+        *retval = size;
+
+    return error;
+}
+
+int sys__port_buffer_size_etc(struct lwp *l, const struct sys__read_port_etc_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id) port_id;
+            syscallarg(uint32_t) flags;
+            syscallarg(int) timeout;
+    } */
+
+    int error
+    ssize_t size;
+
+    error = port_buffer_size_etc(l, SCARG(uap, port_id), SCARG(uap, flags), SCARG(uap, timeout), &size);
+    if (error == 0)
+        *retval = size;
+
+    return error;
+}
+
+
+
+int sys__port_count(struct lwp *l, const struct sys__port_count_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id) port_id;
+    } */
+
+    int error, count;
+
+    error = kport_count(SCARG(uap, port_id), &count);
+    if (error == 0)
+        *retval = count;
+    return error;
+}
+
+int sys__read_port(struct lwp *l, const struct sys__read_port_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id)     port_id;
+            syscallarg(int32_t*)    msg_code;
+            syscallarg(void*)       msg_buffer;
+            syscallarg(int)         buffer_size;
+    } */
+
+    int error, nread;
+
+    error = kport_read_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0, &nread);
+    if (error == 0)
+        *retval = nread;
+
+    return error;
+}
+
+int sys__read_port_etc(struct lwp *l, const struct sys__read_port_etc_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id)     port_id;
+            syscallarg(int32_t*)    msg_code;
+            syscallarg(void*)       msg_buffer;
+            syscallarg(size_t)      buffer_size;
+            syscallarg(uint32_t)    flags;
+            syscallarg(int64_t)     timeout;
+    } */
+    int error, nread;
+
+    error = kport_read_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout), &nread);
+    if (error == 0)
+        *retval = nread;
+
+    return error;
+}
+
+int sys__set_port_owner(struct lwp *l, const struct sys__set_port_owner_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id) port_id;
+            syscallarg(pid_t)   pid;
+    } */
+
+    int error;
+
+    error = set_port_owner(SCARG(uap, port_id), SCARG(uap, pid));
+    if (error == 0)
+        *retval = 0;
+    return error;
+}
+
+int sys__write_port(struct lwp *l, const struct sys__write_port_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id) port_id;
+            syscallarg(int32_t) msg_code;
+            syscallarg(void*)   msg_buffer;
+            syscallarg(size_t)  buffer_size;
+    } */
+
+    int error;
+
+    error = kport_write_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0);
+    if (error == 0)
+        *retval = error;
+
+    return error;
+}
+
+int sys__write_port_etc(struct lwp *l, const struct sys__write_port_etc_args *uap, register_t *retval)
+{
+    /* {
+            syscallarg(port_id)     port_id;
+            syscallarg(int32_t)     msg_code;
+            syscallarg(void*)       msg_buffer;
+            syscallarg(size_t)      buffer_size;
+            syscallarg(uint32_t)    flags;
+            syscallarg(int64_t)     timeout;
+       } */
+    int error;
+
+    error = kport_write_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout));
+    if (error == 0)
+        *retval = error;
+
+    return error;
+}
