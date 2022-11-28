@@ -27,6 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+#include <sys/kernel.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/kmem.h>
@@ -121,7 +123,8 @@ fill_port_info(const struct kport *kp, struct port_info *info)
 static int
 kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_id *val)
 {
-    struct kport *ret, *search;
+    struct kport *ret;
+    struct kport *search;
     kauth_cred_t uc;
     int error;
     size_t namelen;
@@ -171,9 +174,9 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
         return ENFILE;
     }
 
-    if (__predict_false(search = kport_lookup_byname(namebuf) != NULL))
+    if (__predict_false((search = kport_lookup_byname(namebuf)) != NULL))
     {
-        KASSERT(mutex_owned(&search->kp_interlock);
+        KASSERT(mutex_owned(&search->kp_interlock));
         mutex_exit(&search->kp_interlock);
 
         mutex_exit(&kport_mutex);
@@ -183,9 +186,9 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
         return EEXIST;
     }
   
-    while (__predict_false(search = kport_lookup_byid(port_next_id) != NULL))
+    while (__predict_false((search = kport_lookup_byid(port_next_id)) != NULL))
     {
-        KASSERT(mutex_owned(&search->kp_interlock);
+        KASSERT(mutex_owned(&search->kp_interlock));
         mutex_exit(&search->kp_interlock);
         port_next_id++;
     }
@@ -333,7 +336,7 @@ kport_find(const char *name, port_id *id)
 }
 
 static int
-get_port_info(port_id id, struct port_info *p_info_user)
+kport_get_info(port_id id, struct port_info *p_info_user)
 {
     struct kport *port;
     struct port_info p_info_kernel;
@@ -356,7 +359,7 @@ get_port_info(port_id id, struct port_info *p_info_user)
 }
 
 static int
-get_next_port_info(pid_t pid, uint32_t *_cookie, struct port_info *p_info_user)
+kport_get_next_info(pid_t pid, uint32_t *_cookie, struct port_info *p_info_user)
 {
     struct kport *kp;
     struct port_info p_info_kernel;
@@ -410,7 +413,7 @@ get_next_port_info(pid_t pid, uint32_t *_cookie, struct port_info *p_info_user)
 }
 
 static int
-port_buffer_size_etc(struct lwp *l, port_id id, uint32_t flags, int64_t timeout, ssize_t *size)
+kport_buffer_size_etc(struct lwp *l, port_id id, uint32_t flags, int64_t timeout, ssize_t *size)
 {
     struct kport *port;
     struct kp_msg *msg;
@@ -542,7 +545,7 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
 
     msg = SIMPLEQ_FIRST(&port->kp_msgq);
 
-    error = copyout(msg->kp_msg_code, code, sizeof(*code));
+    error = copyout(&msg->kp_msg_code, code, sizeof(*code));
     if (error)
     {
         mutex_exit(&port->kp_interlock);
@@ -578,11 +581,10 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
 }
 
 static int
-set_port_owner(port_id id, pid_t new_pid)
+kport_set_owner(port_id id, pid_t new_pid)
 {
     struct kport *port;
     struct proc *new_proc;
-    int error;
 
     mutex_enter(&kport_mutex);
     port = kport_lookup_byid(id);
@@ -730,12 +732,12 @@ int sys__create_port(struct lwp *l, const struct sys__create_port_args *uap, reg
 int sys__close_port(struct lwp *l, const struct sys__close_port_args *uap, register_t *retval)
 {
     /* {
-             syscallarg(port_id) port_id;
+             syscallarg(port_id) port;
     } */
 
     int error;
 
-    error = kport_close(SCARG(uap, port_id));
+    error = kport_close(SCARG(uap, port));
     if (error == 0)
         *retval = error;
 
@@ -745,12 +747,12 @@ int sys__close_port(struct lwp *l, const struct sys__close_port_args *uap, regis
 int sys__delete_port(struct lwp *l, const struct sys__delete_port_args *uap, register_t *retval)
 {
     /* {
-             syscallarg(port_id) port_id;
+             syscallarg(port_id) port;
     } */
 
     int error;
 
-    error = kport_delete_logical(SCARG(uap, port_id));
+    error = kport_delete_logical(SCARG(uap, port));
     if (error == 0)
         *retval = error;
 
@@ -774,63 +776,63 @@ int sys__find_port(struct lwp *l, const struct sys__find_port_args *uap, registe
 int sys__get_port_info(struct lwp *l, const struct sys__get_port_info_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id)             port_id;
+            syscallarg(port_id)             port;
             syscallarg(struct *port_info)   info;
     } */
 
     int error;
 
-    error = get_port_info(SCARG(uap, port_id), SCARG(uap, info));
+    error = kport_get_info(SCARG(uap, port), SCARG(uap, info));
     if (error == 0)
         *retval = 0;
     return error;
 }
 
-int sys__get_next_port_info(struct lwp *l, const struct sys__get_next_port_args *uap, register_t *retval)
+int sys__get_next_port_info(struct lwp *l, const struct sys__get_next_port_info_args *uap, register_t *retval)
 {
     /* {
             syscallarg(pid_t)               pid;
-            syscallarg(uint32_t)            cookie;
+            syscallarg(uint32_t)            *cookie;
             syscallarg(struct *port_info)   info;
     } */
 
     int error;
 
-    error = get_next_port_info(SCARG(uap, pid), SCARG(uap, cookie), SCARG(uap, info));
+    error = kport_get_next_info(SCARG(uap, pid), SCARG(uap, cookie), SCARG(uap, info));
     if (error == 0)
         *retval = 0;
     return error;
 }
 
 
-int sys__port_buffer_size(struct lwp *l, const struct sys__read_port_etc_args *uap, register_t *retval)
+int sys__port_buffer_size(struct lwp *l, const struct sys__port_buffer_size_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id) port_id;
+            syscallarg(port_id) port;
     } */
 
-    int error
+    int error;
     ssize_t size;
 
-    error = port_buffer_size_etc(l, SCARG(uap, port_id), NULL, NULL, &size);
+    error = kport_buffer_size_etc(l, SCARG(uap, port), 0, 0, &size);
     if (error == 0)
         *retval = size;
 
     return error;
 }
 
-int sys__port_buffer_size_etc(struct lwp *l, const struct sys__read_port_etc_args *uap, register_t *retval)
+int sys__port_buffer_size_etc(struct lwp *l, const struct sys__port_buffer_size_etc_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id) port_id;
+            syscallarg(port_id) port;
             syscallarg(uint32_t) flags;
             syscallarg(int) timeout;
     } */
 
-    int error
+    int error;
     ssize_t size;
 
-    error = port_buffer_size_etc(l, SCARG(uap, port_id), SCARG(uap, flags), SCARG(uap, timeout), &size);
+    error = kport_buffer_size_etc(l, SCARG(uap, port), SCARG(uap, flags), SCARG(uap, timeout), &size);
     if (error == 0)
         *retval = size;
 
@@ -842,12 +844,12 @@ int sys__port_buffer_size_etc(struct lwp *l, const struct sys__read_port_etc_arg
 int sys__port_count(struct lwp *l, const struct sys__port_count_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id) port_id;
+            syscallarg(port_id) port;
     } */
 
     int error, count;
 
-    error = kport_count(SCARG(uap, port_id), &count);
+    error = kport_count(SCARG(uap, port), &count);
     if (error == 0)
         *retval = count;
     return error;
@@ -856,15 +858,16 @@ int sys__port_count(struct lwp *l, const struct sys__port_count_args *uap, regis
 int sys__read_port(struct lwp *l, const struct sys__read_port_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id)     port_id;
+            syscallarg(port_id)     port;
             syscallarg(int32_t*)    msg_code;
             syscallarg(void*)       msg_buffer;
             syscallarg(int)         buffer_size;
     } */
 
-    int error, nread;
+    int error;
+    ssize_t nread;
 
-    error = kport_read_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0, &nread);
+    error = kport_read_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0, &nread);
     if (error == 0)
         *retval = nread;
 
@@ -874,16 +877,17 @@ int sys__read_port(struct lwp *l, const struct sys__read_port_args *uap, registe
 int sys__read_port_etc(struct lwp *l, const struct sys__read_port_etc_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id)     port_id;
+            syscallarg(port_id)     port;
             syscallarg(int32_t*)    msg_code;
             syscallarg(void*)       msg_buffer;
             syscallarg(size_t)      buffer_size;
             syscallarg(uint32_t)    flags;
             syscallarg(int64_t)     timeout;
     } */
-    int error, nread;
+    int error;
+    ssize_t nread;
 
-    error = kport_read_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout), &nread);
+    error = kport_read_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout), &nread);
     if (error == 0)
         *retval = nread;
 
@@ -893,13 +897,13 @@ int sys__read_port_etc(struct lwp *l, const struct sys__read_port_etc_args *uap,
 int sys__set_port_owner(struct lwp *l, const struct sys__set_port_owner_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id) port_id;
+            syscallarg(port_id) port;
             syscallarg(pid_t)   pid;
     } */
 
     int error;
 
-    error = set_port_owner(SCARG(uap, port_id), SCARG(uap, pid));
+    error = kport_set_owner(SCARG(uap, port), SCARG(uap, pid));
     if (error == 0)
         *retval = 0;
     return error;
@@ -908,7 +912,7 @@ int sys__set_port_owner(struct lwp *l, const struct sys__set_port_owner_args *ua
 int sys__write_port(struct lwp *l, const struct sys__write_port_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id) port_id;
+            syscallarg(port_id) port;
             syscallarg(int32_t) msg_code;
             syscallarg(void*)   msg_buffer;
             syscallarg(size_t)  buffer_size;
@@ -916,7 +920,7 @@ int sys__write_port(struct lwp *l, const struct sys__write_port_args *uap, regis
 
     int error;
 
-    error = kport_write_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0);
+    error = kport_write_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0);
     if (error == 0)
         *retval = error;
 
@@ -926,7 +930,7 @@ int sys__write_port(struct lwp *l, const struct sys__write_port_args *uap, regis
 int sys__write_port_etc(struct lwp *l, const struct sys__write_port_etc_args *uap, register_t *retval)
 {
     /* {
-            syscallarg(port_id)     port_id;
+            syscallarg(port_id)     port;
             syscallarg(int32_t)     msg_code;
             syscallarg(void*)       msg_buffer;
             syscallarg(size_t)      buffer_size;
@@ -935,7 +939,7 @@ int sys__write_port_etc(struct lwp *l, const struct sys__write_port_etc_args *ua
        } */
     int error;
 
-    error = kport_write_etc(l, SCARG(uap, port_id), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout));
+    error = kport_write_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout));
     if (error == 0)
         *retval = error;
 
