@@ -130,7 +130,7 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     size_t namelen;
     char namebuf[PORT_MAX_NAME_LENGTH];
 
-    if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH)
+    if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH || *name == '\0')
         return EINVAL;
 
     error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
