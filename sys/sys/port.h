@@ -33,6 +33,7 @@
 #ifndef _SYS_PORT_H
 #define _SYS_PORT_H
 
+
 #define PORT_MAX_NAME_LENGTH 32
 
 typedef int32_t port_id;
@@ -62,7 +63,7 @@ ssize_t		port_buffer_size_etc(port_id, uint32_t,	int64_t);
 int   		port_count(port_id);
 int     	set_port_owner(port_id, pid_t);
 int       get_port_info(port_id , port_info *, size_t);
-int       get_next_port_info(pid_t, uint32 *, port_info *);
+int       get_next_port_info(pid_t, uint32_t *, port_info *);
 
 #ifdef _KERNEL
 
@@ -74,6 +75,12 @@ enum flags {
     PORT_TIMEOUT               = 0x8,
     PORT_RELATIVE_TIMEOUT      = 0x8,
     PORT_ABSOLUTE_TIMEOUT      = 0x10
+};
+
+enum port_state {
+    KP_ACTIVE,
+    KP_CLOSED,
+    KP_DELETED
 };
 
 struct kport {

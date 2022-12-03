@@ -1,4 +1,4 @@
-/* $NetBSD: rump_syscalls.c,v 1.157 2021/11/01 05:26:28 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call vector and marshalling for rump.
@@ -15,7 +15,7 @@
 
 #ifdef __NetBSD__
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: rump_syscalls.c,v 1.157 2021/11/01 05:26:28 thorpej Exp $");
+__KERNEL_RCSID(0, "$NetBSD$");
 
 #include <sys/fstypes.h>
 #include <sys/proc.h>
@@ -8571,53 +8571,2087 @@ struct sysent rump_sysent[] = {
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 	},		/* 499 = lpathconf */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 500 = filler */
+},		/* 500 = _create_port */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 501 = _close_port */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 502 = _delete_port */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 503 = _find_port */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 504 = _get_port_info */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 505 = _get_next_port_info */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 506 = _port_buffer_size */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 507 = _port_buffer_size_etc */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 508 = _port_count */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 509 = _read_port */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 510 = _read_port_etc */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 511 = _set_port_owner */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 512 = _write_port */
+	{
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+},		/* 513 = _write_port_etc */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 501 = filler */
+	},		/* 514 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 502 = filler */
+	},		/* 515 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 503 = filler */
+	},		/* 516 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 504 = filler */
+	},		/* 517 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 505 = filler */
+	},		/* 518 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 506 = filler */
+	},		/* 519 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 507 = filler */
+	},		/* 520 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 508 = filler */
+	},		/* 521 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 509 = filler */
+	},		/* 522 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 510 = filler */
+	},		/* 523 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 511 = filler */
+	},		/* 524 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 525 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 526 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 527 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 528 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 529 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 530 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 531 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 532 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 533 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 534 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 535 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 536 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 537 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 538 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 539 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 540 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 541 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 542 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 543 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 544 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 545 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 546 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 547 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 548 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 549 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 550 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 551 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 552 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 553 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 554 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 555 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 556 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 557 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 558 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 559 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 560 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 561 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 562 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 563 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 564 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 565 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 566 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 567 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 568 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 569 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 570 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 571 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 572 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 573 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 574 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 575 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 576 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 577 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 578 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 579 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 580 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 581 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 582 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 583 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 584 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 585 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 586 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 587 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 588 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 589 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 590 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 591 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 592 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 593 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 594 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 595 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 596 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 597 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 598 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 599 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 600 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 601 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 602 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 603 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 604 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 605 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 606 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 607 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 608 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 609 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 610 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 611 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 612 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 613 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 614 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 615 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 616 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 617 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 618 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 619 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 620 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 621 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 622 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 623 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 624 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 625 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 626 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 627 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 628 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 629 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 630 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 631 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 632 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 633 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 634 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 635 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 636 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 637 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 638 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 639 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 640 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 641 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 642 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 643 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 644 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 645 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 646 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 647 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 648 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 649 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 650 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 651 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 652 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 653 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 654 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 655 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 656 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 657 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 658 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 659 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 660 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 661 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 662 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 663 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 664 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 665 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 666 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 667 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 668 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 669 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 670 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 671 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 672 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 673 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 674 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 675 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 676 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 677 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 678 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 679 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 680 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 681 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 682 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 683 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 684 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 685 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 686 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 687 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 688 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 689 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 690 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 691 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 692 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 693 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 694 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 695 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 696 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 697 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 698 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 699 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 700 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 701 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 702 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 703 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 704 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 705 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 706 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 707 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 708 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 709 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 710 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 711 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 712 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 713 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 714 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 715 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 716 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 717 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 718 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 719 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 720 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 721 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 722 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 723 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 724 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 725 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 726 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 727 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 728 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 729 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 730 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 731 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 732 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 733 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 734 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 735 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 736 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 737 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 738 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 739 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 740 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 741 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 742 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 743 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 744 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 745 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 746 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 747 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 748 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 749 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 750 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 751 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 752 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 753 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 754 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 755 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 756 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 757 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 758 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 759 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 760 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 761 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 762 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 763 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 764 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 765 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 766 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 767 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 768 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 769 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 770 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 771 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 772 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 773 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 774 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 775 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 776 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 777 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 778 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 779 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 780 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 781 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 782 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 783 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 784 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 785 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 786 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 787 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 788 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 789 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 790 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 791 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 792 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 793 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 794 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 795 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 796 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 797 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 798 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 799 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 800 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 801 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 802 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 803 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 804 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 805 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 806 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 807 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 808 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 809 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 810 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 811 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 812 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 813 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 814 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 815 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 816 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 817 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 818 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 819 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 820 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 821 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 822 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 823 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 824 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 825 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 826 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 827 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 828 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 829 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 830 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 831 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 832 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 833 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 834 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 835 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 836 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 837 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 838 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 839 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 840 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 841 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 842 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 843 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 844 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 845 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 846 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 847 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 848 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 849 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 850 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 851 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 852 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 853 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 854 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 855 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 856 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 857 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 858 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 859 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 860 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 861 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 862 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 863 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 864 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 865 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 866 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 867 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 868 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 869 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 870 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 871 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 872 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 873 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 874 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 875 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 876 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 877 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 878 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 879 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 880 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 881 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 882 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 883 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 884 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 885 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 886 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 887 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 888 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 889 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 890 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 891 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 892 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 893 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 894 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 895 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 896 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 897 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 898 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 899 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 900 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 901 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 902 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 903 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 904 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 905 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 906 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 907 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 908 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 909 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 910 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 911 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 912 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 913 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 914 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 915 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 916 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 917 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 918 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 919 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 920 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 921 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 922 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 923 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 924 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 925 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 926 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 927 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 928 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 929 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 930 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 931 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 932 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 933 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 934 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 935 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 936 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 937 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 938 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 939 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 940 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 941 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 942 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 943 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 944 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 945 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 946 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 947 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 948 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 949 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 950 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 951 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 952 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 953 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 954 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 955 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 956 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 957 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 958 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 959 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 960 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 961 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 962 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 963 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 964 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 965 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 966 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 967 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 968 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 969 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 970 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 971 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 972 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 973 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 974 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 975 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 976 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 977 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 978 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 979 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 980 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 981 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 982 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 983 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 984 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 985 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 986 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 987 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 988 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 989 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 990 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 991 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 992 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 993 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 994 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 995 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 996 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 997 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 998 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 999 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1000 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1001 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1002 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1003 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1004 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1005 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1006 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1007 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1008 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1009 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1010 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1011 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1012 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1013 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1014 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1015 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1016 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1017 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1018 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1019 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1020 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1021 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1022 = filler */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 1023 = filler */
 };
 
 const uint32_t rump_sysent_nomodbits[] = {
@@ -8637,6 +10671,22 @@ const uint32_t rump_sysent_nomodbits[] = {
 	0x1c470040,	/* syscalls 416-447 */
 	0x00000000,	/* syscalls 448-479 */
 	0x00000000,	/* syscalls 480-511 */
+	0x00000000,	/* syscalls 512-543 */
+	0x00000000,	/* syscalls 544-575 */
+	0x00000000,	/* syscalls 576-607 */
+	0x00000000,	/* syscalls 608-639 */
+	0x00000000,	/* syscalls 640-671 */
+	0x00000000,	/* syscalls 672-703 */
+	0x00000000,	/* syscalls 704-735 */
+	0x00000000,	/* syscalls 736-767 */
+	0x00000000,	/* syscalls 768-799 */
+	0x00000000,	/* syscalls 800-831 */
+	0x00000000,	/* syscalls 832-863 */
+	0x00000000,	/* syscalls 864-895 */
+	0x00000000,	/* syscalls 896-927 */
+	0x00000000,	/* syscalls 928-959 */
+	0x00000000,	/* syscalls 960-991 */
+	0x00000000,	/* syscalls 992-1023 */
 };
 CTASSERT(__arraycount(rump_sysent) == SYS_NSYSENT);
 __strong_alias(rumpns_sysent,rump_sysent);

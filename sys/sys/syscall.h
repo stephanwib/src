@@ -1,4 +1,4 @@
-/* $NetBSD: syscall.h,v 1.321 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call numbers.
@@ -1404,6 +1404,48 @@
 /* syscall: "lpathconf" ret: "long" args: "const char *" "int" */
 #define	SYS_lpathconf	499
 
-#define	SYS_MAXSYSCALL	500
-#define	SYS_NSYSENT	512
+/* syscall: "_create_port" ret: "port_id" args: "int32_t" "const char *" */
+#define	SYS__create_port	500
+
+/* syscall: "_close_port" ret: "int" args: "port_id" */
+#define	SYS__close_port	501
+
+/* syscall: "_delete_port" ret: "int" args: "port_id" */
+#define	SYS__delete_port	502
+
+/* syscall: "_find_port" ret: "port_id" args: "const char *" */
+#define	SYS__find_port	503
+
+/* syscall: "_get_port_info" ret: "int" args: "port_id" "struct port_info *" */
+#define	SYS__get_port_info	504
+
+/* syscall: "_get_next_port_info" ret: "int" args: "pid_t" "uint32_t *" "struct port_info *" */
+#define	SYS__get_next_port_info	505
+
+/* syscall: "_port_buffer_size" ret: "ssize_t" args: "port_id" */
+#define	SYS__port_buffer_size	506
+
+/* syscall: "_port_buffer_size_etc" ret: "ssize_t" args: "port_id" "uint32_t" "int64_t" */
+#define	SYS__port_buffer_size_etc	507
+
+/* syscall: "_port_count" ret: "int" args: "port_id" */
+#define	SYS__port_count	508
+
+/* syscall: "_read_port" ret: "ssize_t" args: "port_id" "int32_t *" "void *" "size_t" */
+#define	SYS__read_port	509
+
+/* syscall: "_read_port_etc" ret: "ssize_t" args: "port_id" "int32_t *" "void *" "size_t" "uint32_t" "int64_t" */
+#define	SYS__read_port_etc	510
+
+/* syscall: "_set_port_owner" ret: "int" args: "port_id" "pid_t" */
+#define	SYS__set_port_owner	511
+
+/* syscall: "_write_port" ret: "int" args: "port_id" "int32_t" "void *" "size_t" */
+#define	SYS__write_port	512
+
+/* syscall: "_write_port_etc" ret: "int" args: "port_id" "int" "void *" "size_t" "uint32_t" "int64_t" */
+#define	SYS__write_port_etc	513
+
+#define	SYS_MAXSYSCALL	514
+#define	SYS_NSYSENT	1024
 #endif /* _SYS_SYSCALL_H_ */

@@ -1,4 +1,4 @@
-/* $NetBSD: systrace_args.c,v 1.49 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call argument to DTrace register array conversion.
@@ -3885,6 +3885,127 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		uarg[0] = (intptr_t) SCARG(p, path); /* const char * */
 		iarg[1] = SCARG(p, name); /* int */
 		*n_args = 2;
+		break;
+	}
+	/* sys__create_port */
+	case 500: {
+		const struct sys__create_port_args *p = params;
+		iarg[0] = SCARG(p, queue_length); /* int32_t */
+		uarg[1] = (intptr_t) SCARG(p, name); /* const char * */
+		*n_args = 2;
+		break;
+	}
+	/* sys__close_port */
+	case 501: {
+		const struct sys__close_port_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__delete_port */
+	case 502: {
+		const struct sys__delete_port_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__find_port */
+	case 503: {
+		const struct sys__find_port_args *p = params;
+		uarg[0] = (intptr_t) SCARG(p, port_name); /* const char * */
+		*n_args = 1;
+		break;
+	}
+	/* sys__get_port_info */
+	case 504: {
+		const struct sys__get_port_info_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		uarg[1] = (intptr_t) SCARG(p, info); /* struct port_info * */
+		*n_args = 2;
+		break;
+	}
+	/* sys__get_next_port_info */
+	case 505: {
+		const struct sys__get_next_port_info_args *p = params;
+		iarg[0] = SCARG(p, pid); /* pid_t */
+		uarg[1] = (intptr_t) SCARG(p, cookie); /* uint32_t * */
+		uarg[2] = (intptr_t) SCARG(p, info); /* struct port_info * */
+		*n_args = 3;
+		break;
+	}
+	/* sys__port_buffer_size */
+	case 506: {
+		const struct sys__port_buffer_size_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__port_buffer_size_etc */
+	case 507: {
+		const struct sys__port_buffer_size_etc_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		uarg[1] = SCARG(p, flags); /* uint32_t */
+		iarg[2] = SCARG(p, timeout); /* int64_t */
+		*n_args = 3;
+		break;
+	}
+	/* sys__port_count */
+	case 508: {
+		const struct sys__port_count_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__read_port */
+	case 509: {
+		const struct sys__read_port_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		uarg[1] = (intptr_t) SCARG(p, msg_code); /* int32_t * */
+		uarg[2] = (intptr_t) SCARG(p, msg_buffer); /* void * */
+		uarg[3] = SCARG(p, buffer_size); /* size_t */
+		*n_args = 4;
+		break;
+	}
+	/* sys__read_port_etc */
+	case 510: {
+		const struct sys__read_port_etc_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		uarg[1] = (intptr_t) SCARG(p, msg_code); /* int32_t * */
+		uarg[2] = (intptr_t) SCARG(p, msg_buffer); /* void * */
+		uarg[3] = SCARG(p, buffer_size); /* size_t */
+		uarg[4] = SCARG(p, flags); /* uint32_t */
+		iarg[5] = SCARG(p, timeout); /* int64_t */
+		*n_args = 6;
+		break;
+	}
+	/* sys__set_port_owner */
+	case 511: {
+		const struct sys__set_port_owner_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		iarg[1] = SCARG(p, pid); /* pid_t */
+		*n_args = 2;
+		break;
+	}
+	/* sys__write_port */
+	case 512: {
+		const struct sys__write_port_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		iarg[1] = SCARG(p, msg_code); /* int32_t */
+		uarg[2] = (intptr_t) SCARG(p, msg_buffer); /* void * */
+		uarg[3] = SCARG(p, buffer_size); /* size_t */
+		*n_args = 4;
+		break;
+	}
+	/* sys__write_port_etc */
+	case 513: {
+		const struct sys__write_port_etc_args *p = params;
+		iarg[0] = SCARG(p, port); /* port_id */
+		iarg[1] = SCARG(p, msg_code); /* int */
+		uarg[2] = (intptr_t) SCARG(p, msg_buffer); /* void * */
+		uarg[3] = SCARG(p, buffer_size); /* size_t */
+		uarg[4] = SCARG(p, flags); /* uint32_t */
+		iarg[5] = SCARG(p, timeout); /* int64_t */
+		*n_args = 6;
 		break;
 	}
 	default:
@@ -10492,6 +10613,215 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
+	/* sys__create_port */
+	case 500:
+		switch(ndx) {
+		case 0:
+			p = "int32_t";
+			break;
+		case 1:
+			p = "const char *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__close_port */
+	case 501:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__delete_port */
+	case 502:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__find_port */
+	case 503:
+		switch(ndx) {
+		case 0:
+			p = "const char *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_port_info */
+	case 504:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "struct port_info *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_next_port_info */
+	case 505:
+		switch(ndx) {
+		case 0:
+			p = "pid_t";
+			break;
+		case 1:
+			p = "uint32_t *";
+			break;
+		case 2:
+			p = "struct port_info *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__port_buffer_size */
+	case 506:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__port_buffer_size_etc */
+	case 507:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "uint32_t";
+			break;
+		case 2:
+			p = "int64_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__port_count */
+	case 508:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__read_port */
+	case 509:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "int32_t *";
+			break;
+		case 2:
+			p = "void *";
+			break;
+		case 3:
+			p = "size_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__read_port_etc */
+	case 510:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "int32_t *";
+			break;
+		case 2:
+			p = "void *";
+			break;
+		case 3:
+			p = "size_t";
+			break;
+		case 4:
+			p = "uint32_t";
+			break;
+		case 5:
+			p = "int64_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__set_port_owner */
+	case 511:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "pid_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__write_port */
+	case 512:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "int32_t";
+			break;
+		case 2:
+			p = "void *";
+			break;
+		case 3:
+			p = "size_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__write_port_etc */
+	case 513:
+		switch(ndx) {
+		case 0:
+			p = "port_id";
+			break;
+		case 1:
+			p = "int";
+			break;
+		case 2:
+			p = "void *";
+			break;
+		case 3:
+			p = "size_t";
+			break;
+		case 4:
+			p = "uint32_t";
+			break;
+		case 5:
+			p = "int64_t";
+			break;
+		default:
+			break;
+		};
+		break;
 	default:
 		break;
 	};
@@ -12693,6 +13023,76 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 	case 499:
 		if (ndx == 0 || ndx == 1)
 			p = "long";
+		break;
+	/* sys__create_port */
+	case 500:
+		if (ndx == 0 || ndx == 1)
+			p = "port_id";
+		break;
+	/* sys__close_port */
+	case 501:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__delete_port */
+	case 502:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__find_port */
+	case 503:
+		if (ndx == 0 || ndx == 1)
+			p = "port_id";
+		break;
+	/* sys__get_port_info */
+	case 504:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__get_next_port_info */
+	case 505:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__port_buffer_size */
+	case 506:
+		if (ndx == 0 || ndx == 1)
+			p = "ssize_t";
+		break;
+	/* sys__port_buffer_size_etc */
+	case 507:
+		if (ndx == 0 || ndx == 1)
+			p = "ssize_t";
+		break;
+	/* sys__port_count */
+	case 508:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__read_port */
+	case 509:
+		if (ndx == 0 || ndx == 1)
+			p = "ssize_t";
+		break;
+	/* sys__read_port_etc */
+	case 510:
+		if (ndx == 0 || ndx == 1)
+			p = "ssize_t";
+		break;
+	/* sys__set_port_owner */
+	case 511:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__write_port */
+	case 512:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__write_port_etc */
+	case 513:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
 		break;
 	default:
 		break;

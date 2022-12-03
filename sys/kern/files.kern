@@ -193,6 +193,7 @@ file	kern/uipc_domain.c		kern
 file	kern/uipc_mbuf.c		kern
 file	kern/uipc_mbufdebug.c		kern & ether & ddb
 file	net/link_proto.c		kern	# XXX
+file    kern/uipc_port.c        kern
 file	kern/uipc_proto.c		kern
 file	kern/uipc_sem.c			kern
 file	kern/uipc_socket.c		kern

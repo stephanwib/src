@@ -622,6 +622,9 @@ main(void)
 	pipe_init();
 #endif
 
+	/* Initialize ports */
+	kport_init();
+
 #ifdef KTRACE
 	/* Initialize ktrace. */
 	ktrinit();

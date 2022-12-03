@@ -1,4 +1,4 @@
-/* $NetBSD: syscallargs.h,v 1.305 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call argument lists.
@@ -15,6 +15,7 @@
 #include <sys/mount.h>
 #include <sys/sched.h>
 #include <sys/acl.h>
+#include <sys/port.h>
 #endif
 
 #include <sys/socket.h>
@@ -3356,6 +3357,127 @@ struct sys_lpathconf_args {
 };
 check_syscall_args(sys_lpathconf)
 
+#ifndef RUMP_CLIENT
+struct sys__create_port_args {
+	syscallarg(int32_t) queue_length;
+	syscallarg(const char *) name;
+};
+check_syscall_args(sys__create_port)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__close_port_args {
+	syscallarg(port_id) port;
+};
+check_syscall_args(sys__close_port)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__delete_port_args {
+	syscallarg(port_id) port;
+};
+check_syscall_args(sys__delete_port)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__find_port_args {
+	syscallarg(const char *) port_name;
+};
+check_syscall_args(sys__find_port)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_port_info_args {
+	syscallarg(port_id) port;
+	syscallarg(struct port_info *) info;
+};
+check_syscall_args(sys__get_port_info)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_next_port_info_args {
+	syscallarg(pid_t) pid;
+	syscallarg(uint32_t *) cookie;
+	syscallarg(struct port_info *) info;
+};
+check_syscall_args(sys__get_next_port_info)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__port_buffer_size_args {
+	syscallarg(port_id) port;
+};
+check_syscall_args(sys__port_buffer_size)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__port_buffer_size_etc_args {
+	syscallarg(port_id) port;
+	syscallarg(uint32_t) flags;
+	syscallarg(int64_t) timeout;
+};
+check_syscall_args(sys__port_buffer_size_etc)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__port_count_args {
+	syscallarg(port_id) port;
+};
+check_syscall_args(sys__port_count)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__read_port_args {
+	syscallarg(port_id) port;
+	syscallarg(int32_t *) msg_code;
+	syscallarg(void *) msg_buffer;
+	syscallarg(size_t) buffer_size;
+};
+check_syscall_args(sys__read_port)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__read_port_etc_args {
+	syscallarg(port_id) port;
+	syscallarg(int32_t *) msg_code;
+	syscallarg(void *) msg_buffer;
+	syscallarg(size_t) buffer_size;
+	syscallarg(uint32_t) flags;
+	syscallarg(int64_t) timeout;
+};
+check_syscall_args(sys__read_port_etc)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__set_port_owner_args {
+	syscallarg(port_id) port;
+	syscallarg(pid_t) pid;
+};
+check_syscall_args(sys__set_port_owner)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__write_port_args {
+	syscallarg(port_id) port;
+	syscallarg(int32_t) msg_code;
+	syscallarg(void *) msg_buffer;
+	syscallarg(size_t) buffer_size;
+};
+check_syscall_args(sys__write_port)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__write_port_etc_args {
+	syscallarg(port_id) port;
+	syscallarg(int) msg_code;
+	syscallarg(void *) msg_buffer;
+	syscallarg(size_t) buffer_size;
+	syscallarg(uint32_t) flags;
+	syscallarg(int64_t) timeout;
+};
+check_syscall_args(sys__write_port_etc)
+#endif /* !RUMP_CLIENT */
+
 /*
  * System call prototypes.
  */
@@ -4279,6 +4401,34 @@ int	sys___acl_aclcheck_file(struct lwp *, const struct sys___acl_aclcheck_file_a
 int	sys___acl_aclcheck_fd(struct lwp *, const struct sys___acl_aclcheck_fd_args *, register_t *);
 
 int	sys_lpathconf(struct lwp *, const struct sys_lpathconf_args *, register_t *);
+
+int	sys__create_port(struct lwp *, const struct sys__create_port_args *, register_t *);
+
+int	sys__close_port(struct lwp *, const struct sys__close_port_args *, register_t *);
+
+int	sys__delete_port(struct lwp *, const struct sys__delete_port_args *, register_t *);
+
+int	sys__find_port(struct lwp *, const struct sys__find_port_args *, register_t *);
+
+int	sys__get_port_info(struct lwp *, const struct sys__get_port_info_args *, register_t *);
+
+int	sys__get_next_port_info(struct lwp *, const struct sys__get_next_port_info_args *, register_t *);
+
+int	sys__port_buffer_size(struct lwp *, const struct sys__port_buffer_size_args *, register_t *);
+
+int	sys__port_buffer_size_etc(struct lwp *, const struct sys__port_buffer_size_etc_args *, register_t *);
+
+int	sys__port_count(struct lwp *, const struct sys__port_count_args *, register_t *);
+
+int	sys__read_port(struct lwp *, const struct sys__read_port_args *, register_t *);
+
+int	sys__read_port_etc(struct lwp *, const struct sys__read_port_etc_args *, register_t *);
+
+int	sys__set_port_owner(struct lwp *, const struct sys__set_port_owner_args *, register_t *);
+
+int	sys__write_port(struct lwp *, const struct sys__write_port_args *, register_t *);
+
+int	sys__write_port_etc(struct lwp *, const struct sys__write_port_etc_args *, register_t *);
 
 #endif /* !RUMP_CLIENT */
 #endif /* _SYS_SYSCALLARGS_H_ */

@@ -60,6 +60,7 @@
 #include <sys/idtype.h>
 #include <sys/syscallargs.h>
 #include <sys/acl.h>
+#include <sys/port.h>
 
 %%
 
@@ -1054,14 +1055,14 @@
 502 STD		{ int|sys||_delete_port(port_id port); }
 503 STD		{ port_id|sys||_find_port(const char *port_name); }
 504 STD		{ int|sys||_get_port_info(port_id port, struct port_info *info); }
-505 STD		{ int|sys||_get_next_port_info(pid_t pid, uint32_t cookie, struct port_info *info); }
+505 STD		{ int|sys||_get_next_port_info(pid_t pid, uint32_t *cookie, struct port_info *info); }
 506 STD		{ ssize_t|sys||_port_buffer_size(port_id port); }
 507 STD		{ ssize_t|sys||_port_buffer_size_etc(port_id port, uint32_t flags, int64_t timeout); }
 508 STD		{ int|sys||_port_count(port_id port); }
 509 STD		{ ssize_t|sys||_read_port(port_id port, int32_t *msg_code, void *msg_buffer, size_t buffer_size); }
 510 STD		{ ssize_t|sys||_read_port_etc(port_id port, int32_t *msg_code, void *msg_buffer, size_t buffer_size, \
-						    uint32_t flags, int64_t timeout); }
+				uint32_t flags, int64_t timeout); }
 511 STD		{ int|sys||_set_port_owner(port_id port, pid_t pid); }
 512 STD		{ int|sys||_write_port(port_id port, int32_t msg_code, void *msg_buffer, size_t buffer_size); }
 513 STD		{ int|sys||_write_port_etc(port_id port, int msg_code, void *msg_buffer, size_t buffer_size, \
-			    			uint32_t flags, int64_t timeout); }
+			    uint32_t flags, int64_t timeout); }
