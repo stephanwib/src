@@ -615,9 +615,9 @@ kport_set_owner(port_id id, pid_t new_pid)
 
     /* Everything is valid, change ownership */
 
-    mutex_exit(&proc_lock);
-
     port->kp_owner = new_pid;
+
+    mutex_exit(&proc_lock);
     mutex_exit(&port->kp_interlock);
 
     return 0;
