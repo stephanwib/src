@@ -60,7 +60,7 @@ void	syscallemu_setsce(struct proc *, struct syscallemu_data *);
 void *	md_syscallemu(struct proc *);
 
 /* syscall: "syscallemu" ret: "int" args: "uintptr_t" "uintptr_t" */
-#define	SYS_syscallemu		511
+#define	SYS_syscallemu		1023
 
 struct sys_syscallemu_args {
 	syscallarg(uintptr_t)	user_start;
