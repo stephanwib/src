@@ -159,7 +159,12 @@ ASM=\
 		____semctl50.S __timer_settime50.S \
 	timerfd_create.S timerfd_gettime.S timerfd_settime.S \
 	umask.S undelete.S unlink.S unlinkat.S unmount.S __utimes50.S \
-		utimensat.S utrace.S uuidgen.S
+		utimensat.S utrace.S uuidgen.S \
+	_close_port.S _create_port.S _delete_port.S _find_port.S \
+	_get_next_port_info.S _get_port_info.S _port_buffer_size.S \
+	_port_buffer_size_etc.S _port_count.S _read_port.S \
+	_read_port_etc.S _set_port_owner.S _write_port.S \
+	_write_port_etc.S
 
 # sa compat syscalls
 SAASM+=	sa_register.S sa_stacks.S sa_enable.S sa_setconcurrency.S sa_yield.S \
