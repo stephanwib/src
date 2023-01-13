@@ -33,6 +33,8 @@
 #ifndef _SYS_PORT_H
 #define _SYS_PORT_H
 
+#include <sys/types.h>
+
 #define PORT_MAX_NAME_LENGTH 32
 
 enum flags {
@@ -53,20 +55,20 @@ typedef struct port_info {
 } port_info;
 
 
-port_id		create_port(int32_t, const char *);
-port_id		find_port(const char *);
-ssize_t		read_port(port_id, int32_t *, void *,size_t);
-ssize_t		read_port_etc(port_id, int32_t *, void *,	size_t, uint32_t, int64_t);
-int     	write_port(port_id, int32_t, const void *, size_t);
-int     	write_port_etc(port_id, int32_t, const void *, size_t, uint32_t, int64_t);
-int     	close_port(port_id);
-int     	delete_port(port_id);
-ssize_t		port_buffer_size(port_id);
-ssize_t		port_buffer_size_etc(port_id, uint32_t,	int64_t);
-int   		port_count(port_id);
-int     	set_port_owner(port_id, pid_t);
-int       get_port_info(port_id , port_info *);
-int       get_next_port_info(pid_t, uint32_t *, port_info *);
+port_id		_create_port(int32_t, const char *);
+port_id		_find_port(const char *);
+ssize_t		_read_port(port_id, int32_t *, void *,size_t);
+ssize_t		_read_port_etc(port_id, int32_t *, void *,	size_t, uint32_t, int64_t);
+int     	_write_port(port_id, int32_t, const void *, size_t);
+int     	_write_port_etc(port_id, int32_t, const void *, size_t, uint32_t, int64_t);
+int     	_close_port(port_id);
+int     	_delete_port(port_id);
+ssize_t		_port_buffer_size(port_id);
+ssize_t		_port_buffer_size_etc(port_id, uint32_t,	int64_t);
+int   		_port_count(port_id);
+int     	_set_port_owner(port_id, pid_t);
+int       _get_port_info(port_id , port_info *);
+int       _get_next_port_info(pid_t, uint32_t *, port_info *);
 
 #ifdef _KERNEL
 
