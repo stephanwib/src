@@ -283,6 +283,7 @@ kport_delete_logical(port_id id)
         if (kp->kp_id == id)
         {
             LIST_REMOVE(kp, kp_entry);
+            break;
         }
     }
 
@@ -413,66 +414,6 @@ kport_get_next_info(pid_t pid, uint32_t *_cookie, struct port_info *p_info_user)
 }
 
 static int
-kport_buffer_size_etc(struct lwp *l, port_id id, uint32_t flags, int64_t timeout, ssize_t *size)
-{
-    struct kport *port;
-    struct kp_msg *msg;
-    // kauth_cred_t uc;
-    int error, t;
-
-    // uc = l->l_cred;
-
-    mutex_enter(&kport_mutex);
-    port = kport_lookup_byid(id);
-    if (port == NULL)
-    {
-        mutex_exit(&kport_mutex);
-        return ENOENT;
-    }
-    mutex_exit(&kport_mutex);
-
-    if (port->kp_state == KP_DELETED)
-    {
-        mutex_exit(&port->kp_interlock);
-        return ENOENT;
-    }
-
-    if (port->kp_nmsg == 0)
-    {
-        if ((flags & PORT_TIMEOUT) && (timeout == 0))
-        {
-            mutex_exit(&port->kp_interlock);
-            return EAGAIN;
-        }
-        else
-        {
-            t = (flags & PORT_TIMEOUT) ? timeout : 0;
-            port->kp_waiters++;
-            error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
-            port->kp_waiters--;
-            if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
-            {
-                kport_delete_physical(port);
-                return ENOENT;
-            }
-            if (error || (port->kp_state == KP_DELETED))
-            {
-                error = (error == EWOULDBLOCK) ? ETIMEDOUT : ENOENT;
-                mutex_exit(&port->kp_interlock);
-                return error;
-            }
-        }
-    }
-
-    msg = SIMPLEQ_FIRST(&port->kp_msgq);
-    *size = msg->kp_msg_size;
-
-    mutex_exit(&port->kp_interlock);
-
-    return 0;
-}
-
-static int
 kport_count(port_id id, int *count)
 {
     struct kport *port;
@@ -492,7 +433,7 @@ kport_count(port_id id, int *count)
 }
 
 static int
-kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size, uint32_t flags, int64_t timeout, ssize_t *bytes_read)
+kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size, uint32_t flags, int64_t timeout, ssize_t *bytes_read, bool peek_only)
 {
     struct kport *port;
     struct kp_msg *msg;
@@ -527,7 +468,7 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
         {
             t = (flags & PORT_TIMEOUT) ? timeout : 0;
             port->kp_waiters++;
-            error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
+            error = cv_timedwait_sig(&port->kp_rdcv, &port->kp_interlock, mstohz(t));
             port->kp_waiters--;
             if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
             {
@@ -544,6 +485,13 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
     }
 
     msg = SIMPLEQ_FIRST(&port->kp_msgq);
+
+    if (peek_only)
+    {
+        *bytes_read = msg->kp_msg_size;
+        mutex_exit(&port->kp_interlock);
+        return 0;
+    }
 
     error = copyout(&msg->kp_msg_code, code, sizeof(*code));
     if (error)
@@ -572,7 +520,7 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
     
     port->kp_nmsg--;
     port->kp_total_count++;
-    cv_signal(&port->kp_rdcv);
+    cv_signal(&port->kp_wrcv);
     mutex_exit(&port->kp_interlock);
 
     *bytes_read = copyout_size;
@@ -664,7 +612,7 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
         {
             t = (flags & PORT_TIMEOUT) ? timeout : 0;
             port->kp_waiters++;
-            error = cv_timedwait_sig(&port->kp_rdcv, &port->kp_interlock, mstohz(t));
+            error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
             port->kp_waiters--;
             if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
             {
@@ -703,7 +651,7 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
 
     SIMPLEQ_INSERT_TAIL(&port->kp_msgq, msg, kp_msg_next);
     port->kp_nmsg++;
-    cv_signal(&port->kp_wrcv);
+    cv_signal(&port->kp_rdcv);
     mutex_exit(&port->kp_interlock);
 
     return 0;
@@ -814,7 +762,8 @@ int sys__port_buffer_size(struct lwp *l, const struct sys__port_buffer_size_args
     int error;
     ssize_t size;
 
-    error = kport_buffer_size_etc(l, SCARG(uap, port), 0, 0, &size);
+    //error = kport_buffer_size_etc(l, SCARG(uap, port), 0, 0, &size);
+    error = kport_read_etc(l, SCARG(uap, port), NULL, NULL, 0, 0, 0, &size, 1);
     if (error == 0)
         *retval = size;
 
@@ -832,7 +781,8 @@ int sys__port_buffer_size_etc(struct lwp *l, const struct sys__port_buffer_size_
     int error;
     ssize_t size;
 
-    error = kport_buffer_size_etc(l, SCARG(uap, port), SCARG(uap, flags), SCARG(uap, timeout), &size);
+    //error = kport_buffer_size_etc(l, SCARG(uap, port), SCARG(uap, flags), SCARG(uap, timeout), &size);
+    error = kport_read_etc(l, SCARG(uap, port), NULL, NULL, 0, SCARG(uap, flags), SCARG(uap, timeout), &size, 1);
     if (error == 0)
         *retval = size;
 
@@ -867,7 +817,7 @@ int sys__read_port(struct lwp *l, const struct sys__read_port_args *uap, registe
     int error;
     ssize_t nread;
 
-    error = kport_read_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0, &nread);
+    error = kport_read_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), 0, 0, &nread, 0);
     if (error == 0)
         *retval = nread;
 
@@ -887,7 +837,7 @@ int sys__read_port_etc(struct lwp *l, const struct sys__read_port_etc_args *uap,
     int error;
     ssize_t nread;
 
-    error = kport_read_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout), &nread);
+    error = kport_read_etc(l, SCARG(uap, port), SCARG(uap, msg_code), SCARG(uap, msg_buffer), SCARG(uap, buffer_size), SCARG(uap, flags), SCARG(uap, timeout), &nread, 0);
     if (error == 0)
         *retval = nread;
 

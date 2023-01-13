@@ -33,11 +33,15 @@
 #ifndef _SYS_PORT_H
 #define _SYS_PORT_H
 
-
 #define PORT_MAX_NAME_LENGTH 32
 
-typedef int32_t port_id;
+enum flags {
+    PORT_TIMEOUT               = 0x8,
+    PORT_RELATIVE_TIMEOUT      = 0x8,
+    PORT_ABSOLUTE_TIMEOUT      = 0x10
+};
 
+typedef int32_t port_id;
 
 typedef struct port_info {
 	port_id     port;
@@ -47,7 +51,6 @@ typedef struct port_info {
 	int32_t		queue_count;	/* messages in queue */
 	int32_t		total_count;	/* total messages read */
 } port_info;
-
 
 
 port_id		create_port(int32_t, const char *);
@@ -62,7 +65,7 @@ ssize_t		port_buffer_size(port_id);
 ssize_t		port_buffer_size_etc(port_id, uint32_t,	int64_t);
 int   		port_count(port_id);
 int     	set_port_owner(port_id, pid_t);
-int       get_port_info(port_id , port_info *, size_t);
+int       get_port_info(port_id , port_info *);
 int       get_next_port_info(pid_t, uint32_t *, port_info *);
 
 #ifdef _KERNEL
@@ -71,11 +74,6 @@ int       get_next_port_info(pid_t, uint32_t *, port_info *);
 #include <sys/mutex.h>
 #include <sys/condvar.h>
 
-enum flags {
-    PORT_TIMEOUT               = 0x8,
-    PORT_RELATIVE_TIMEOUT      = 0x8,
-    PORT_ABSOLUTE_TIMEOUT      = 0x10
-};
 
 enum port_state {
     KP_ACTIVE,
@@ -87,8 +85,8 @@ struct kport {
   LIST_ENTRY(kport)       kp_entry;        /* global list entry */
   SIMPLEQ_HEAD(, kp_msg)  kp_msgq;        /* head of message queue */
   kmutex_t                kp_interlock;   /* lock on this kport */
-  kcondvar_t              kp_rdcv;        /* reader CV */
-  kcondvar_t              kp_wrcv;        /* writer CV */
+  kcondvar_t              kp_rdcv;        /* reader CV, wait for write event */
+  kcondvar_t              kp_wrcv;        /* writer CV, wait for read event */
   port_id                 kp_id;          /* id of this port */
   pid_t                   kp_owner;       /* owner PID assigned to this port */
   char                    *kp_name;       /* name of this port */
