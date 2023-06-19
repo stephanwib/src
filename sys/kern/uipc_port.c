@@ -51,8 +51,8 @@ static const size_t PORT_BUFFER_GROW_RATE = 4 * 1024 * 1024;
 #define PORT_MAX_MESSAGE_SIZE (256 * 1024)
 #define PORT_MAX_NAME_LENGTH 32
 
-static uint32_t port_max = PORT_MAX;
-static uint32_t nports = 0;
+static int port_max = PORT_MAX;
+static int nports = 0;
 static port_id port_next_id = 1;
 static kmutex_t kport_mutex;
 
