@@ -174,18 +174,7 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
         return ENFILE;
     }
 
-    if (__predict_false((search = kport_lookup_byname(namebuf)) != NULL))
-    {
-        KASSERT(mutex_owned(&search->kp_interlock));
-        mutex_exit(&search->kp_interlock);
-
-        mutex_exit(&kport_mutex);
-        kmem_free(ret->kp_name, ret->kp_namelen);
-        kmem_free(ret, sizeof(*ret));
-
-        return EEXIST;
-    }
-  
+ 
     while (__predict_false((search = kport_lookup_byid(port_next_id)) != NULL))
     {
         KASSERT(mutex_owned(&search->kp_interlock));
