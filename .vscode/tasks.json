@@ -23,5 +23,10 @@
             "type": "shell",
             "command": "./build.sh -u -U -m amd64 -a x86_64 -j4 live-image"
         },
+        {
+            "label": "Build test ISO",
+            "type": "shell",
+            "command": "./obj/tooldir.Linux-4.4.0-19041-Microsoft-x86_64/bin/nbmakefs -t cd9660 ./obj/mytests.iso ./obj/tests"
+        },
     ]
 }
