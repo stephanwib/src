@@ -130,14 +130,14 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     size_t namelen;
     char namebuf[PORT_MAX_NAME_LENGTH];
 
-    if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH || *name == '\0')
+    if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH)
         return EINVAL;
 
     error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
     if (error)
         return error;
 
-    uc = l->l_cred;
+        uc = l->l_cred;
 
     ret = kmem_zalloc(sizeof(*ret), KM_SLEEP);
 
@@ -456,19 +456,30 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
         else
         {
             t = (flags & PORT_TIMEOUT) ? timeout : 0;
-            port->kp_waiters++;
-            error = cv_timedwait_sig(&port->kp_rdcv, &port->kp_interlock, mstohz(t));
-            port->kp_waiters--;
-            if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
-            {
-                kport_delete_physical(port);
-                return ENOENT;
-            }
-            if (error || (port->kp_state == KP_DELETED))
-            {
-                error = (error == EWOULDBLOCK) ? ETIMEDOUT : ENOENT;
-                mutex_exit(&port->kp_interlock);
-                return error;
+            
+            while (port->kp_nmsg == 0) {
+                port->kp_waiters++;
+                error = cv_timedwait_sig(&port->kp_rdcv, &port->kp_interlock, mstohz(t));
+                port->kp_waiters--;
+                
+                if ((port->kp_state == KP_DELETED)) /* port has been logically destroyed */
+                {
+                    if (port->kp_waiters == 0) /* we are the last waiter */
+                        kport_delete_physical(port);
+                    else
+                        mutex_exit(&port->kp_interlock);
+                    
+                    return ENOENT;
+                }
+
+                if (error)
+                {
+                    if (error == EWOULDBLOCK)
+                        error = ETIMEDOUT;
+
+                    mutex_exit(&port->kp_interlock);
+                    return error;
+                }
             }
         }
     }
@@ -590,7 +601,7 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
         mutex_exit(&port->kp_interlock);
         return EMSGSIZE;
     }
-    if (port->kp_nmsg == port->kp_qlen)
+    if (port->kp_nmsg >= port->kp_qlen)
     {
         if ((flags & PORT_TIMEOUT) && (timeout == 0))
         {
@@ -600,19 +611,30 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
         else
         {
             t = (flags & PORT_TIMEOUT) ? timeout : 0;
-            port->kp_waiters++;
-            error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
-            port->kp_waiters--;
-            if ((port->kp_state == KP_DELETED) && (port->kp_waiters == 0)) /* port has been logically destroyed, and we are the last waiter */
-            {
-                kport_delete_physical(port);
-                return ENOENT;
-            }
-            if (error || (port->kp_state == KP_DELETED) || (port->kp_state == KP_CLOSED))
-            {
-                error = (error == EWOULDBLOCK) ? ETIMEDOUT : ENOENT;
-                mutex_exit(&port->kp_interlock);
-                return error;
+
+            while (port->kp_nmsg >= port->kp_qlen) {
+                port->kp_waiters++;
+                error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
+                port->kp_waiters--;
+
+                if ((port->kp_state == KP_DELETED)) /* port has been logically destroyed */
+                {
+                    if (port->kp_waiters == 0) /* we are the last waiter */
+                        kport_delete_physical(port);
+                    else
+                        mutex_exit(&port->kp_interlock);
+                    
+                    return ENOENT;
+                }
+
+                if (port->kp_state != KP_ACTIVE)
+                    error = ENOENT;
+
+                if (error)
+                {
+                    mutex_exit(&port->kp_interlock);
+                    return error;
+                }
             }
         }
     }
@@ -634,6 +656,7 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
             mutex_exit(&port->kp_interlock);
             kmem_free(msg->kp_msg_buffer, size);
             kmem_free(msg, sizeof(*msg));
+
             return error;
         }
     }
