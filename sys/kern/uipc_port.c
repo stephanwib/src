@@ -56,18 +56,27 @@ static int nports = 0;
 static port_id port_next_id = 1;
 static kmutex_t kport_mutex;
 
-/* XXX: Only one list for the moment. To prevent contention around kport_mutex, an array of lists/locks is to be added
- * along with a suitable distribution algorithm. */
-
 LIST_HEAD(kport_list, kport);
 static struct kport_list kport_head = LIST_HEAD_INITIALIZER(&kport_head);
+
+/* for exithook_establish() */
+void *eh_cookie;
+
+static void
+eh_handler(struct proc *p, void *v)
+{
+    printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
+}
+
+/* XXX: Only one list for the moment. To prevent contention around kport_mutex, an array of lists/locks is to be added
+ * along with a suitable distribution algorithm. */
 
 void kport_init(void)
 {
     mutex_init(&kport_mutex, MUTEX_DEFAULT, IPL_NONE);
+
+    eh_cookie = exithook_establish(eh_handler, NULL);
 }
-
-
 
     /*  helper functions  */
 
@@ -128,6 +137,7 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     kauth_cred_t uc;
     int error;
     size_t namelen;
+    const char UNNAMED_PORT[] = "unnamed port";
     char namebuf[PORT_MAX_NAME_LENGTH];
 
     if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH)
@@ -137,13 +147,21 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     if (error)
         return error;
 
-        uc = l->l_cred;
+    uc = l->l_cred;
 
     ret = kmem_zalloc(sizeof(*ret), KM_SLEEP);
 
-    ret->kp_namelen = namelen;
-    ret->kp_name = kmem_alloc(ret->kp_namelen, KM_SLEEP);
-    strlcpy(ret->kp_name, namebuf, namelen);
+    if (namelen == 1) { /* This is just a \0 (empty name). Apply defult name for unnamed ports */
+        ret->kp_namelen = sizeof(UNNAMED_PORT);
+        ret->kp_name = kmem_alloc(ret->kp_namelen, KM_SLEEP);
+        strlcpy(ret->kp_name, UNNAMED_PORT, sizeof(UNNAMED_PORT));
+    }
+    else {
+        ret->kp_namelen = namelen;
+        ret->kp_name = kmem_alloc(ret->kp_namelen, KM_SLEEP);
+        strlcpy(ret->kp_name, namebuf, namelen);
+    }
+
     ret->kp_uid = kauth_cred_geteuid(uc);
     ret->kp_gid = kauth_cred_getegid(uc);
     ret->kp_owner = l->l_proc->p_pid;
@@ -219,6 +237,8 @@ kport_close(port_id id)
     return 0;
 }
 
+
+/* Must be called with port mutex held. */
 static int
 kport_delete_physical(struct kport *port)
 {
@@ -249,10 +269,13 @@ kport_delete_physical(struct kport *port)
     mutex_destroy(&port->kp_interlock);
 
     kmem_free(port->kp_name, port->kp_namelen);
+    
     kmem_free(port, sizeof(*port));
 
     return 0;
 }
+
+
 
 static int
 kport_delete_logical(port_id id)

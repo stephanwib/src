@@ -43,7 +43,9 @@ enum flags {
     PORT_ABSOLUTE_TIMEOUT      = 0x10
 };
 
+#ifndef _OS_H
 typedef int32_t port_id;
+
 
 typedef struct port_info {
 	port_id     port;
@@ -53,6 +55,7 @@ typedef struct port_info {
 	int32_t		queue_count;	/* messages in queue */
 	int32_t		total_count;	/* total messages read */
 } port_info;
+#endif /* _OS_H */
 
 
 port_id		_create_port(int32_t, const char *);
@@ -82,6 +85,7 @@ enum port_state {
     KP_CLOSED,
     KP_DELETED
 };
+
 
 struct kport {
   LIST_ENTRY(kport)       kp_entry;        /* global list entry */
