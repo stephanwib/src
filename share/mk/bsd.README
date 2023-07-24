@@ -1746,6 +1746,7 @@ DPADD		Additional dependencies for the program.  Usually used for
 		LIBRESOLV?=		${DESTDIR}/usr/lib/libresolv.a
 		LIBRMT?=		${DESTDIR}/usr/lib/librmt.a
 		LIBROKEN?=		${DESTDIR}/usr/lib/libroken.a
+		LIBROOT?=		${DESTDIR}/usr/lib/libroot.a
 		LIBRPCSVC?=		${DESTDIR}/usr/lib/librpcsvc.a
 		LIBRT?=			${DESTDIR}/usr/lib/librt.a
 		LIBRUMP?=		${DESTDIR}/usr/lib/librump.a

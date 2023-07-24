@@ -176,6 +176,7 @@ _LIBLIST=\
 	resolv \
 	rmt \
 	roken \
+	root \
 	rpcsvc \
 	rt \
 	rump \

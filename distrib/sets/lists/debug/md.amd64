@@ -10,6 +10,7 @@
 ./usr/libdata/debug/usr/lib/i386/libi386.so.2.0.debug	comp-compat-shlib	compat,pic,debug
 ./usr/libdata/debug/usr/lib/i386/libpam.so.4.1.debug	comp-compat-shlib	compat,pic,debug,pam
 ./usr/libdata/debug/usr/lib/i386/libproc.so.1.0.debug	comp-compat-shlib	compat,pic,debug,dtrace
+./usr/libdata/debug/usr/lib/i386/libroot.so.0.1.debug	comp-compat-shlib	compat,pic,debug
 ./usr/libdata/debug/usr/lib/i386/librtld_db.so.0.0.debug	comp-compat-shlib	compat,pic,debug,dtrace
 ./usr/libdata/debug/usr/lib/libtsan.so.1.0.debug		comp-sys-debug	debug,cxx,gcc=9
 ./usr/libdata/debug/usr/lib/libtsan.so.1.0.debug		comp-sys-debug	debug,cxx,gcc=10

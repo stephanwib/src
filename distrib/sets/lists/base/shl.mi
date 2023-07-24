@@ -543,6 +543,9 @@
 ./usr/lib/libroken.so				base-krb5-shlib		compatfile,kerberos
 ./usr/lib/libroken.so.20			base-krb5-shlib		compatfile,kerberos
 ./usr/lib/libroken.so.20.0			base-krb5-shlib		compatfile,kerberos
+./usr/lib/libroot.so	    		base-sys-shlib		compatfile
+./usr/lib/libroot.so.0	    		base-sys-shlib		compatfile
+./usr/lib/libroot.so.0.1    		base-sys-shlib		compatfile
 ./usr/lib/librpcsvc.so				base-net-shlib		compatfile
 ./usr/lib/librpcsvc.so.1			base-net-shlib		compatfile
 ./usr/lib/librpcsvc.so.1.0			base-net-shlib		compatfile

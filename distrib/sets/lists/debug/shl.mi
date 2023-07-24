@@ -200,6 +200,7 @@
 ./usr/libdata/debug/usr/lib/librefuse.so.2.0.debug		comp-refuse-debug	debug,compatfile
 ./usr/libdata/debug/usr/lib/libresolv.so.3.0.debug		comp-net-debug	debug,compatfile
 ./usr/libdata/debug/usr/lib/libroken.so.20.0.debug		comp-krb5-debug	debug,compatfile,kerberos
+./usr/libdata/debug/usr/lib/libroot.so.0.1.debug        comp-sys-debug	debug,compatfile
 ./usr/libdata/debug/usr/lib/librpcsvc.so.1.0.debug		comp-net-debug	debug,compatfile
 ./usr/libdata/debug/usr/lib/librt.so.1.1.debug			comp-sys-debug	debug,compatfile
 ./usr/libdata/debug/usr/lib/librtld_db.so.0.0.debug		comp-sys-debug	debug,dtrace

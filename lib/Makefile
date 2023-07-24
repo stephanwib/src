@@ -25,7 +25,7 @@ SUBDIR+=	libarch \
 		libcompat libcrypt \
 		libintl libipsec libkvm libm \
 		libossaudio libpci libposix libprop libpthread \
-		libpuffs libresolv librmt librpcsvc librt \
+		libpuffs libresolv librmt libroot librpcsvc librt \
 		libtelnet libterminfo \
 		libusbhid libutil liby libz
 

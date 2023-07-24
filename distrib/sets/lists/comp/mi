@@ -911,6 +911,7 @@
 ./usr/include/endian.h				comp-c-include
 ./usr/include/err.h				comp-c-include
 ./usr/include/errno.h				comp-c-include
+./usr/include/Errors.h              comp-c-include
 ./usr/include/eti.h				comp-c-include
 ./usr/include/evdns.h				comp-c-include
 ./usr/include/event-config.h			comp-obsolete		obsolete
@@ -3043,6 +3044,7 @@
 ./usr/include/openssl/x509err.h			comp-c-include	openssl=11
 ./usr/include/openssl/x509v3.h			comp-c-include
 ./usr/include/openssl/x509v3err.h		comp-c-include	openssl=11
+./usr/include/OS.h                  comp-c-include
 ./usr/include/panel.h				comp-c-include
 ./usr/include/paths.h				comp-c-include
 ./usr/include/pcap-namedb.h			comp-c-include
@@ -3953,6 +3955,8 @@
 ./usr/lib/libresolv.a				comp-c-lib		compatfile
 ./usr/lib/libresolv_p.a				comp-c-proflib		compatfile,profile
 ./usr/lib/librmt.a				comp-c-lib		compatfile
+./usr/lib/libroot.a				comp-c-lib		compatfile
+./usr/lib/libroot_p.a				comp-c-proflib		compatfile,profile
 ./usr/lib/libroken.a				comp-krb5-lib		compatfile,kerberos
 ./usr/lib/libroken_p.a				comp-krb5-proflib	compatfile,profile,kerberos
 ./usr/lib/librpcsvc.a				comp-c-lib		compatfile
