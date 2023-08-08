@@ -221,16 +221,12 @@ kport_close(port_id id)
     struct kport *port;
 
     mutex_enter(&kport_mutex);
-    
     port = kport_lookup_byid(id);
-    if (port == NULL)
-    {
-        mutex_exit(&kport_mutex);
-        return ENOENT;
-    }
-    
     mutex_exit(&kport_mutex);
 
+    if (port == NULL)
+        return ENOENT;
+    
     port->kp_state = KP_CLOSED;
     mutex_exit(&port->kp_interlock);
 
@@ -275,7 +271,30 @@ kport_delete_physical(struct kport *port)
     return 0;
 }
 
+/*
 
+static int
+kport_delete_logical(struct kport *port)
+{
+ 
+    KASSERT(mutex_owned(port->kp_interlock));
+
+    if (port->kp_waiters > 0)
+    {
+        port->kp_state = KP_DELETED;
+        cv_broadcast(&port->kp_rdcv);
+        cv_broadcast(&port->kp_wrcv);
+        mutex_exit(&port->kp_interlock);
+    }
+    else
+    {
+        kport_delete_physical(port);
+    }
+    
+    return 0;
+}
+
+*/
 
 static int
 kport_delete_logical(port_id id)
@@ -334,18 +353,13 @@ kport_find(const char *name, port_id *id)
     port = kport_lookup_byname(namebuf);
     mutex_exit(&kport_mutex);
 
-    if (port)
-    {
-        *id = port->kp_id;
-        mutex_exit(&port->kp_interlock);
-
-        return 0;
-    }
-    else
-    {
+    if (port == NULL)
         return ENOENT;
-    }
 
+    *id = port->kp_id;
+    mutex_exit(&port->kp_interlock);
+
+    return 0;
 }
 
 static int
@@ -359,14 +373,13 @@ kport_get_info(port_id id, struct port_info *p_info_user)
     port = kport_lookup_byid(id);
     mutex_exit(&kport_mutex);
 
-    error = (port == NULL) ? ENOENT : 0;
-    if (error == 0)
-    {
-        fill_port_info(port, &p_info_kernel);
-        mutex_exit(&port->kp_interlock);
+    if (port == NULL)
+        return ENOENT;
+    
+    fill_port_info(port, &p_info_kernel);
+    mutex_exit(&port->kp_interlock);
 
-        error = copyout(&p_info_kernel, p_info_user, sizeof(struct port_info));
-    }
+    error = copyout(&p_info_kernel, p_info_user, sizeof(struct port_info));
 
     return error;
 }
@@ -420,28 +433,26 @@ kport_get_next_info(pid_t pid, uint32_t *_cookie, struct port_info *p_info_user)
 
     mutex_exit(&kport_mutex);
 
-    error = ENOENT;
+    return ENOENT;
     
-    return error;
 }
 
 static int
 kport_count(port_id id, int *count)
 {
     struct kport *port;
-    int error;
 
     mutex_enter(&kport_mutex);
     port = kport_lookup_byid(id);
     mutex_exit(&kport_mutex);
 
-    error = (port == NULL) ? ENOENT : 0;
-    if (error == 0)
-    {
-        *count = port->kp_nmsg;
-        mutex_exit(&port->kp_interlock);
-    }
-    return error;
+    if (port == NULL)
+        return ENOENT;
+ 
+    *count = port->kp_nmsg;
+    mutex_exit(&port->kp_interlock);
+
+    return 0;
 }
 
 static int
@@ -456,14 +467,13 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
 
     mutex_enter(&kport_mutex);
     port = kport_lookup_byid(id);
-    if (port == NULL)
-    {
-        mutex_exit(&kport_mutex);
-        return ENOENT;
-    }
     mutex_exit(&kport_mutex);
-
-    if (port->kp_state == KP_DELETED)
+    
+    if (port == NULL)
+        return ENOENT;
+    
+    if ((port->kp_state == KP_DELETED) ||
+        (port->kp_state == KP_CLOSED && port->kp_nmsg == 0)) /* A closed port will never get new messages */
     {
         mutex_exit(&port->kp_interlock);
         return ENOENT;
@@ -559,14 +569,11 @@ kport_set_owner(port_id id, pid_t new_pid)
 
     mutex_enter(&kport_mutex);
     port = kport_lookup_byid(id);
-    if (port == NULL)
-    {
-        mutex_exit(&kport_mutex);
-        return ENOENT;
-    }
     mutex_exit(&kport_mutex);
-
-
+    
+    if (port == NULL)
+        return ENOENT;
+    
     if (port->kp_owner == new_pid)
     {
         mutex_exit(&port->kp_interlock);
@@ -607,23 +614,23 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
 
     mutex_enter(&kport_mutex);
     port = kport_lookup_byid(id);
-    if (port == NULL)
-    {
-        mutex_exit(&kport_mutex);
-        return ENOENT;
-    }
     mutex_exit(&kport_mutex);
 
-    if ((port->kp_state == KP_DELETED) || (port->kp_state == KP_CLOSED))
+    if (port == NULL)
+        return ENOENT;
+    
+    if (port->kp_state != KP_ACTIVE)
     {
         mutex_exit(&port->kp_interlock);
         return ENOENT;
     }
+
     if (size > PORT_MAX_MESSAGE_SIZE)
     {
         mutex_exit(&port->kp_interlock);
         return EMSGSIZE;
     }
+    
     if (port->kp_nmsg >= port->kp_qlen)
     {
         if ((flags & PORT_TIMEOUT) && (timeout == 0))
