@@ -52,24 +52,17 @@ static const size_t PORT_BUFFER_GROW_RATE = 4 * 1024 * 1024;
 #define PORT_MAX_NAME_LENGTH 32
 
 static int port_max = PORT_MAX;
-static int nports = 0;
+static int nports = 0; /* protected by kport_mutex */
 static port_id port_next_id = 1;
-static kmutex_t kport_mutex;
+static kmutex_t kport_mutex; /* XXX: better use reader/writer lock? */
 
-LIST_HEAD(kport_list, kport);
+LIST_HEAD(kport_list, kport); /* protected by kport_mutex */
 static struct kport_list kport_head = LIST_HEAD_INITIALIZER(&kport_head);
 
 /* for exithook_establish() */
 void *eh_cookie;
+static void eh_handler(struct proc *p, void *v);
 
-static void
-eh_handler(struct proc *p, void *v)
-{
-    printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
-}
-
-/* XXX: Only one list for the moment. To prevent contention around kport_mutex, an array of lists/locks is to be added
- * along with a suitable distribution algorithm. */
 
 void kport_init(void)
 {
@@ -271,13 +264,13 @@ kport_delete_physical(struct kport *port)
     return 0;
 }
 
-/*
+
 
 static int
 kport_delete_logical(struct kport *port)
 {
  
-    KASSERT(mutex_owned(port->kp_interlock));
+    KASSERT(mutex_owned(&port->kp_interlock));
 
     if (port->kp_waiters > 0)
     {
@@ -294,8 +287,7 @@ kport_delete_logical(struct kport *port)
     return 0;
 }
 
-*/
-
+/*
 static int
 kport_delete_logical(port_id id)
 {
@@ -336,6 +328,8 @@ kport_delete_logical(port_id id)
     
     return 0;
 }
+
+*/
 
 static int
 kport_find(const char *name, port_id *id)
@@ -700,6 +694,30 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
 }
 
 
+static void
+eh_handler(struct proc *p, void *v)
+{
+    // printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
+    struct kport *kp, *kp_next;
+
+    mutex_enter(&kport_mutex);
+    
+    LIST_FOREACH_SAFE(kp, &kport_head, kp_entry, kp_next)
+    {
+        if (kp->kp_owner == p->p_pid)
+        {
+            mutex_enter(&kp->kp_interlock);
+            kport_delete_logical(kp);
+
+            LIST_REMOVE(kp, kp_entry);
+            nports--;
+        }
+    }
+
+    mutex_exit(&kport_mutex);
+}
+
+
 /* syscall functions */
 
 int sys__create_port(struct lwp *l, const struct sys__create_port_args *uap, register_t *retval)
@@ -741,10 +759,35 @@ int sys__delete_port(struct lwp *l, const struct sys__delete_port_args *uap, reg
     } */
 
     int error;
+    port_id id;
+    struct kport *port, *kp;
 
-    error = kport_delete_logical(SCARG(uap, port));
+    id = SCARG(uap, port);
+
+    mutex_enter(&kport_mutex);
+    port = kport_lookup_byid(id);
+    if (port == NULL)
+    {
+        mutex_exit(&kport_mutex);
+        return ENOENT;
+    }
+
+    LIST_FOREACH(kp, &kport_head, kp_entry)
+    {
+        if (kp->kp_id == id)
+        {
+            LIST_REMOVE(kp, kp_entry);
+            break;
+        }
+    }
+
+    nports--;
+
+    mutex_exit(&kport_mutex);
+
+    error = kport_delete_logical(port);
     if (error == 0)
-        *retval = error;
+        *retval = 0;
 
     return error;
 }
@@ -760,6 +803,7 @@ int sys__find_port(struct lwp *l, const struct sys__find_port_args *uap, registe
     error = kport_find(SCARG(uap, port_name), &id);
     if (error == 0)
         *retval = id;
+
     return error;
 }
 
