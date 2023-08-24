@@ -5,7 +5,9 @@
 LIB=		root
 # MAN=		root.3
 
-SRCS=		port.c
+SRCS=		port.c thread.c
+
+LIBDPLIBS+=	pthread ${NETBSDSRCDIR}/lib/libpthread
 
 INCS=		OS.h Errors.h
 INCSDIR=	/usr/include

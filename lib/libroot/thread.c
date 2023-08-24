@@ -28,41 +28,62 @@
  */
 
 #include <OS.h>
+#include <Errors.h>
 #include <pthread.h>
 #include <unistd.h> /* for usleep() */
+#include <string.h>
 #include <errno.h>
 
+typedef void* (*pthread_entry) (void*);
 
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
+	int error;
+	pthread_t thread;
+    pthread_attr_t attr;
+	char namebuf[NAME_MAX];
+	void *func_ptr;
 
-	return B_ERROR;
+	(void)priority;
+	strlcpy(namebuf, name, sizeof(namebuf));
+
+	func_ptr = (void*)func;
+
+    pthread_attr_init(&attr);
+
+    /* Set thread priority 
+    struct sched_param schedParam;
+    schedParam.sched_priority = priority;
+    pthread_attr_setschedparam(&attr, &schedParam);
+	*/
+
+    error = pthread_create(&thread, &attr, (pthread_entry)func_ptr, data);
+
+    pthread_attr_destroy(&attr);
+ 
+    pthread_setname_np(thread, "%s", (void*)namebuf);
+
+    return error;
 }
 
 status_t
-kill_thread(thread_id thread)
+resume_thread(thread_id id)
 {
 
-
-			if (pthread_kill(thread_table[i].pth, SIGKILL) == 0)
-				return B_OK;
-			
+	 /* pthread_kill(thread_table[i].pth, SIGCONT);
+	
 	return B_BAD_THREAD_ID;
+
+	*/
+
+	return B_OK;
 }
-
-status_t
-rename_thread(thread_id thread, const char *newName)
-{
-
-	return B_BAD_THREAD_ID;
-}
-
 
 void
 exit_thread(status_t status)
 {
-	pthread_t this_thread = pthread_self();
+	// pthread_t this_thread = pthread_self();
 	
 	pthread_exit((void *) &status);
 }
@@ -78,15 +99,66 @@ thread_id
 find_thread(const char *name)
 {
 
-	pthread_t pt = 0;
+	pthread_t t;
 
-	if (name == NULL)
-		pt = pthread_self();
-
-
+	if (name == NULL) {
+		t = pthread_self();
+		(void)t;
+	}
 
 	return B_NAME_NOT_FOUND;
 }
+
+
+status_t
+snooze(bigtime_t timeout)
+{
+	int error;
+	unsigned int time_left;
+
+
+	if (timeout > 1000000) {
+		time_left = sleep((unsigned int) timeout / 1000);
+		if (time_left) {
+			error = -1;
+			errno = EINTR;
+		}
+		else
+			error = 0;
+	}
+	else
+		error = usleep((useconds_t) timeout);
+
+	if (error < 0 && errno == EINTR)
+		return B_INTERRUPTED;
+
+	return B_OK;
+}
+
+status_t
+snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
+{
+	// TODO: determine what timeBase and flags do
+	return snooze(amount);
+}
+
+
+
+
+status_t
+wait_for_thread(thread_id id, status_t *_returnCode)
+{
+	pthread_t t;
+
+	t = (pthread_t)&id;
+
+	if (pthread_join(t, (void**)_returnCode) == 0)
+		return B_OK;
+	
+	return B_BAD_THREAD_ID;
+}
+
+/*
 
 status_t
 set_thread_priority(thread_id id, int32 priority)
@@ -107,41 +179,25 @@ set_thread_priority(thread_id id, int32 priority)
 }
 
 
-status_t
-snooze(bigtime_t timeout)
-{
-	int err;
-	
-	err = usleep((unsigned long)timeout);
-
-	if (err < 0 && errno == EINTR)
-		return B_INTERRUPTED;
-
-	return B_OK;
-}
 
 
 status_t
-snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
-{
-	// TODO: determine what timeBase and flags do
-	return snooze(amount);
-}
-
-
-status_t
-wait_for_thread(thread_id id, status_t *_returnCode)
+kill_thread(thread_id thread)
 {
 
-		if (thread_table[i].thread == id)
-		{
-			if (pthread_join(thread_table[i].pth, (void**)_returnCode) == 0)
+
+			if (pthread_kill(thread_table[i].pth, SIGKILL) == 0)
 				return B_OK;
-		}
-	
+			
 	return B_BAD_THREAD_ID;
 }
 
+status_t
+rename_thread(thread_id thread, const char *newName)
+{
+
+	return B_BAD_THREAD_ID;
+}
 
 status_t
 suspend_thread(thread_id id)
@@ -154,13 +210,6 @@ suspend_thread(thread_id id)
 }
 
 
-status_t
-resume_thread(thread_id id)
-{
 
-					pthread_kill(thread_table[i].pth, SIGCONT);
-	
 
-	return B_BAD_THREAD_ID;
-}
-
+*/
