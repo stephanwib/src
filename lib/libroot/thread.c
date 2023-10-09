@@ -109,7 +109,7 @@ find_thread(const char *name)
 	return B_NAME_NOT_FOUND;
 }
 
-
+/*
 status_t
 snooze(bigtime_t timeout)
 {
@@ -133,6 +133,32 @@ snooze(bigtime_t timeout)
 		return B_INTERRUPTED;
 
 	return B_OK;
+}
+*/
+
+status_t
+snooze(bigtime_t timeout) {
+    
+    int error;
+    struct timespec ts;
+    
+    if (timeout == 0) {
+        return 0;
+    }
+
+    ts.tv_sec = timeout / 1000000;
+    ts.tv_nsec = (timeout % 1000000) * 1000;
+
+    if (ts.tv_nsec >= 1000000000) {
+        errno = EINVAL;
+        return -1;
+    }
+        
+    error = nanosleep(&ts, &ts);
+    if (error == -1 && errno == EINTR)
+	    return B_INTERRUPTED;
+
+    return B_OK;
 }
 
 status_t
