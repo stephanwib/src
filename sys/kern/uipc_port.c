@@ -287,50 +287,6 @@ kport_delete_logical(struct kport *port)
     return 0;
 }
 
-/*
-static int
-kport_delete_logical(port_id id)
-{
-    struct kport *port, *kp;
-
-    mutex_enter(&kport_mutex);
-    port = kport_lookup_byid(id);
-    if (port == NULL)
-    {
-        mutex_exit(&kport_mutex);
-        return ENOENT;
-    }
-
-    LIST_FOREACH(kp, &kport_head, kp_entry)
-    {
-        if (kp->kp_id == id)
-        {
-            LIST_REMOVE(kp, kp_entry);
-            break;
-        }
-    }
-
-    nports--;
-
-    mutex_exit(&kport_mutex);
-
-    if (port->kp_waiters > 0)
-    {
-        port->kp_state = KP_DELETED;
-        cv_broadcast(&port->kp_rdcv);
-        cv_broadcast(&port->kp_wrcv);
-        mutex_exit(&port->kp_interlock);
-    }
-    else
-    {
-        kport_delete_physical(port);
-    }
-    
-    return 0;
-}
-
-*/
-
 static int
 kport_find(const char *name, port_id *id)
 {
