@@ -58,6 +58,8 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     pthread_attr_setschedparam(&attr, &schedParam);
 	*/
 
+    pthread_attr_setcreatesuspend_np(&attr);
+
     error = pthread_create(&thread, &attr, (pthread_entry)func_ptr, data);
 
     pthread_attr_destroy(&attr);
@@ -70,24 +72,44 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 status_t
 resume_thread(thread_id id)
 {
+	if (pthread_resume_np((pthread_t) &id) == 0)
+	    return B_OK;
 
-	 /* pthread_kill(thread_table[i].pth, SIGCONT);
-	
+    return B_BAD_THREAD_ID;
+}
+
+status_t
+suspend_thread(thread_id id)
+{
+	if (pthread_suspend_np((pthread_t) &id) == 0)
+	    return B_OK;
+
 	return B_BAD_THREAD_ID;
-
-	*/
-
-	return B_OK;
 }
 
 void
 exit_thread(status_t status)
 {
-	// pthread_t this_thread = pthread_self();
-	
 	pthread_exit((void *) &status);
 }
 
+status_t
+wait_for_thread(thread_id id, status_t *ret)
+{
+	if (pthread_join((pthread_t) &id, (void**)ret) == 0)
+		return B_OK;
+	
+	return B_BAD_THREAD_ID;
+}
+
+status_t
+kill_thread(thread_id id)
+{
+	if (pthread_cancel((pthread_t) &id) == 0)
+		return B_OK;
+			
+	return B_BAD_THREAD_ID;
+}
 
 status_t
 on_exit_thread(void (*callback)(void *), void *data)
@@ -109,32 +131,7 @@ find_thread(const char *name)
 	return B_NAME_NOT_FOUND;
 }
 
-/*
-status_t
-snooze(bigtime_t timeout)
-{
-	int error;
-	unsigned int time_left;
 
-
-	if (timeout > 1000000) {
-		time_left = sleep((unsigned int) timeout / 1000);
-		if (time_left) {
-			error = -1;
-			errno = EINTR;
-		}
-		else
-			error = 0;
-	}
-	else
-		error = usleep((useconds_t) timeout);
-
-	if (error < 0 && errno == EINTR)
-		return B_INTERRUPTED;
-
-	return B_OK;
-}
-*/
 
 status_t
 snooze(bigtime_t timeout) {
@@ -169,21 +166,6 @@ snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
 }
 
 
-
-
-status_t
-wait_for_thread(thread_id id, status_t *_returnCode)
-{
-	pthread_t t;
-
-	t = (pthread_t)&id;
-
-	if (pthread_join(t, (void**)_returnCode) == 0)
-		return B_OK;
-	
-	return B_BAD_THREAD_ID;
-}
-
 /*
 
 status_t
@@ -207,16 +189,7 @@ set_thread_priority(thread_id id, int32 priority)
 
 
 
-status_t
-kill_thread(thread_id thread)
-{
 
-
-			if (pthread_kill(thread_table[i].pth, SIGKILL) == 0)
-				return B_OK;
-			
-	return B_BAD_THREAD_ID;
-}
 
 status_t
 rename_thread(thread_id thread, const char *newName)
@@ -225,15 +198,7 @@ rename_thread(thread_id thread, const char *newName)
 	return B_BAD_THREAD_ID;
 }
 
-status_t
-suspend_thread(thread_id id)
-{
 
-			pthread_kill(thread_table[i].pth, SIGSTOP);
-	
-
-	return B_BAD_THREAD_ID;
-}
 
 
 
