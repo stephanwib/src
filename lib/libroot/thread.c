@@ -27,8 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <OS.h>
-#include <Errors.h>
+#include "OS.h"
+#include "Errors.h"
 #include <pthread.h>
 #include <unistd.h> /* for usleep() */
 #include <string.h>
@@ -39,7 +39,6 @@ typedef void* (*pthread_entry) (void*);
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
-	int error;
 	pthread_t thread;
     pthread_attr_t attr;
 	char namebuf[NAME_MAX];
@@ -60,19 +59,20 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 
     pthread_attr_setcreatesuspend_np(&attr);
 
-    error = pthread_create(&thread, &attr, (pthread_entry)func_ptr, data);
+    if (pthread_create(&thread, &attr, (pthread_entry)func_ptr, data) != 0)
+	    return B_NO_MEMORY;
 
     pthread_attr_destroy(&attr);
  
     pthread_setname_np(thread, "%s", (void*)namebuf);
 
-    return error;
+    return (thread_id)thread;
 }
 
 status_t
 resume_thread(thread_id id)
 {
-	if (pthread_resume_np((pthread_t) &id) == 0)
+	if (pthread_resume_np((pthread_t) id) == 0)
 	    return B_OK;
 
     return B_BAD_THREAD_ID;
@@ -81,7 +81,7 @@ resume_thread(thread_id id)
 status_t
 suspend_thread(thread_id id)
 {
-	if (pthread_suspend_np((pthread_t) &id) == 0)
+	if (pthread_suspend_np((pthread_t) id) == 0)
 	    return B_OK;
 
 	return B_BAD_THREAD_ID;
@@ -96,16 +96,16 @@ exit_thread(status_t status)
 status_t
 wait_for_thread(thread_id id, status_t *ret)
 {
-	if (pthread_join((pthread_t) &id, (void**)ret) == 0)
+	if (pthread_join((pthread_t) id, (void**)ret) == 0)
 		return B_OK;
 	
 	return B_BAD_THREAD_ID;
-}
+}  
 
 status_t
 kill_thread(thread_id id)
 {
-	if (pthread_cancel((pthread_t) &id) == 0)
+	if (pthread_cancel((pthread_t) id) == 0)
 		return B_OK;
 			
 	return B_BAD_THREAD_ID;
