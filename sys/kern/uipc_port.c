@@ -52,11 +52,11 @@ static const size_t PORT_BUFFER_GROW_RATE = 4 * 1024 * 1024;
 #define PORT_MAX_NAME_LENGTH 32
 
 static int port_max = PORT_MAX;
-static int nports = 0; /* protected by kport_mutex */
+static int nports = 0;
 static port_id port_next_id = 1;
 static kmutex_t kport_mutex; /* XXX: better use reader/writer lock? */
 
-LIST_HEAD(kport_list, kport); /* protected by kport_mutex */
+LIST_HEAD(kport_list, kport);
 static struct kport_list kport_head = LIST_HEAD_INITIALIZER(&kport_head);
 
 /* for exithook_establish() */
@@ -169,13 +169,6 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
 
     mutex_enter(&kport_mutex);
 
-
-    /* 
-     *   Perform checks and update data structures 
-     *   that require kport_mutex to be held
-     */
-
-
     if (__predict_false(nports >= port_max))
     {
         mutex_exit(&kport_mutex);
@@ -221,6 +214,13 @@ kport_close(port_id id)
         return ENOENT;
     
     port->kp_state = KP_CLOSED;
+
+    if (port->kp_waiters > 0)
+    {
+        cv_broadcast(&port->kp_rdcv);
+        cv_broadcast(&port->kp_wrcv);
+    }
+
     mutex_exit(&port->kp_interlock);
 
     return 0;
@@ -243,6 +243,8 @@ kport_delete_physical(struct kport *port)
     while (port->kp_nmsg)   /* get rid of eventually outstanding messages */
     {
         msg = SIMPLEQ_FIRST(&port->kp_msgq);
+
+        KASSERT(msg != NULL);
 
         SIMPLEQ_REMOVE_HEAD(&port->kp_msgq, kp_msg_next);
 
@@ -452,6 +454,13 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
                     else
                         mutex_exit(&port->kp_interlock);
                     
+                    return ENOENT;
+                }
+
+                if (port->kp_state == KP_CLOSED && port->kp_nmsg == 0)
+                {
+                    mutex_exit(&port->kp_interlock);
+
                     return ENOENT;
                 }
 
