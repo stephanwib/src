@@ -1066,3 +1066,13 @@
 512 STD		{ int|sys||_write_port(port_id port, int32_t msg_code, void *msg_buffer, size_t buffer_size); }
 513 STD		{ int|sys||_write_port_etc(port_id port, int msg_code, void *msg_buffer, size_t buffer_size, \
 			    uint32_t flags, int64_t timeout); }
+514 STD		{ sem_id|sys||_create_sem(int32_t count, const char *name); }
+515 STD		{ int|sys||_delete_sem(sem_id sem); }
+516 STD		{ int|sys||_acquire_sem(sem_id sem); }
+517 STD		{ int|sys||_acquire_sem_etc(sem_id sem, int32_t count, uint32_t flags, int64_t timeout); }
+518 STD		{ int|sys||_release_sem(sem_id sem); }
+519 STD		{ int|sys||_release_sem_etc(sem_id sem, int32_t count, uint32_t flags); }
+520 STD		{ int|sys||_get_sem_count(sem_id id, int32_t *threadCount); }
+521 STD		{ int|sys||_set_sem_owner(sem_id id, pid_t pid); }
+522 STD		{ int|sys||_get_sem_info(sem_id sem, sem_info *info); }
+523 STD		{ int|sys||_get_next_sem_info(pid_t pid, int32_t *cookie, sem_info *info); }
