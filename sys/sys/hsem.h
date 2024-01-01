@@ -79,12 +79,13 @@ int         _get_next_sem_info(pid_t pid, int32_t *cookie, sem_info *info);
 struct khsem {
   LIST_ENTRY(kshem)       khs_entry;       /* global list entry */
   kmutex_t                khs_interlock;   /* lock on this semaphore */
-  kcondvar_t              khs_rdcv;        /* CV for wait events */
+  kcondvar_t              khs_cv;          /* CV for wait events */
   sem_id                  khs_id;          /* id of this semaphore */
   pid_t                   khs_owner;       /* owning process */
   char                    *khs_name;       /* name of this semaphore */
   size_t                  khs_namelen;     /* length of name */
   int                     khs_state;       /* state of this port */
+  int                     khs_waiters;
   int                     khs_count;       /* current count */  
   uid_t                   khs_uid;         /* creator uid */
   gid_t                   khs_gid;         /* creator gid */
@@ -92,7 +93,7 @@ struct khsem {
 
 enum port_state {
     KHS_FREE = 0,
-    KHS_ALLOCATED,
+    KHS_IN_USE,
     KHS_DELETED
 };
 

@@ -39,6 +39,99 @@
 // Helper function to implement semaphore syscalls
 
 
+const int khsem_max = 8192;
+static kmutex_t khsem_mutex __cacheline_aligned;
+
+LIST_HEAD(khsem_free_list, khsem);
+static struct khsem_free_list khsem_free_list_head = LIST_HEAD_INITIALIZER(&khsem_free_head);
+
+
+void
+ksem_init(void) {
+
+}
+
+static void
+khsem_free(struct khsem *khs) {
+
+}
+
+static struct *khsem
+khsem_get_byid(sem_id id) {
+
+    if (id < 0 || id >= khsem_max)
+        return NULL;
+
+    // XXX write me
+
+    return NULL;
+}
+
+static int 
+khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t timeout) {
+
+    struct khsem *khs;
+    int t;
+    
+    khs = khsem_get_byid(id);
+    if (khs == NULL)
+        return ENOENT;
+    
+    if (khs->khs_state != KHS_IN_USE) {
+        mutex_exit(&khs->khs_interlock);
+        return ENOENT;
+    }
+
+    if (khs->khs_count - count > 0)
+    {
+        khs->khs_count -= count;
+        mutex_exit(&khs->khs_interlock);
+
+        return 0;
+    }
+    else
+    {
+        if (flags & SEM_RELATIVE_TIMEOUT && timeout == 0)
+        {
+            mutex_exit(&khs->khs_interlock);
+            return EAGAIN;
+        }
+
+        t = (flags & PORT_TIMEOUT) ? timeout : 0;
+
+        do
+        {
+            khs->khs_waiters++;
+            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz(t));
+            khs->khs_waiters--;
+
+            if (khs->khs_state == KHS_DELETED)
+            {
+                if (khs->khs_waiters == 0)
+                    khsem_free(khs);
+                else
+                    mutex_exit(&khs->khs_interlock);
+
+                return ENOENT;
+            }
+
+            if (error)
+            {
+                if (error == EWOULDBLOCK)
+                    error = ETIMEDOUT;
+
+                mutex_exit(&khs->khs_interlock);
+                return error;
+            }
+
+        } while (khs->khs_count - count <= 0);
+
+        return 0;
+    }
+
+}
+
+
 // _create_sem syscall
 int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, register_t *retval)
 {
