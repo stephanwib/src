@@ -49,7 +49,6 @@ static const size_t PORT_BUFFER_GROW_RATE = 4 * 1024 * 1024;
 #define PORT_MAX 4096
 #define PORT_MAX_QUEUE_LENGTH 4096
 #define PORT_MAX_MESSAGE_SIZE (256 * 1024)
-#define PORT_MAX_NAME_LENGTH 32
 
 static int port_max = PORT_MAX;
 static int nports = 0;

@@ -35,9 +35,9 @@
 
 #include <sys/types.h>
 
-#define PORT_MAX_NAME_LENGTH 32
+#define PORT_MAX_NAME_LENGTH NAME_MAX
 
-enum flags {
+enum port_flags {
     PORT_TIMEOUT               = 0x8,
     PORT_RELATIVE_TIMEOUT      = 0x8,
     PORT_ABSOLUTE_TIMEOUT      = 0x10
