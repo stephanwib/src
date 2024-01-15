@@ -190,6 +190,7 @@ file	kern/tty_subr.c			kern
 file	kern/tty_tty.c			kern
 file	kern/uipc_accf.c		kern
 file	kern/uipc_domain.c		kern
+file	kern/uipc_hsem.c		kern
 file	kern/uipc_mbuf.c		kern
 file	kern/uipc_mbufdebug.c		kern & ether & ddb
 file	net/link_proto.c		kern	# XXX
