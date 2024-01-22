@@ -78,7 +78,7 @@ int         _get_next_sem_info(pid_t pid, int32_t *cookie, sem_info *info);
 
 struct khsem {
   sem_id                  khs_id;             /* id of this semaphore */
-  SIMPLEQ_ENTRY(kshem)    khs_entry;          /* free list entry */
+  SIMPLEQ_ENTRY(khsem)    khs_entry;          /* free list entry */
   kmutex_t                khs_interlock;      /* lock on this semaphore */
   kcondvar_t              khs_cv;             /* CV for wait events */
   pid_t                   khs_owner;          /* owning process */
