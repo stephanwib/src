@@ -32,6 +32,7 @@
 #include <sys/param.h>
 // #include <sys/syscall.h>
 #include <sys/syscallargs.h>
+#include <uvm/uvm.h>
 #include <sys/proc.h>
 #include <sys/hsem.h>
 #include <sys/kmem.h>
@@ -44,28 +45,35 @@ const int khsem_max = 8192;
 
 static kmutex_t                 khsem_mutex               __cacheline_aligned;
 static struct khsem             *hsems                    __read_mostly;
-static SIMPLEQ_HEAD(, khsem)    khsem_freeq;
+static SIMPLEQ_HEAD(, khsem)    khsem_freeq               __cacheline_aligned;
+static LIST_HEAD(, khsem)       khsem_used_list           __cacheline_aligned;
 
+
+#define PTR_TO_ID(x) (x - hsems)
 
 int
 khsem_init(void) 
 {
     int i, sz;
+    vaddr_t v;
 
     SIMPLEQ_INIT(&khsem_freeq);
+    LIST_INIT(&khsem_used_list);
     mutex_init(&khsem_mutex, MUTEX_DEFAULT, IPL_NONE);
 
     sz = ALIGN(khsem_max * sizeof(struct khsem));
     sz = round_page(sz);
 
-    // XXX allocate memory
+    v = uvm_km_alloc(kernel_map, sz, 0, UVM_KMF_WIRED|UVM_KMF_ZERO);
+	if (v == 0) {
+		printf("sysv_sem: cannot allocate memory");
+		return ENOMEM;
+	}
 
     for (i = 0; i < khsem_max; i++) {
-        hsems[i].khs_id = i;
-        mutex_init(&hsems[i].khs_interlock, MUTEX_DEFAULT, IPL_NONE);
         cv_init(&hsems[i].khs_cv, "acquire_sem");
 
-        SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_entry);
+        SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
     }
 
 }
@@ -82,16 +90,14 @@ khsem_lookup_byid(sem_id id) {
     if (id < 0 || id >= khsem_max)
         return NULL;
 
-    // XXX write me
-
-    return NULL;
+    return &hsems[i];
 }
 
 static void
 fill_hsem_info(const struct khsem *khs, struct sem_info *info)
 {
     *info = (struct sem_info) {
-        .sem = khs->khs_id,
+        .sem = PTR_TO_ID(khs),
         .pid = khs->khs_owner,
         .count = khs->khs_count,
         .latest_holder = khs->khs_latest_holder

@@ -77,19 +77,18 @@ int         _get_next_sem_info(pid_t pid, int32_t *cookie, sem_info *info);
 
 
 struct khsem {
-  sem_id                  khs_id;             /* id of this semaphore */
-  SIMPLEQ_ENTRY(khsem)    khs_entry;          /* free list entry */
-  kmutex_t                khs_interlock;      /* lock on this semaphore */
-  kcondvar_t              khs_cv;             /* CV for wait events */
-  pid_t                   khs_owner;          /* owning process */
-  char                    *khs_name;          /* name of this semaphore */
-  size_t                  khs_namelen;        /* length of name */
-  int                     khs_state;          /* state of this port */
-  int                     khs_waiters;
-  int                     khs_count;          /* current count */  
-  lwpid_t                 khs_latest_holder;  /* latest holder LWP id */
-  uid_t                   khs_uid;            /* creator uid */
-  gid_t                   khs_gid;            /* creator gid */
+  //sem_id                  khs_id;                           /* id of this semaphore */
+  SIMPLEQ_ENTRY(khsem)    khs_freeq_entry;                  /* free queue entry */
+  LIST_ENTRY(khsem)       khs_usedq_entry;                  /* in use queue entry */
+  kcondvar_t              khs_cv;                           /* CV for wait events */
+  pid_t                   khs_owner;                        /* owning process */
+  char                    khs_name[SEM_MAX_NAME_LENGTH];    /* name of this semaphore */
+  int                     khs_state;                        /* state of this port */
+  int                     khs_waiters;                      /* count of waiting threads */
+  int                     khs_count;                        /* current semaphore value  */  
+  lwpid_t                 khs_latest_holder;                /* latest holder LWP id */
+  uid_t                   khs_uid;                          /* creator uid */
+  gid_t                   khs_gid;                          /* creator gid */
 };
 
 enum sem_state {
