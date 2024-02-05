@@ -81,6 +81,7 @@ struct khsem {
   SIMPLEQ_ENTRY(khsem)    khs_freeq_entry;                  /* free queue entry */
   LIST_ENTRY(khsem)       khs_usedq_entry;                  /* in use queue entry */
   kcondvar_t              khs_cv;                           /* CV for wait events */
+  kmutex_t                khs_interlock;                    /* lock on this semaphore */
   pid_t                   khs_owner;                        /* owning process */
   char                    khs_name[SEM_MAX_NAME_LENGTH];    /* name of this semaphore */
   int                     khs_state;                        /* state of this port */

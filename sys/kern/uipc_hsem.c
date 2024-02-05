@@ -66,12 +66,13 @@ khsem_init(void)
 
     v = uvm_km_alloc(kernel_map, sz, 0, UVM_KMF_WIRED|UVM_KMF_ZERO);
 	if (v == 0) {
-		printf("sysv_sem: cannot allocate memory");
+		printf("hsem: cannot allocate memory");
 		return ENOMEM;
 	}
 
     for (i = 0; i < khsem_max; i++) {
         cv_init(&hsems[i].khs_cv, "acquire_sem");
+        mutex_init(&hsems[i].khs_interlock, MUTEX_DEFAULT, IPL_NONE);
 
         SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
     }
@@ -81,6 +82,7 @@ khsem_init(void)
 
 static void
 khsem_free(struct khsem *khs) {
+    KASSERT(mutex_owned(&khs->khs_interlock));
 
 }
 
@@ -90,7 +92,9 @@ khsem_lookup_byid(sem_id id) {
     if (id < 0 || id >= khsem_max)
         return NULL;
 
-    return &hsems[i];
+    mutex_enter(&hsems[id].khs_interlock);
+
+    return &hsems[id];
 }
 
 static void
@@ -211,13 +215,39 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
         syscallarg(const char *) name;
     } */
 
+    int error;
+    size_t namelen;
     int32_t count = SCARG(uap, count);
     const char *name = SCARG(uap, name);
+    char namebuf[SEM_MAX_NAME_LENGTH];
+    struct khsem *khs;
 
-    // Implement semaphore creation logic here
+    error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
+    if (error)
+        return error;
 
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
+    mutex_enter(&khsem_mutex);
+
+    if (SIMPLEQ_EMPTY(&khsem_freeq)) {
+        mutex_exit(&khsem_mutex);
+        return ENOSPC;
+    }
+
+    khs = SIMPLEQ_FIRST(&khsem_freeq);
+    SIMPLEQ_REMOVE_HEAD(&khsem_freeq, khs_freeq_entry);
+    LIST_INSERT_HEAD(&khsem_used_list, khs, khs_usedq_entry);
+    mutex_enter(&khs->khs_interlock);
+    mutex_exit(&khsem_mutex);
+
+    *khs = (struct khsem) {
+        .khs_state = KHS_IN_USE,
+        .khs_count = count,
+        .khs_owner = l->l_proc->p_pid
+    };
+    
+    mutex_exit(&khs->khs_interlock);
+
+    *retval = PTR_TO_ID(khs);
 
     return 0;  // Return 0 on success, or an appropriate error code on failure
 }
@@ -230,7 +260,7 @@ int sys__delete_sem(struct lwp *l, const struct sys__delete_sem_args *uap, regis
     } */
 
     struct khsem *khs;
-    sem_id sem = SCARG(uap, sem);
+    sem_id id = SCARG(uap, sem);
 
     khs = khsem_lookup_byid(id);
     if (khs == NULL)
