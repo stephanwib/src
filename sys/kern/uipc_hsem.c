@@ -73,7 +73,7 @@ khsem_init(void)
     for (i = 0; i < khsem_max; i++) {
         cv_init(&hsems[i].khs_cv, "acquire_sem");
         mutex_init(&hsems[i].khs_interlock, MUTEX_DEFAULT, IPL_NONE);
-
+	hsems[i].khs_state = KHS_FREE;
         SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
     }
 
