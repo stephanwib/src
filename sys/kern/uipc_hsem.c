@@ -36,7 +36,8 @@
 #include <sys/proc.h>
 #include <sys/hsem.h>
 #include <sys/kmem.h>
-#include <sys/queue.h>
+#include <sys/kauth.h>
+
 
 // Helper function to implement semaphore syscalls
 
@@ -73,7 +74,7 @@ khsem_init(void)
     for (i = 0; i < khsem_max; i++) {
         cv_init(&hsems[i].khs_cv, "acquire_sem");
         mutex_init(&hsems[i].khs_interlock, MUTEX_DEFAULT, IPL_NONE);
-	hsems[i].khs_state = KHS_FREE;
+	    hsems[i].khs_state = KHS_FREE;
         SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
     }
 
@@ -82,8 +83,25 @@ khsem_init(void)
 
 static void
 khsem_free(struct khsem *khs) {
-    KASSERT(mutex_owned(&khs->khs_interlock));
 
+    struct khsem *khs_this;
+    struct khsem *khs_next;
+
+    KASSERT(mutex_owned(&khs->khs_interlock));
+    KASSERT(khs->khs_state == KHS_DELETED);
+
+    mutex_enter(&khsem_mutex);
+    LIST_FOREACH_SAFE(khs_this, &khsem_used_list, khs_usedq_entry, khs_next) {
+        if (khs_this == khs) {
+            LIST_REMOVE(khs_this, khs_usedq_entry);
+        }
+    }
+
+    SIMPLEQ_INSERT_TAIL(&khsem_freeq, khs, khs_freeq_entry);
+    mutex_exit(&khsem_mutex);
+
+    khs->khs_state = KHS_FREE;
+    mutex_exit(&khs->khs_interlock);
 }
 
 static struct khsem *
@@ -111,7 +129,7 @@ fill_hsem_info(const struct khsem *khs, struct sem_info *info)
 }
 
 static int 
-khsem_acquire(sem_id id, int32_t count, uint32_t flags, int64_t timeout) {
+khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t timeout) {
 
     int error, t;
     struct khsem *khs;
@@ -133,14 +151,7 @@ khsem_acquire(sem_id id, int32_t count, uint32_t flags, int64_t timeout) {
         return ENOENT;
     }
 
-    if (khs->khs_count - count > 0)
-    {
-        khs->khs_count -= count;
-        mutex_exit(&khs->khs_interlock);
-
-        return 0;
-    }
-    else
+    if (khs->khs_count - count <= 0)
     {
         if (flags & SEM_RELATIVE_TIMEOUT && timeout == 0)
         {
@@ -177,6 +188,10 @@ khsem_acquire(sem_id id, int32_t count, uint32_t flags, int64_t timeout) {
 
         } while (khs->khs_count - count <= 0);
 
+        khs->khs_latest_holder = l->l_lid;
+        khs->khs_count -= count;
+        
+        mutex_exit(&khs->khs_interlock);
         return 0;
     }
 
@@ -220,6 +235,7 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
     int32_t count = SCARG(uap, count);
     const char *name = SCARG(uap, name);
     char namebuf[SEM_MAX_NAME_LENGTH];
+    kauth_cred_t uc;
     struct khsem *khs;
 
     error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
@@ -228,7 +244,7 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
 
     mutex_enter(&khsem_mutex);
 
-    if (SIMPLEQ_EMPTY(&khsem_freeq)) {
+    if (__predict_false(SIMPLEQ_EMPTY(&khsem_freeq))) {
         mutex_exit(&khsem_mutex);
         return ENOSPC;
     }
@@ -239,10 +255,14 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
     mutex_enter(&khs->khs_interlock);
     mutex_exit(&khsem_mutex);
 
+    uc = l->l_cred;
+
     *khs = (struct khsem) {
         .khs_state = KHS_IN_USE,
         .khs_count = count,
-        .khs_owner = l->l_proc->p_pid
+        .khs_owner = l->l_proc->p_pid,
+        .khs_uid = kauth_cred_geteuid(uc);
+        .khs_gid = kauth_cred_getegid(uc);
     };
     
     mutex_exit(&khs->khs_interlock);
@@ -299,7 +319,7 @@ int sys__acquire_sem(struct lwp *l, const struct sys__acquire_sem_args *uap, reg
     int error;
     sem_id sem = SCARG(uap, sem);
 
-    error = khsem_acquire(sem, 1, 0, 0);
+    error = khsem_acquire(l, sem, 1, 0, 0);
 
 
     // Implement semaphore acquisition logic here
@@ -326,7 +346,7 @@ int sys__acquire_sem_etc(struct lwp *l, const struct sys__acquire_sem_etc_args *
     uint32_t flags = SCARG(uap, flags);
     int64_t timeout = SCARG(uap, timeout);
 
-    error = khsem_acquire(sem, count, flags, timeout);
+    error = khsem_acquire(l, sem, count, flags, timeout);
 
     // Implement extended semaphore acquisition logic here
 
