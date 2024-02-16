@@ -86,7 +86,7 @@ struct khsem {
   char                    khs_name[SEM_MAX_NAME_LENGTH];    /* name of this semaphore */
   int                     khs_state;                        /* state of this port */
   int                     khs_waiters;                      /* count of waiting threads */
-  int                     khs_count;                        /* current semaphore value  */  
+  int32_t                 khs_count;                        /* current semaphore value  */  
   lwpid_t                 khs_latest_holder;                /* latest holder LWP id */
   uid_t                   khs_uid;                          /* creator uid */
   gid_t                   khs_gid;                          /* creator gid */

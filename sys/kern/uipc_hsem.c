@@ -30,16 +30,12 @@
 
 
 #include <sys/param.h>
-// #include <sys/syscall.h>
 #include <sys/syscallargs.h>
 #include <uvm/uvm.h>
 #include <sys/proc.h>
 #include <sys/hsem.h>
 #include <sys/kmem.h>
 #include <sys/kauth.h>
-
-
-// Helper function to implement semaphore syscalls
 
 
 const int khsem_max = 8192;
@@ -222,7 +218,7 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
 
 }
 
-// _create_sem syscall
+
 int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, register_t *retval)
 {
     /* {
@@ -261,18 +257,18 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
         .khs_state = KHS_IN_USE,
         .khs_count = count,
         .khs_owner = l->l_proc->p_pid,
-        .khs_uid = kauth_cred_geteuid(uc);
-        .khs_gid = kauth_cred_getegid(uc);
+        .khs_uid = kauth_cred_geteuid(uc),
+        .khs_gid = kauth_cred_getegid(uc)
     };
     
     mutex_exit(&khs->khs_interlock);
 
     *retval = PTR_TO_ID(khs);
 
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    return 0;
 }
 
-// _delete_sem syscall
+
 int sys__delete_sem(struct lwp *l, const struct sys__delete_sem_args *uap, register_t *retval)
 {
     /* {
@@ -309,7 +305,7 @@ int sys__delete_sem(struct lwp *l, const struct sys__delete_sem_args *uap, regis
     return 0;
 }
 
-// _acquire_sem syscall
+
 int sys__acquire_sem(struct lwp *l, const struct sys__acquire_sem_args *uap, register_t *retval)
 {
     /* {
@@ -321,16 +317,10 @@ int sys__acquire_sem(struct lwp *l, const struct sys__acquire_sem_args *uap, reg
 
     error = khsem_acquire(l, sem, 1, 0, 0);
 
-
-    // Implement semaphore acquisition logic here
-
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
-
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    return 0;
 }
 
-// _acquire_sem_etc syscall
+
 int sys__acquire_sem_etc(struct lwp *l, const struct sys__acquire_sem_etc_args *uap, register_t *retval)
 {
     /* {
@@ -348,15 +338,10 @@ int sys__acquire_sem_etc(struct lwp *l, const struct sys__acquire_sem_etc_args *
 
     error = khsem_acquire(l, sem, count, flags, timeout);
 
-    // Implement extended semaphore acquisition logic here
-
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
-
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    return 0;
 }
 
-// _release_sem syscall
+
 int sys__release_sem(struct lwp *l, const struct sys__release_sem_args *uap, register_t *retval)
 {
     /* {
@@ -368,15 +353,10 @@ int sys__release_sem(struct lwp *l, const struct sys__release_sem_args *uap, reg
 
     error = khsem_release(sem, 1, 0);
 
-    // Implement semaphore release logic here
-
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
-
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    return 0;
 }
 
-// _release_sem_etc syscall
+
 int sys__release_sem_etc(struct lwp *l, const struct sys__release_sem_etc_args *uap, register_t *retval)
 {
     /* {
@@ -392,15 +372,10 @@ int sys__release_sem_etc(struct lwp *l, const struct sys__release_sem_etc_args *
 
     error = khsem_release(sem, count, flags);
 
-    // Implement extended semaphore release logic here
-
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
-
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    return 0;
 }
 
-// _get_sem_count syscall
+
 int sys__get_sem_count(struct lwp *l, const struct sys__get_sem_count_args *uap, register_t *retval)
 {
     /* {
@@ -410,16 +385,23 @@ int sys__get_sem_count(struct lwp *l, const struct sys__get_sem_count_args *uap,
 
     sem_id id = SCARG(uap, id);
     int32_t *threadCount = SCARG(uap, threadCount);
+    int error = 0;
+    struct khsem *khs;
 
-    // Implement getting semaphore count logic here
 
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
+    khs = khsem_lookup_byid(id);
+    
+    if (khs == NULL)
+        return ENOENT;
 
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    error = copyout(&khs->khs_count, threadCount, sizeof(int32_t));
+
+    mutex_exit(&khs->khs_interlock);
+
+    return error;
 }
 
-// _set_sem_owner syscall
+
 int sys__set_sem_owner(struct lwp *l, const struct sys__set_sem_owner_args *uap, register_t *retval)
 {
     /* {
@@ -429,16 +411,45 @@ int sys__set_sem_owner(struct lwp *l, const struct sys__set_sem_owner_args *uap,
 
     sem_id id = SCARG(uap, id);
     pid_t pid = SCARG(uap, pid);
+    struct khsem *khs;
+    struct proc *new_proc;
 
-    // Implement setting semaphore owner logic here
+    khs = khsem_lookup_byid(id);
+    
+    if (khs == NULL)
+        return ENOENT;
+    
+    if (khs->khs_owner == new_pid)
+    {
+        mutex_exit(&khs->khs_interlock);
+        return 0;
+    }
 
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
+    mutex_enter(&khsem_mutex);
+    mutex_enter(&proc_lock);
+    new_proc = proc_find(new_pid);
 
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    if (!new_proc)
+    {
+        mutex_exit(&proc_lock);
+        mutex_exit(&khsem_mutex);
+        mutex_exit(&khs->khs_interlock);
+
+        return ESRCH;
+    }
+
+    /* Everything is valid, change ownership */
+
+    khs->khs_owner = new_pid;
+
+    mutex_exit(&proc_lock);
+    mutex_exit(&khsem_mutex);
+    mutex_exit(&khs-khs_interlock);
+
+    return 0;
 }
 
-// _get_sem_info syscall
+
 int sys__get_sem_info(struct lwp *l, const struct sys__get_sem_info_args *uap, register_t *retval)
 {
     /* {
@@ -446,18 +457,26 @@ int sys__get_sem_info(struct lwp *l, const struct sys__get_sem_info_args *uap, r
         syscallarg(struct sem_info *) info;
     } */
 
-    sem_id sem = SCARG(uap, sem);
-    struct sem_info *info = SCARG(uap, info);
+    sem_id id = SCARG(uap, sem);
+    struct sem_info *sem_info_user = SCARG(uap, info);
+    int error = 0;
+    struct khsem *khs;
+    struct sem_info sem_info_kernel;
 
-    // Implement getting semaphore information logic here
+    khs = khsem_lookup_byid(id);
+    
+    if (khs == NULL)
+        return ENOENT;
 
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
+    fill_hsem_info(khs, &sem_info_kernel);
+    mutex_exit(&khs->khs_interlock);
 
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    error = copyout(&sem_info_kernel, sem_info_user, sizeof(struct sem_info));
+
+    return error;
 }
 
-// _get_next_sem_info syscall
+
 int sys__get_next_sem_info(struct lwp *l, const struct sys__get_next_sem_info_args *uap, register_t *retval)
 {
     /* {
@@ -470,10 +489,6 @@ int sys__get_next_sem_info(struct lwp *l, const struct sys__get_next_sem_info_ar
     int32_t *cookie = SCARG(uap, cookie);
     struct sem_info *info = SCARG(uap, info);
 
-    // Implement getting next semaphore information logic here
 
-    // Set the return value if necessary
-    // *retval = <your_return_value>;
-
-    return 0;  // Return 0 on success, or an appropriate error code on failure
+    return 0;
 }
