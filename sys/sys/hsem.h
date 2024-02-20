@@ -104,4 +104,4 @@ int khsem_init(void);
 
 #endif	/* _KERNEL */
 
-#endif	/* _SYS_PORT_H_ */
+#endif	/* _SYS_HSEM_H */
