@@ -81,11 +81,16 @@ status_t	_get_next_area_info(pid_t pid, ssize_t *cookie,	area_info *areaInfo,
 
 
 struct karea {
+  area_id                 ka_id;                           /* area identifier */
   LIST_ENTRY(karea)       ka_entry;                        /* global list entry */
+  size_t                  ka_size;                         /* area space */
+  uint32_t                ka_lock;                         /* flags for wiring, continuity, ... */
+  uint32_t                ka_protection;                   /* page protection flags */
   pid_t                   ka_owner;                        /* owning process */
   char                    ka_name[AREA_MAX_NAME_LENGTH];   /* name of this area */
   uid_t                   ka_uid;                          /* creator uid */
   gid_t                   ka_gid;                          /* creator gid */
+  struct uvm_object       *ka_uobj;                        /* backing UVM object */
 };
 
 
