@@ -83,6 +83,7 @@ status_t	_get_next_area_info(pid_t pid, ssize_t *cookie,	area_info *areaInfo,
 struct karea {
   area_id                 ka_id;                           /* area identifier */
   LIST_ENTRY(karea)       ka_entry;                        /* global list entry */
+  vaddr_t                 ka_va;                           /* adress mapped */
   size_t                  ka_size;                         /* area space */
   uint32_t                ka_lock;                         /* flags for wiring, continuity, ... */
   uint32_t                ka_protection;                   /* page protection flags */
