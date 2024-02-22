@@ -43,6 +43,28 @@ typedef int32_t area_id;
 #endif /* _OS_H */
 
 
+/* locking options */
+#define AREA_NO_LOCK			0
+#define AREA_LAZY_LOCK			1
+#define AREA_FULL_LOCK			2
+#define AREA_CONTIGUOUS			3
+
+/* mapping options */
+#define AREA_ANY_ADDRESS		0
+#define AREA_EXACT_ADDRESS		1
+#define AREA_BASE_ADDRESS		2
+#define AREA_CLONE_ADDRESS		3
+#define	AREA_ANY_KERNEL_ADDRESS		4
+#define AREA_RANDOMIZED_ANY_ADDRESS	6
+#define AREA_RANDOMIZED_BASE_ADDRESS	7
+
+/* page protection */
+#define AREA_READ_AREA			(1 << 0)
+#define AREA_WRITE_AREA			(1 << 1)
+#define AREA_EXECUTE_AREA		(1 << 2)
+#define AREA_STACK_AREA			(1 << 3)
+#define AREA_CLONEABLE_AREA		(1 << 8)
+
 typedef struct area_info {
 	area_id		area;
 	char		name[AREA_MAX_NAME_LENGTH];
