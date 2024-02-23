@@ -1076,3 +1076,13 @@
 521 STD		{ int|sys||_set_sem_owner(sem_id id, pid_t pid); }
 522 STD		{ int|sys||_get_sem_info(sem_id sem, sem_info *info); }
 523 STD		{ int|sys||_get_next_sem_info(pid_t pid, int32_t *cookie, sem_info *info); }
+524 STD 	{ area_id|sys||_create_area(const char *name, void **startAddress, uint32_t addressSpec, size_t size, uint32_t lock, \
+			uint32_t protection); }
+525 STD		{ area_id|sys||_clone_area(const char *name, void **destAddress, uint32_t addressSpec, uint32_t protection, area_id source); }
+526 STD 	{ area_id|sys||_find_area(const char *name); }
+527 STD 	{ area_id|sys||_area_for(void *address); }
+528 STD 	{ int|sys||_delete_area(area_id id); }
+529 STD 	{ int|sys||_resize_area(area_id id, size_t newSize); }
+530 STD 	{ int|sys||_set_area_protection(area_id id, uint32_t newProtection); }
+531 STD 	{ int|sys||_get_area_info(area_id id, area_info *areaInfo, size_t size); }
+532 STD 	{ int|sys||_get_next_area_info(pid_t pid, ssize_t *cookie, area_info *areaInfo, size_t size); }
