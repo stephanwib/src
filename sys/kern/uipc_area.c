@@ -50,3 +50,144 @@ area_init(void)
     LIST_INIT(&karea_list);
     mutex_init(&area_mutex, MUTEX_DEFAULT, IPL_NONE);
 }
+
+struct karea *
+karea_lookup_byid(area_id id)
+{
+    struct karea *ka;
+
+    KASSERT(mutex_owned(&area_mutex));
+    LIST_FOREACH(ka, &karea_list, ka_entry)
+    {
+        if (ka->ka_id == id)
+        {
+            return ka;
+        }
+    }
+    return NULL;
+}
+
+
+area_id
+sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, register_t *retval)
+{
+    /*
+     * _create_area: Create a memory area with specified attributes.
+     * {
+     *      syscallarg(const char *) name;
+     *      syscallarg(void **) startAddress;
+     *      syscallarg(uint32_t) addressSpec;
+     *      syscallarg(size_t) size;
+     *      syscallarg(uint32_t) lock;
+     *      syscallarg(uint32_t) protection;
+     * }
+     */
+    /* Your implementation here */
+}
+
+area_id
+sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_t *retval)
+{
+    /*
+     * _clone_area: Clone an existing memory area.
+     * {
+     *      syscallarg(const char *) name;
+     *      syscallarg(void **) destAddress;
+     *      syscallarg(uint32_t) addressSpec;
+     *      syscallarg(uint32_t) protection;
+     *      syscallarg(area_id) source;
+     * }
+     */
+    /* Your implementation here */
+}
+
+area_id
+sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t *retval)
+{
+    /*
+     * _find_area: Search for a memory area by name.
+     * {
+     *      syscallarg(const char *) name;
+     * }
+     */
+    /* Your implementation here */
+}
+
+area_id
+sys__area_for(struct lwp *l, const struct sys__area_for_args *uap, register_t *retval)
+{
+    /*
+     * _area_for: Given an address, return the identifier of the containing memory area.
+     * {
+     *      syscallarg(void *) address;
+     * }
+     */
+    /* Your implementation here */
+}
+
+int
+sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, register_t *retval)
+{
+    /*
+     * _delete_area: Delete the specified memory area.
+     * {
+     *      syscallarg(area_id) id;
+     * }
+     */
+    /* Your implementation here */
+}
+
+int
+sys__resize_area(struct lwp *l, const struct sys__resize_area_args *uap, register_t *retval)
+{
+    /*
+     * _resize_area: Change the size of the specified memory area.
+     * {
+     *      syscallarg(area_id) id;
+     *      syscallarg(size_t) newSize;
+     * }
+     */
+    /* Your implementation here */
+}
+
+int
+sys__set_area_protection(struct lwp *l, const struct sys__set_area_protection_args *uap, register_t *retval)
+{
+    /*
+     * _set_area_protection: Modify the protection settings of the specified memory area.
+     * {
+     *      syscallarg(area_id) id;
+     *      syscallarg(uint32_t) newProtection;
+     * }
+     */
+    /* Your implementation here */
+}
+
+int
+sys__get_area_info(struct lwp *l, const struct sys__get_area_info_args *uap, register_t *retval)
+{
+    /*
+     * _get_area_info: Retrieve information about the specified memory area.
+     * {
+     *      syscallarg(area_id) id;
+     *      syscallarg(area_info *) areaInfo;
+     *      syscallarg(size_t) size;
+     * }
+     */
+    /* Your implementation here */
+}
+
+int
+sys__get_next_area_info(struct lwp *l, const struct sys__get_next_area_info_args *uap, register_t *retval)
+{
+    /*
+     * _get_next_area_info: Iterate through memory areas of a process and retrieve information about the next area.
+     * {
+     *      syscallarg(pid_t) pid;
+     *      syscallarg(ssize_t *) cookie;
+     *      syscallarg(area_info *) areaInfo;
+     *      syscallarg(size_t) size;
+     * }
+     */
+    /* Your implementation here */
+}
