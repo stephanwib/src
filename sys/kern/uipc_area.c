@@ -38,8 +38,8 @@
 
 #include <uvm/uvm.h>
 
-const int area_max = 8192;
-
+const  int                      area_max                  = 8192;
+static int                      next_area_id              = 0;
 static kmutex_t                 area_mutex                __cacheline_aligned;
 static LIST_HEAD(, karea)       karea_list                __cacheline_aligned;
 
@@ -82,7 +82,8 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
      *      syscallarg(uint32_t) protection;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
 
 area_id
@@ -98,7 +99,8 @@ sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_
      *      syscallarg(area_id) source;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
 
 area_id
@@ -110,7 +112,8 @@ sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t 
      *      syscallarg(const char *) name;
      * }
      */
-    /* Your implementation here */
+   
+    return 0;
 }
 
 area_id
@@ -122,7 +125,8 @@ sys__area_for(struct lwp *l, const struct sys__area_for_args *uap, register_t *r
      *      syscallarg(void *) address;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
 
 int
@@ -134,7 +138,8 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
      *      syscallarg(area_id) id;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
 
 int
@@ -147,7 +152,8 @@ sys__resize_area(struct lwp *l, const struct sys__resize_area_args *uap, registe
      *      syscallarg(size_t) newSize;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
 
 int
@@ -160,7 +166,8 @@ sys__set_area_protection(struct lwp *l, const struct sys__set_area_protection_ar
      *      syscallarg(uint32_t) newProtection;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
 
 int
@@ -174,7 +181,8 @@ sys__get_area_info(struct lwp *l, const struct sys__get_area_info_args *uap, reg
      *      syscallarg(size_t) size;
      * }
      */
-    /* Your implementation here */
+
+    return 0;
 }
 
 int
@@ -189,5 +197,6 @@ sys__get_next_area_info(struct lwp *l, const struct sys__get_next_area_info_args
      *      syscallarg(size_t) size;
      * }
      */
-    /* Your implementation here */
+    
+    return 0;
 }
