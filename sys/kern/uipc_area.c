@@ -82,7 +82,58 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
      *      syscallarg(uint32_t) protection;
      * }
      */
+
+    const char *user_name = SCARG(uap, name);
+    void **startAddress = SCARG(uap, startAddress);
+    uint32_t addressSpec = SCARG(uap, addressSpec);
+    size_t size = SCARG(uap, size);
+    uint32_t lock = SCARG(uap, lock);
+    uint32_t protection = SCARG(uap, protection);
     
+    int error;
+    struct karea *ka;
+
+    ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
+   
+    *ka = (struct karea) {
+        .ka_id = next_area_id++,
+        .ka_va = 0,
+        .ka_size = size,
+        .ka_lock = lock,
+        .ka_protection = protection,
+        .ka_owner = l->l_proc->p_pid,
+        .ka_uid = kauth_cred_getuid(l->l_cred),
+        .ka_gid = kauth_cred_getgid(l->l_cred),
+        .ka_uobj = NULL
+    };
+
+    error = copyinstr(user_name, ka->ka_name, sizeof(ka->ka_name), NULL);
+    if (error) {
+        kmem_free(ka, sizeof(struct karea));
+        return error;
+    }
+    
+    ka->ka_uobj = uao_create(size, UAO_FLAG_KMAP);
+    if (ka->ka_uobj == NULL) {
+        kmem_free(ka, sizeof(struct karea));
+        return ENOMEM;  // Failed to create UVM object
+    }
+   
+    vaddr_t va = uvm_map(ka->ka_uobj, 0, size, NULL, UVM_FLAG_FIXED | UVM_FLAG_OVERLAY, prot, prot, UVM_INH_SHARE);
+    if (va == UVM_INVALID_ADDRESS) {
+        uao_detach(ka->ka_uobj);
+        kmem_free(ka, sizeof(struct karea));
+        return ENOMEM;  // Failed to map UVM object
+    }
+
+    ka->ka_va = va;
+    
+    mutex_enter(&area_mutex);
+    LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
+    mutex_exit(&area_mutex);
+
+    *retval = ka->ka_id;
+
     return 0;
 }
 
