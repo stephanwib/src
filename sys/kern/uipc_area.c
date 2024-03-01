@@ -40,6 +40,7 @@
 
 const  int                      area_max                  = 8192;
 static int                      next_area_id              = 0;
+static int                      area_total_count          = 0;
 static kmutex_t                 area_mutex                __cacheline_aligned;
 static LIST_HEAD(, karea)       karea_list                __cacheline_aligned;
 
@@ -67,6 +68,24 @@ karea_lookup_byid(area_id id)
     return NULL;
 }
 
+static void
+fill_area_info(const struct karea *ka, struct area_info *info)
+{
+    *info = (struct area_info) {
+        .area = ka->ka_id,
+        .pid = ka->ka_owner,
+        .size = ka->ka_size,
+        .lock = ka->ka_lock,
+        .protection = ka->ka_protection,
+        .ram_size = 0,
+        .copy_count = 0,
+        .in_count = 0,
+        .out_count = 0,
+        .address = ka->ka_va
+    };
+
+    (void)strlcpy(info->name, ka->ka_name, AREA_MAX_NAME_LENGTH);
+}
 
 area_id
 sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, register_t *retval)
@@ -92,6 +111,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     
     int error;
     struct karea *ka;
+    struct karea *search;
 
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
    
@@ -129,7 +149,20 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     ka->ka_va = va;
     
     mutex_enter(&area_mutex);
+
+    if area_total_count >= area_max {
+        mutex_exit(&area_mutex);
+        uao_detach(ka->ka_uobj);
+        kmem_free(ka, sizeof(struct karea));
+        return ENOSPC;    
+    }
+    
+    while (__predict_false((search = karea_lookup_byid(area_next_id)) != NULL))      
+        area_next_id++;
+    ka->ka_id = area_next_id;
+    
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
+    area_total_count++;
     mutex_exit(&area_mutex);
 
     *retval = ka->ka_id;
