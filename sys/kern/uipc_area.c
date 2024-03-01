@@ -262,11 +262,26 @@ sys__get_area_info(struct lwp *l, const struct sys__get_area_info_args *uap, reg
      * {
      *      syscallarg(area_id) id;
      *      syscallarg(area_info *) areaInfo;
-     *      syscallarg(size_t) size;
      * }
      */
 
-    return 0;
+    area_id id = SCARG(uap, id);
+    struct area_info *area_info_user = SCARG(uap, areaInfo);
+    struct area_info area_info_kernel;
+    int error;
+    
+    mutex_enter(&area_mutex);
+    struct karea *ka = karea_lookup_byid(id);
+    mutex_exit(&area_mutex);
+
+    if (ka == NULL)
+        return EINVAL;
+    
+    fill_area_info(ka, &area_info_kernel);
+
+    error = copyout(&kernel_area_info, user_area_info, sizeof(struct area_info));
+   
+    return error;
 }
 
 int
@@ -278,7 +293,6 @@ sys__get_next_area_info(struct lwp *l, const struct sys__get_next_area_info_args
      *      syscallarg(pid_t) pid;
      *      syscallarg(ssize_t *) cookie;
      *      syscallarg(area_info *) areaInfo;
-     *      syscallarg(size_t) size;
      * }
      */
     
