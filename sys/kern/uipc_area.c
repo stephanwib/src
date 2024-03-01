@@ -222,17 +222,7 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
      *      syscallarg(area_id) id;
      * }
      */
-    #include <sys/param.h>
-#include <sys/syscallargs.h>
-#include <sys/proc.h>
-#include <sys/area.h>
-#include <sys/kmem.h>
-#include <sys/kauth.h>
-#include <uvm/uvm.h>
 
-int
-sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, register_t *retval)
-{
     area_id id = SCARG(uap, id);
 
     mutex_enter(&area_mutex);
