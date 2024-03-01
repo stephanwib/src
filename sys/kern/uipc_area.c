@@ -222,7 +222,44 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
      *      syscallarg(area_id) id;
      * }
      */
+    #include <sys/param.h>
+#include <sys/syscallargs.h>
+#include <sys/proc.h>
+#include <sys/area.h>
+#include <sys/kmem.h>
+#include <sys/kauth.h>
+#include <uvm/uvm.h>
+
+int
+sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, register_t *retval)
+{
+    area_id id = SCARG(uap, id);
+
+    mutex_enter(&area_mutex);
+    struct karea *ka = karea_lookup_byid(id);
+
+    if (ka == NULL) {
+        mutex_exit(&area_mutex);
+        return EINVAL;
+    }
+        
+    if (ka->ka_owner != l->l_proc->p_pid) {
+        mutex_exit(&area_mutex);
+        return EACCES;
+    }
     
+    if (ka->ka_uobj != NULL) {
+        uvm_unmap(l->l_proc->p_vmspace, ka->ka_va, ka->ka_va + ka->ka_size, UVM_FLAG_VAONLY);
+        uao_detach(ka->ka_uobj);
+        mutex_exit(&area_mutex);
+    }
+
+    LIST_REMOVE(ka, ka_entry);
+    area_total_count--;
+    mutex_exit(&area_mutex);
+
+    kmem_free(ka, sizeof(struct karea));
+
     return 0;
 }
 
