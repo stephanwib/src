@@ -295,6 +295,52 @@ sys__get_next_area_info(struct lwp *l, const struct sys__get_next_area_info_args
      *      syscallarg(area_info *) areaInfo;
      * }
      */
+
+    pid_t pid = SCARG(uap, pid);
+    ssize_t *cookie = SCARG(uap, cookie);
+    struct area_info *user_area_info = SCARG(uap, areaInfo);
+    size_t size = SCARG(uap, size);
+
+    int error;
+    uint32_t skip, iter_cookie;
+    struct karea *ka;
+    struct area_info area_info_kernel;
+
+    // Copy in the initial cookie state
+    error = copyin(cookie, &skip, sizeof(uint32_t));
+    if (error)
+        return error;
+
+    iter_cookie = skip;  // Keep the initial cookie state, will be incremented for the next run
+
+    mutex_enter(&area_mutex);
     
-    return 0;
+    LIST_FOREACH(ka, &karea_list, ka_entry) {
+        if (ka->ka_owner == pid) {
+            if (skip == 0) {
+
+                fill_area_info(ka, &area_info_kernel);
+                mutex_exit(&area_mutex);
+
+                error = copyout(&kernel_area_info, user_area_info, sizeof(struct area_info));
+                if (error)
+                    return error;
+                
+                iter_cookie++;
+                error = copyout(&iter_cookie, cookie, sizeof(uint32_t));
+                if (error)
+                    return error;
+                
+                return 0;
+            } else {
+                skip--;
+            }
+        }
+    }
+
+    // Nothing found
+    mutex_exit(&area_mutex);
+    
+    return ENOENT;
+
 }
