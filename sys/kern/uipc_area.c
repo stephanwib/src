@@ -203,14 +203,23 @@ sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t 
 area_id
 sys__area_for(struct lwp *l, const struct sys__area_for_args *uap, register_t *retval)
 {
-    /*
-     * _area_for: Given an address, return the identifier of the containing memory area.
-     * {
-     *      syscallarg(void *) address;
-     * }
-     */
+   void *address = SCARG(uap, address);
+   struct karea *ka;
     
-    return 0;
+    mutex_enter(&area_mutex);
+    LIST_FOREACH(ka, &karea_list, ka_entry) {
+        if (ka->ka_owner == l->l_proc->p_pid &&
+            ka->ka_va <= (vaddr_t)address &&
+            (vaddr_t)address < ka->ka_va + ka->ka_size) {
+                *retval = ka->ka_id;
+                mutex_exit(&area_mutex);
+                return 0;
+        }
+    }
+
+    mutex_exit(&area_mutex);
+
+    return ENOENT;
 }
 
 int
