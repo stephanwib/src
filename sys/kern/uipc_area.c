@@ -197,12 +197,34 @@ sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t 
      * }
      */
    
-    return 0;
+    const char *name = SCARG(uap, name);
+    struct karea *ka = NULL;
+    
+    mutex_enter(&area_mutex);
+    
+    LIST_FOREACH(ka, &karea_list, ka_entry) {
+        if (strcmp(ka->ka_name, name) == 0) {
+            *retval = ka->ka_id;
+            break;
+        }
+    }
+   
+    mutex_exit(&area_mutex);
+
+    return (ka == NULL) ? ENOENT : 0; 
 }
 
 area_id
 sys__area_for(struct lwp *l, const struct sys__area_for_args *uap, register_t *retval)
 {
+
+    /*
+     * _area_for: Given an address, return the identifier of the containing memory area.
+     * {
+     *      syscallarg(void *) address;
+     * }
+     */
+    
    void *address = SCARG(uap, address);
    struct karea *ka;
     
