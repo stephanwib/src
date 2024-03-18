@@ -1084,5 +1084,5 @@
 528 STD 	{ int|sys||_delete_area(area_id id); }
 529 STD 	{ int|sys||_resize_area(area_id id, size_t newSize); }
 530 STD 	{ int|sys||_set_area_protection(area_id id, uint32_t newProtection); }
-531 STD 	{ int|sys||_get_area_info(area_id id, area_info *areaInfo, size_t size); }
-532 STD 	{ int|sys||_get_next_area_info(pid_t pid, ssize_t *cookie, area_info *areaInfo, size_t size); }
+531 STD 	{ int|sys||_get_area_info(area_id id, area_info *areaInfo); }
+532 STD 	{ int|sys||_get_next_area_info(pid_t pid, ssize_t *cookie, area_info *areaInfo); }

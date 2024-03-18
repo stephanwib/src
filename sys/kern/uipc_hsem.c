@@ -291,7 +291,7 @@ int sys__delete_sem(struct lwp *l, const struct sys__delete_sem_args *uap, regis
     if (khs->khs_owner != l->l_proc->p_pid)
     {
         mutex_exit(&khs->khs_interlock);
-        return EPERM;
+        return EACCES;
     }
 
     khs->khs_state = KHS_DELETED;

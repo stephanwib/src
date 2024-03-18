@@ -1,4 +1,4 @@
-/*      $NetBSD: hsem.h,v 1.00 2023/11/18 14:57:22 stephanwib Exp $        */
+/*      $NetBSD: area.h,v 1.00 2023/11/18 14:57:22 stephanwib Exp $        */
 
 /*-
  * Copyright (c) 2023 The NetBSD Foundation, Inc.
