@@ -129,7 +129,9 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
 
     int error, t;
     struct khsem *khs;
-    
+
+    if (count <= 0)
+        return EINVAL;
     
     if ((flags & (SEM_RELATIVE_TIMEOUT | SEM_ABSOLUTE_TIMEOUT)) == (SEM_RELATIVE_TIMEOUT | SEM_ABSOLUTE_TIMEOUT))
         return EINVAL;
