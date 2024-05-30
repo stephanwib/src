@@ -127,7 +127,7 @@ fill_hsem_info(const struct khsem *khs, struct sem_info *info)
 static int 
 khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t timeout) {
 
-    int error, t;
+    int error;
     struct khsem *khs;
 
     if (count <= 0)
@@ -149,7 +149,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
         return ENOENT;
     }
 
-    if (khs->khs_count - count <= 0)
+    if (khs->khs_count - count < 0)
     {
         if (flags & SEM_RELATIVE_TIMEOUT && timeout == 0)
         {
@@ -157,12 +157,12 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
             return EAGAIN;
         }
 
-        t = (flags & SEM_TIMEOUT) ? timeout : 0;
+        // t = (flags & SEM_TIMEOUT) ? timeout : 0;
 
         do
         {
             khs->khs_waiters++;
-            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz(t));
+            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_TIMEOUT) ? timeout : 0));
             khs->khs_waiters--;
 
             if (khs->khs_state == KHS_DELETED)
@@ -184,7 +184,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
                 return error;
             }
 
-        } while (khs->khs_count - count <= 0);
+        } while (khs->khs_count - count < 0);
 
         khs->khs_latest_holder = l->l_lid;
         khs->khs_count -= count;
@@ -202,6 +202,9 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
     
     /* The original implementation has a "do not rescedule" flag, which we do not support */
     (void)flags;
+
+    if (count <= 0)
+        return EINVAL;
 
     khs = khsem_lookup_byid(id);
     if (khs == NULL)
@@ -229,16 +232,21 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
     } */
 
     int error;
-    size_t namelen;
+    size_t namelen = 0;
     int32_t count = SCARG(uap, count);
     const char *name = SCARG(uap, name);
     char namebuf[SEM_MAX_NAME_LENGTH];
-    kauth_cred_t uc;
+    kauth_cred_t uc = l->l_cred;
     struct khsem *khs;
 
-    error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
-    if (error)
-        return error;
+    if (count < 0)
+        return EINVAL;
+
+    if (name != NULL) {
+        error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
+        if (error)
+            return error;
+    }
 
     mutex_enter(&khsem_mutex);
 
@@ -247,13 +255,12 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
         return ENOSPC;
     }
 
+    /* Pick a semaphore structure from the free queue and transfer it to the used list */
     khs = SIMPLEQ_FIRST(&khsem_freeq);
     SIMPLEQ_REMOVE_HEAD(&khsem_freeq, khs_freeq_entry);
     LIST_INSERT_HEAD(&khsem_used_list, khs, khs_usedq_entry);
     mutex_enter(&khs->khs_interlock);
     mutex_exit(&khsem_mutex);
-
-    uc = l->l_cred;
 
     *khs = (struct khsem) {
         .khs_state = KHS_IN_USE,
@@ -262,6 +269,10 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
         .khs_uid = kauth_cred_geteuid(uc),
         .khs_gid = kauth_cred_getegid(uc)
     };
+
+    strlcpy(khs->khs_name,
+            (namelen == 0) ? "unnamed semaphore" : namebuf,
+            SEM_MAX_NAME_LENGTH);
     
     mutex_exit(&khs->khs_interlock);
 
