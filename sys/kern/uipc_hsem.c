@@ -74,6 +74,7 @@ khsem_init(void)
         SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
     }
 
+    return 0;
 }
 
 
@@ -193,6 +194,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
         return 0;
     }
 
+    return 0;
 }
 
 static int 
@@ -221,8 +223,9 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
     if (khs->khs_waiters)
         cv_signal(&khs->khs_cv);
 
+    return 0;
 }
-
+ 
 
 int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, register_t *retval)
 {
@@ -330,7 +333,10 @@ int sys__acquire_sem(struct lwp *l, const struct sys__acquire_sem_args *uap, reg
 
     error = khsem_acquire(l, sem, 1, 0, 0);
 
-    return 0;
+    if (error == 0)
+        *retval = 0;
+
+    return error;
 }
 
 
@@ -350,8 +356,11 @@ int sys__acquire_sem_etc(struct lwp *l, const struct sys__acquire_sem_etc_args *
     int64_t timeout = SCARG(uap, timeout);
 
     error = khsem_acquire(l, sem, count, flags, timeout);
+ 
+    if (error == 0)
+        *retval = 0;
 
-    return 0;
+    return error;
 }
 
 
@@ -366,7 +375,10 @@ int sys__release_sem(struct lwp *l, const struct sys__release_sem_args *uap, reg
 
     error = khsem_release(sem, 1, 0);
 
-    return 0;
+    if (error == 0)
+        *retval = 0;
+
+    return error;
 }
 
 
@@ -385,7 +397,10 @@ int sys__release_sem_etc(struct lwp *l, const struct sys__release_sem_etc_args *
 
     error = khsem_release(sem, count, flags);
 
-    return 0;
+    if (error == 0)
+        *retval = 0;
+
+    return error;
 }
 
 
@@ -410,6 +425,9 @@ int sys__get_sem_count(struct lwp *l, const struct sys__get_sem_count_args *uap,
     error = copyout(&khs->khs_count, threadCount, sizeof(int32_t));
 
     mutex_exit(&khs->khs_interlock);
+    
+    if (error == 0)
+        *retval = 0;
 
     return error;
 }
@@ -423,7 +441,7 @@ int sys__set_sem_owner(struct lwp *l, const struct sys__set_sem_owner_args *uap,
     } */
 
     sem_id id = SCARG(uap, id);
-    pid_t pid = SCARG(uap, pid);
+    pid_t new_pid = SCARG(uap, pid);
     struct khsem *khs;
     struct proc *new_proc;
 
@@ -435,6 +453,7 @@ int sys__set_sem_owner(struct lwp *l, const struct sys__set_sem_owner_args *uap,
     if (khs->khs_owner == new_pid)
     {
         mutex_exit(&khs->khs_interlock);
+        *retval = 0;
         return 0;
     }
 
@@ -457,7 +476,9 @@ int sys__set_sem_owner(struct lwp *l, const struct sys__set_sem_owner_args *uap,
 
     mutex_exit(&proc_lock);
     mutex_exit(&khsem_mutex);
-    mutex_exit(&khs-khs_interlock);
+    mutex_exit(&khs->khs_interlock);
+
+    *retval = 0;
 
     return 0;
 }
@@ -485,6 +506,9 @@ int sys__get_sem_info(struct lwp *l, const struct sys__get_sem_info_args *uap, r
     mutex_exit(&khs->khs_interlock);
 
     error = copyout(&sem_info_kernel, sem_info_user, sizeof(struct sem_info));
+
+    if (error == 0)
+        *retval = 0;
 
     return error;
 }

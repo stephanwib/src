@@ -906,6 +906,7 @@ int sys__set_port_owner(struct lwp *l, const struct sys__set_port_owner_args *ua
     error = kport_set_owner(SCARG(uap, port), SCARG(uap, pid));
     if (error == 0)
         *retval = 0;
+        
     return error;
 }
 
