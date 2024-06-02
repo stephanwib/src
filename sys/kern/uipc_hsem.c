@@ -524,8 +524,47 @@ int sys__get_next_sem_info(struct lwp *l, const struct sys__get_next_sem_info_ar
 
     pid_t pid = SCARG(uap, pid);
     int32_t *cookie = SCARG(uap, cookie);
-    struct sem_info *info = SCARG(uap, info);
+    int i, error;
+    uint32_t skip, iter_cookie;
+    struct sem_info *sem_info_user = SCARG(uap, info);
+    struct sem_info sem_info_kernel;
 
+     // Copy in the initial cookie state
+    error = copyin(cookie, &skip, sizeof(uint32_t));
+    if (error)
+        return error;
 
-    return 0;
+    iter_cookie = skip;  // Keep the initial cookie state, will be incremented for the next run
+
+    mutex_enter(&khsem_mutex);
+    
+    for (i = 0; i < khsem_max; i++)  {
+        if (hsems[i].khs_state == KHS_IN_USE && hsems[i].khs_owner == pid) {
+            if (skip == 0) {
+
+                mutex_enter(&hsems[i].khs_interlock);
+                fill_hsem_info(&hsems[i], &sem_info_kernel);
+                mutex_exit(&hsems[i].khs_interlock);
+
+                mutex_exit(&khsem_mutex);
+
+                error = copyout(&sem_info_kernel, sem_info_user, sizeof(struct sem_info));
+                if (error)
+                    return error;
+                
+                iter_cookie++;
+                error = copyout(&iter_cookie, cookie, sizeof(uint32_t));
+                if (error)
+                    return error;
+                
+                return 0;
+            } else 
+                skip--;
+        }
+    }
+
+    // Nothing found
+    mutex_exit(&khsem_mutex);
+    
+    return ENOENT;
 }
