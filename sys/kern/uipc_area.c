@@ -109,7 +109,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     uint32_t lock = SCARG(uap, lock);
     uint32_t protection = SCARG(uap, protection);
     
-    int error;
+    int error, flags = 0;
     vm_prot_t prot;
     vaddr_t va;
     struct karea *ka;
@@ -118,7 +118,6 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
    
     *ka = (struct karea) {
-        .ka_id = next_area_id++,
         .ka_va = 0,
         .ka_size = size,
         .ka_lock = lock,
