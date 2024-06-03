@@ -110,6 +110,8 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     uint32_t protection = SCARG(uap, protection);
     
     int error;
+    vm_prot_t prot;
+    vaddr_t va;
     struct karea *ka;
     struct karea *search;
 
@@ -133,17 +135,19 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
         return error;
     }
     
-    ka->ka_uobj = uao_create(size, UAO_FLAG_KMAP);
+    ka->ka_uobj = uao_create(size, 0);
     if (ka->ka_uobj == NULL) {
         kmem_free(ka, sizeof(struct karea));
-        return ENOMEM;  // Failed to create UVM object
+        return ENOMEM;
     }
-   
-    vaddr_t va = uvm_map(ka->ka_uobj, 0, size, NULL, UVM_FLAG_FIXED | UVM_FLAG_OVERLAY, prot, prot, UVM_INH_SHARE);
-    if (va == UVM_INVALID_ADDRESS) {
+
+    prot = VM_PROT_READ;
+    
+    error = uvm_map(ka->ka_uobj, &va, size, ka->ka_uobj, 0 /* offset */, 0 /* alignment */ , UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
+    if (error) {
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
-        return ENOMEM;  // Failed to map UVM object
+        return ENOMEM;
     }
 
     ka->ka_va = va;
