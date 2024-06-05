@@ -142,7 +142,8 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
 
     prot = VM_PROT_READ;
     
-    error = uvm_map(ka->ka_uobj, &va, size, ka->ka_uobj, 0 /* offset */, 0 /* alignment */ , UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
+    error = uvm_map(l->l_proc->p_vmspace, &va, size, ka->ka_uobj, 0 /* offset */, 0 /* alignment */ , 
+                    UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
