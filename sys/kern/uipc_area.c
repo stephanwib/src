@@ -120,10 +120,21 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     if (addressSpec == AREA_ANY_KERNEL_ADDRESS)
         return EINVAL;
 
+    */ Remap options with the same meaning */
+    if (addressSpec == AREA_RANDOMIZED_ANY_ADDRESS)
+		addressSpec = AREA_ANY_ADDRESS;
+	if (addressSpec == AREA_RANDOMIZED_BASE_ADDRESS)
+		addressSpec = AREA_BASE_ADDRESS;
+
+    
     /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
     error = copyin((void*)startAddress, address, sizeof(void*);
     if (error)
         return error;
+    
+    /* Make sure the requested address is aligned to PAGE_SIZE */
+    if ((address % PAGE_SIZE) != 0)
+		return EINVAL;
     
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
    
