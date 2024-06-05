@@ -112,9 +112,19 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     int error, flags = 0;
     vm_prot_t prot;
     vaddr_t va;
+    void *address;
     struct karea *ka;
     struct karea *search;
 
+    /* Reject mappings unavailable to user-mode */
+    if (addressSpec == AREA_ANY_KERNEL_ADDRESS)
+        return EINVAL;
+
+    /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
+    error = copyin((void*)startAddress, address, sizeof(void*);
+    if (error)
+        return error;
+    
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
    
     *ka = (struct karea) {
