@@ -110,7 +110,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     uint32_t protection = SCARG(uap, protection);
     
     int error, flags = 0;
-    vm_prot_t prot;
+    vm_prot_t prot = VM_PROT_NONE;
     vaddr_t va;
     void *address;
     struct karea *ka;
@@ -132,11 +132,11 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
 
     /* Map area protection flags to UVM flags */
     if (protection & AREA_READ_AREA)
-        prot = VM_PROT_READ;
+        prot |= VM_PROT_READ;
     if (protection & AREA_WRITE_AREA)
-        prot = VM_PROT_WRITE;
+        prot |= VM_PROT_WRITE;
     if (protection & AREA_EXECUTE_AREA)
-        prot = VM_PROT_EXECUTE;
+        prot |= VM_PROT_EXECUTE;
 
 	
     /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
