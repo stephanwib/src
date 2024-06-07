@@ -116,16 +116,19 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     struct karea *ka;
     struct karea *search;
 
-    /* Reject mappings unavailable to user-mode */
-    if (addressSpec == AREA_ANY_KERNEL_ADDRESS)
-        return EINVAL;
 
-    */ Remap options with the same meaning */
-    if (addressSpec == AREA_RANDOMIZED_ANY_ADDRESS)
-		addressSpec = AREA_ANY_ADDRESS;
-	if (addressSpec == AREA_RANDOMIZED_BASE_ADDRESS)
-		addressSpec = AREA_BASE_ADDRESS;
-
+    /* Reject mappings unavailable to user-mode
+    /  Remap options with the same meaning */
+    switch (addressSpec) {
+        case AREA_ANY_ADDRESS:
+	case AREA_RANDOMIZED_ANY_ADDRESS:
+            break;
+	case AREA_BASE_ADDRESS:
+	case AREA_RANDOMIZED_BASE_ADDRESS:
+	    break;
+	case AREA_ANY_KERNEL_ADDRESS:
+ 	    return EINVAL;
+    }
     
     /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
     error = copyin((void*)startAddress, address, sizeof(void*);
