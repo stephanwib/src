@@ -129,7 +129,16 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
 	case AREA_ANY_KERNEL_ADDRESS:
  	    return EINVAL;
     }
-    
+
+    /* Map area protection flags to UVM flags */
+    if (protection & AREA_READ_AREA)
+        prot = VM_PROT_READ;
+    if (protection & AREA_WRITE_AREA)
+        prot = VM_PROT_WRITE;
+    if (protection & AREA_EXECUTE_AREA)
+        prot = VM_PROT_EXECUTE;
+
+	
     /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
     error = copyin((void*)startAddress, address, sizeof(void*);
     if (error)
@@ -163,9 +172,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
         kmem_free(ka, sizeof(struct karea));
         return ENOMEM;
     }
-
-    prot = VM_PROT_READ;
-    
+	
     error = uvm_map(l->l_proc->p_vmspace, &va, size, ka->ka_uobj, 0 /* offset */, 0 /* alignment */ , 
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
