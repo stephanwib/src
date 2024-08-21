@@ -185,6 +185,15 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
         return ENOMEM;
     }
 
+    if (lock >= AREA_LAZY_LOCK) {
+        error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
+	if (error) {
+	    uao_detach(ka->ka_uobj);
+            kmem_free(ka, sizeof(struct karea));
+            return ENOMEM;
+	}
+    }
+
     ka->ka_va = va;
     
     mutex_enter(&area_mutex);
