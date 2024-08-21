@@ -120,11 +120,15 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     /* Reject mappings unavailable to user-mode
     /  Remap options with the same meaning */
     switch (addressSpec) {
+	case AREA_EXACT_ADDRESS:
+	    /* XXX: UVM takes this as a hint only */
+	    flags |= UVM_FLAG_FIXED;
         case AREA_ANY_ADDRESS:
 	case AREA_RANDOMIZED_ANY_ADDRESS:
             break;
 	case AREA_BASE_ADDRESS:
 	case AREA_RANDOMIZED_BASE_ADDRESS:
+	    /* XXX: base addresses probably not supported by UVM */
 	    break;
 	case AREA_ANY_KERNEL_ADDRESS:
  	    return EINVAL;
