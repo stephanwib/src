@@ -147,11 +147,11 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     error = copyin((void*)startAddress, address, sizeof(void*);
     if (error)
         return error;
-    va = *(vaddr_t*)address;
+    va = (vaddr_t*)address;
     
     /* Make sure the requested address and size is aligned to PAGE_SIZE */
-    if ((address % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
-		return EINVAL;
+    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
+	return EINVAL;
     
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
    
@@ -186,9 +186,17 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
         return ENOMEM;
     }
 
+    if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t*)address) {
+	/* XXX unmap */
+        uao_detach(ka->ka_uobj);
+        kmem_free(ka, sizeof(struct karea));
+        return ENOMEM;
+    }
+
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
 	if (error) {
+	    /* XXX unmap */
 	    uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
             return ENOMEM;
