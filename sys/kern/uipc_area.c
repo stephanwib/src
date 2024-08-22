@@ -147,6 +147,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     error = copyin((void*)startAddress, address, sizeof(void*);
     if (error)
         return error;
+    va = *(vaddr_t*)address;
     
     /* Make sure the requested address and size is aligned to PAGE_SIZE */
     if ((address % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
@@ -198,6 +199,8 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     
     mutex_enter(&area_mutex);
 
+    error = copyout(&va, (void*)startAddress, sizeof(void*));
+	
     if area_total_count >= area_max {
         mutex_exit(&area_mutex);
         uao_detach(ka->ka_uobj);
