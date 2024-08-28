@@ -87,6 +87,183 @@ fill_area_info(const struct karea *ka, struct area_info *info)
     (void)strlcpy(info->name, ka->ka_name, AREA_MAX_NAME_LENGTH);
 }
 
+static int
+create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress, 
+                     uint32_t addressSpec, size_t size, uint32_t lock, uint32_t protection, 
+                     area_id source_area_id, register_t *retval)
+{
+    int error, flags = 0;
+    vm_prot_t prot = VM_PROT_NONE;
+    vaddr_t va;
+    void *address;
+    struct karea *ka, *search;
+    struct uvm_object *uobj = NULL;
+    bool is_clone = (source_area_id != -1);
+    
+    /* Reject kernel mapping attempts */
+    if (addressSpec == AREA_ANY_KERNEL_ADDRESS)
+        return EINVAL;
+
+    /* Map area protection flags to UVM flags */
+    if (protection & AREA_READ_AREA)
+        prot |= VM_PROT_READ;
+    if (protection & AREA_WRITE_AREA)
+        prot |= VM_PROT_WRITE;
+    if (protection & AREA_EXECUTE_AREA)
+        prot |= VM_PROT_EXECUTE;
+
+    /* Load the user-supplied address */
+    error = copyin(startAddress, &address, sizeof(void *));
+    if (error)
+        return error;
+    va = (vaddr_t)address;
+
+    /* Ensure the requested address and size are aligned */
+    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
+        return EINVAL;
+
+    /* Allocate memory for the new karea structure */
+    ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
+    if (ka == NULL)
+        return ENOMEM;
+
+    /* Initialize the karea structure */
+    *ka = (struct karea){
+        .ka_va = 0,
+        .ka_size = size,
+        .ka_lock = lock,
+        .ka_protection = protection,
+        .ka_owner = l->l_proc->p_pid,
+        .ka_uid = kauth_cred_getuid(l->l_cred),
+        .ka_gid = kauth_cred_getgid(l->l_cred),
+        .ka_uobj = NULL,
+    };
+
+    /* Copy the area name from user space */
+    error = copyinstr(user_name, ka->ka_name, sizeof(ka->ka_name), NULL);
+    if (error) {
+        kmem_free(ka, sizeof(struct karea));
+        return error;
+    }
+
+    /* If cloning, locate the source area and duplicate its UVM object */
+    if (is_clone) {
+        struct karea *source_area = karea_lookup_byid(source_area_id);
+        if (source_area == NULL) {
+            kmem_free(ka, sizeof(struct karea));
+            return EINVAL;
+        }
+        ka->ka_uobj = uao_create(size, UAO_FLAG_CLONE);
+        if (ka->ka_uobj == NULL) {
+            kmem_free(ka, sizeof(struct karea));
+            return ENOMEM;
+        }
+    } else {
+        /* Create a new UVM object */
+        ka->ka_uobj = uao_create(size, 0);
+        if (ka->ka_uobj == NULL) {
+            kmem_free(ka, sizeof(struct karea));
+            return ENOMEM;
+        }
+    }
+
+    /* Map the UVM object into the process address space */
+    error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, size, ka->ka_uobj, 0, 0,
+                    UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
+    if (error) {
+        uao_detach(ka->ka_uobj);
+        kmem_free(ka, sizeof(struct karea));
+        return error;
+    }
+
+    /* If the address specification was exact but the address was adjusted, unmap */
+    if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
+        uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
+        uao_detach(ka->ka_uobj);
+        kmem_free(ka, sizeof(struct karea));
+        return EINVAL;
+    }
+
+    /* Wire pages if requested */
+    if (lock >= AREA_LAZY_LOCK) {
+        error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
+        if (error) {
+            uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
+            uao_detach(ka->ka_uobj);
+            kmem_free(ka, sizeof(struct karea));
+            return error;
+        }
+    }
+
+    ka->ka_va = va;
+
+    /* Protect the area and insert it into the global list */
+    mutex_enter(&area_mutex);
+
+    if (area_total_count >= area_max) {
+        mutex_exit(&area_mutex);
+        uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
+        uao_detach(ka->ka_uobj);
+        kmem_free(ka, sizeof(struct karea));
+        return ENOSPC;
+    }
+
+    /* Assign an available area ID */
+    while (__predict_false((search = karea_lookup_byid(area_next_id)) != NULL))
+        area_next_id++;
+    ka->ka_id = area_next_id;
+
+    LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
+    area_total_count++;
+    mutex_exit(&area_mutex);
+
+    /* Return the area ID and address */
+    *retval = ka->ka_id;
+    error = copyout(&va, startAddress, sizeof(void *));
+    return error;
+}
+
+int
+sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, register_t *retval)
+{
+    /*
+     * _create_area: Create a memory area with specified attributes.
+     * {
+     *      syscallarg(const char *) name;
+     *      syscallarg(void **) startAddress;
+     *      syscallarg(uint32_t) addressSpec;
+     *      syscallarg(size_t) size;
+     *      syscallarg(uint32_t) lock;
+     *      syscallarg(uint32_t) protection;
+     * }
+     */
+
+    return create_or_clone_area(l, SCARG(uap, name), SCARG(uap, startAddress),
+                                SCARG(uap, addressSpec), SCARG(uap, size),
+                                SCARG(uap, lock), SCARG(uap, protection), -1, retval);
+}
+
+int
+sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_t *retval)
+{
+    /*
+     * _clone_area: Clone an existing memory area.
+     * {
+     *      syscallarg(const char *) name;
+     *      syscallarg(void **) destAddress;
+     *      syscallarg(uint32_t) addressSpec;
+     *      syscallarg(uint32_t) protection;
+     *      syscallarg(area_id) source;
+     * }
+     */
+
+    return create_or_clone_area(l, SCARG(uap, name), SCARG(uap, destAddress),
+                                SCARG(uap, addressSpec), 0, 0, SCARG(uap, protection),
+                                SCARG(uap, source), retval);
+}
+
+
+/*
 area_id
 sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, register_t *retval)
 {
@@ -245,6 +422,9 @@ sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_
     
     return 0;
 }
+
+
+*/
 
 area_id
 sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t *retval)
