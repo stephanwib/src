@@ -100,9 +100,23 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     struct uvm_object *uobj = NULL;
     bool is_clone = (source_area_id != -1);
     
-    /* Reject kernel mapping attempts */
-    if (addressSpec == AREA_ANY_KERNEL_ADDRESS)
-        return EINVAL;
+    /* Reject mappings unavailable to user-mode
+    /  Remap options with the same meaning */
+    switch (addressSpec) {
+	case AREA_EXACT_ADDRESS:
+	    /* XXX: UVM takes this as a hint only */
+	    flags |= UVM_FLAG_FIXED;
+        case AREA_ANY_ADDRESS:
+	case AREA_RANDOMIZED_ANY_ADDRESS:
+            break;
+	case AREA_BASE_ADDRESS:
+	case AREA_RANDOMIZED_BASE_ADDRESS:
+	    /* XXX: base addresses probably not supported by UVM */
+	    break;
+	case AREA_ANY_KERNEL_ADDRESS:
+	default:
+ 	    return EINVAL;
+    }
 
     /* Map area protection flags to UVM flags */
     if (protection & AREA_READ_AREA)
@@ -112,11 +126,19 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if (protection & AREA_EXECUTE_AREA)
         prot |= VM_PROT_EXECUTE;
 
+/*
     /* Load the user-supplied address */
     error = copyin(startAddress, &address, sizeof(void *));
     if (error)
         return error;
     va = (vaddr_t)address;
+*/
+	
+    /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
+    error = copyin((void*)startAddress, address, sizeof(void*);
+    if (error)
+        return error;
+    va = (vaddr_t*)address;
 
     /* Ensure the requested address and size are aligned */
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
