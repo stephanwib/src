@@ -569,7 +569,43 @@ sys__set_area_protection(struct lwp *l, const struct sys__set_area_protection_ar
      *      syscallarg(uint32_t) newProtection;
      * }
      */
-    
+
+    area_id id = SCARG(uap, id);
+    uint32_t newProtection = SCARG(uap, newProtection);
+    struct karea *ka;
+    vm_prot_t prot = VM_PROT_NONE;
+    int error = 0;
+
+    if (newProtection & AREA_READ_AREA)
+        prot |= VM_PROT_READ;
+    if (newProtection & AREA_WRITE_AREA)
+        prot |= VM_PROT_WRITE;
+    if (newProtection & AREA_EXECUTE_AREA)
+        prot |= VM_PROT_EXECUTE;
+
+    mutex_enter(&area_mutex);
+
+    ka = karea_lookup_byid(id);
+    if (ka == NULL) {
+        mutex_exit(&area_mutex);
+        return EINVAL;
+    }
+
+    if (ka->ka_owner != l->l_proc->p_pid) {
+        mutex_exit(&area_mutex);
+        return EPERM;
+    }
+
+    error = uvm_map_protect(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_va + ka->ka_size, prot, true);
+    if (error) {
+        mutex_exit(&area_mutex);
+        return error;
+    }
+
+    ka->ka_protection = newProtection;
+
+    mutex_exit(&area_mutex);
+
     return 0;
 }
 
