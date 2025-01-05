@@ -117,7 +117,8 @@ struct karea {
 
 
 /* Prototypes */
-int area_init(void);
+void area_init(void);
+
 
 #endif	/* _KERNEL */
 

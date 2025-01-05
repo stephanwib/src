@@ -565,25 +565,25 @@ const char *const syscallnames[] = {
 	/* 511 */	"_set_port_owner",
 	/* 512 */	"_write_port",
 	/* 513 */	"_write_port_etc",
-	/* 514 */	"# filler",
-	/* 515 */	"# filler",
-	/* 516 */	"# filler",
-	/* 517 */	"# filler",
-	/* 518 */	"# filler",
-	/* 519 */	"# filler",
-	/* 520 */	"# filler",
-	/* 521 */	"# filler",
-	/* 522 */	"# filler",
-	/* 523 */	"# filler",
-	/* 524 */	"# filler",
-	/* 525 */	"# filler",
-	/* 526 */	"# filler",
-	/* 527 */	"# filler",
-	/* 528 */	"# filler",
-	/* 529 */	"# filler",
-	/* 530 */	"# filler",
-	/* 531 */	"# filler",
-	/* 532 */	"# filler",
+	/* 514 */	"_create_sem",
+	/* 515 */	"_delete_sem",
+	/* 516 */	"_acquire_sem",
+	/* 517 */	"_acquire_sem_etc",
+	/* 518 */	"_release_sem",
+	/* 519 */	"_release_sem_etc",
+	/* 520 */	"_get_sem_count",
+	/* 521 */	"_set_sem_owner",
+	/* 522 */	"_get_sem_info",
+	/* 523 */	"_get_next_sem_info",
+	/* 524 */	"_create_area",
+	/* 525 */	"_clone_area",
+	/* 526 */	"_find_area",
+	/* 527 */	"_area_for",
+	/* 528 */	"_delete_area",
+	/* 529 */	"_resize_area",
+	/* 530 */	"_set_area_protection",
+	/* 531 */	"_get_area_info",
+	/* 532 */	"_get_next_area_info",
 	/* 533 */	"# filler",
 	/* 534 */	"# filler",
 	/* 535 */	"# filler",
@@ -1614,25 +1614,25 @@ const char *const altsyscallnames[] = {
 	/* 511 */	NULL, /* _set_port_owner */
 	/* 512 */	NULL, /* _write_port */
 	/* 513 */	NULL, /* _write_port_etc */
-	/* 514 */	NULL, /* filler */
-	/* 515 */	NULL, /* filler */
-	/* 516 */	NULL, /* filler */
-	/* 517 */	NULL, /* filler */
-	/* 518 */	NULL, /* filler */
-	/* 519 */	NULL, /* filler */
-	/* 520 */	NULL, /* filler */
-	/* 521 */	NULL, /* filler */
-	/* 522 */	NULL, /* filler */
-	/* 523 */	NULL, /* filler */
-	/* 524 */	NULL, /* filler */
-	/* 525 */	NULL, /* filler */
-	/* 526 */	NULL, /* filler */
-	/* 527 */	NULL, /* filler */
-	/* 528 */	NULL, /* filler */
-	/* 529 */	NULL, /* filler */
-	/* 530 */	NULL, /* filler */
-	/* 531 */	NULL, /* filler */
-	/* 532 */	NULL, /* filler */
+	/* 514 */	NULL, /* _create_sem */
+	/* 515 */	NULL, /* _delete_sem */
+	/* 516 */	NULL, /* _acquire_sem */
+	/* 517 */	NULL, /* _acquire_sem_etc */
+	/* 518 */	NULL, /* _release_sem */
+	/* 519 */	NULL, /* _release_sem_etc */
+	/* 520 */	NULL, /* _get_sem_count */
+	/* 521 */	NULL, /* _set_sem_owner */
+	/* 522 */	NULL, /* _get_sem_info */
+	/* 523 */	NULL, /* _get_next_sem_info */
+	/* 524 */	NULL, /* _create_area */
+	/* 525 */	NULL, /* _clone_area */
+	/* 526 */	NULL, /* _find_area */
+	/* 527 */	NULL, /* _area_for */
+	/* 528 */	NULL, /* _delete_area */
+	/* 529 */	NULL, /* _resize_area */
+	/* 530 */	NULL, /* _set_area_protection */
+	/* 531 */	NULL, /* _get_area_info */
+	/* 532 */	NULL, /* _get_next_area_info */
 	/* 533 */	NULL, /* filler */
 	/* 534 */	NULL, /* filler */
 	/* 535 */	NULL, /* filler */

@@ -4008,6 +4008,164 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		*n_args = 6;
 		break;
 	}
+	/* sys__create_sem */
+	case 514: {
+		const struct sys__create_sem_args *p = params;
+		iarg[0] = SCARG(p, count); /* int32_t */
+		uarg[1] = (intptr_t) SCARG(p, name); /* const char * */
+		*n_args = 2;
+		break;
+	}
+	/* sys__delete_sem */
+	case 515: {
+		const struct sys__delete_sem_args *p = params;
+		iarg[0] = SCARG(p, sem); /* sem_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__acquire_sem */
+	case 516: {
+		const struct sys__acquire_sem_args *p = params;
+		iarg[0] = SCARG(p, sem); /* sem_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__acquire_sem_etc */
+	case 517: {
+		const struct sys__acquire_sem_etc_args *p = params;
+		iarg[0] = SCARG(p, sem); /* sem_id */
+		iarg[1] = SCARG(p, count); /* int32_t */
+		uarg[2] = SCARG(p, flags); /* uint32_t */
+		iarg[3] = SCARG(p, timeout); /* int64_t */
+		*n_args = 4;
+		break;
+	}
+	/* sys__release_sem */
+	case 518: {
+		const struct sys__release_sem_args *p = params;
+		iarg[0] = SCARG(p, sem); /* sem_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__release_sem_etc */
+	case 519: {
+		const struct sys__release_sem_etc_args *p = params;
+		iarg[0] = SCARG(p, sem); /* sem_id */
+		iarg[1] = SCARG(p, count); /* int32_t */
+		uarg[2] = SCARG(p, flags); /* uint32_t */
+		*n_args = 3;
+		break;
+	}
+	/* sys__get_sem_count */
+	case 520: {
+		const struct sys__get_sem_count_args *p = params;
+		iarg[0] = SCARG(p, id); /* sem_id */
+		uarg[1] = (intptr_t) SCARG(p, threadCount); /* int32_t * */
+		*n_args = 2;
+		break;
+	}
+	/* sys__set_sem_owner */
+	case 521: {
+		const struct sys__set_sem_owner_args *p = params;
+		iarg[0] = SCARG(p, id); /* sem_id */
+		iarg[1] = SCARG(p, pid); /* pid_t */
+		*n_args = 2;
+		break;
+	}
+	/* sys__get_sem_info */
+	case 522: {
+		const struct sys__get_sem_info_args *p = params;
+		iarg[0] = SCARG(p, sem); /* sem_id */
+		uarg[1] = (intptr_t) SCARG(p, info); /* sem_info * */
+		*n_args = 2;
+		break;
+	}
+	/* sys__get_next_sem_info */
+	case 523: {
+		const struct sys__get_next_sem_info_args *p = params;
+		iarg[0] = SCARG(p, pid); /* pid_t */
+		uarg[1] = (intptr_t) SCARG(p, cookie); /* int32_t * */
+		uarg[2] = (intptr_t) SCARG(p, info); /* sem_info * */
+		*n_args = 3;
+		break;
+	}
+	/* sys__create_area */
+	case 524: {
+		const struct sys__create_area_args *p = params;
+		uarg[0] = (intptr_t) SCARG(p, name); /* const char * */
+		uarg[1] = (intptr_t) SCARG(p, startAddress); /* void ** */
+		uarg[2] = SCARG(p, addressSpec); /* uint32_t */
+		uarg[3] = SCARG(p, size); /* size_t */
+		uarg[4] = SCARG(p, lock); /* uint32_t */
+		uarg[5] = SCARG(p, protection); /* uint32_t */
+		*n_args = 6;
+		break;
+	}
+	/* sys__clone_area */
+	case 525: {
+		const struct sys__clone_area_args *p = params;
+		uarg[0] = (intptr_t) SCARG(p, name); /* const char * */
+		uarg[1] = (intptr_t) SCARG(p, destAddress); /* void ** */
+		uarg[2] = SCARG(p, addressSpec); /* uint32_t */
+		uarg[3] = SCARG(p, protection); /* uint32_t */
+		iarg[4] = SCARG(p, source); /* area_id */
+		*n_args = 5;
+		break;
+	}
+	/* sys__find_area */
+	case 526: {
+		const struct sys__find_area_args *p = params;
+		uarg[0] = (intptr_t) SCARG(p, name); /* const char * */
+		*n_args = 1;
+		break;
+	}
+	/* sys__area_for */
+	case 527: {
+		const struct sys__area_for_args *p = params;
+		uarg[0] = (intptr_t) SCARG(p, address); /* void * */
+		*n_args = 1;
+		break;
+	}
+	/* sys__delete_area */
+	case 528: {
+		const struct sys__delete_area_args *p = params;
+		iarg[0] = SCARG(p, id); /* area_id */
+		*n_args = 1;
+		break;
+	}
+	/* sys__resize_area */
+	case 529: {
+		const struct sys__resize_area_args *p = params;
+		iarg[0] = SCARG(p, id); /* area_id */
+		uarg[1] = SCARG(p, newSize); /* size_t */
+		*n_args = 2;
+		break;
+	}
+	/* sys__set_area_protection */
+	case 530: {
+		const struct sys__set_area_protection_args *p = params;
+		iarg[0] = SCARG(p, id); /* area_id */
+		uarg[1] = SCARG(p, newProtection); /* uint32_t */
+		*n_args = 2;
+		break;
+	}
+	/* sys__get_area_info */
+	case 531: {
+		const struct sys__get_area_info_args *p = params;
+		iarg[0] = SCARG(p, id); /* area_id */
+		uarg[1] = (intptr_t) SCARG(p, areaInfo); /* area_info * */
+		*n_args = 2;
+		break;
+	}
+	/* sys__get_next_area_info */
+	case 532: {
+		const struct sys__get_next_area_info_args *p = params;
+		iarg[0] = SCARG(p, pid); /* pid_t */
+		uarg[1] = (intptr_t) SCARG(p, cookie); /* ssize_t * */
+		uarg[2] = (intptr_t) SCARG(p, areaInfo); /* area_info * */
+		*n_args = 3;
+		break;
+	}
 	default:
 		*n_args = 0;
 		break;
@@ -10822,6 +10980,271 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
+	/* sys__create_sem */
+	case 514:
+		switch(ndx) {
+		case 0:
+			p = "int32_t";
+			break;
+		case 1:
+			p = "const char *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__delete_sem */
+	case 515:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__acquire_sem */
+	case 516:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__acquire_sem_etc */
+	case 517:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		case 1:
+			p = "int32_t";
+			break;
+		case 2:
+			p = "uint32_t";
+			break;
+		case 3:
+			p = "int64_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__release_sem */
+	case 518:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__release_sem_etc */
+	case 519:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		case 1:
+			p = "int32_t";
+			break;
+		case 2:
+			p = "uint32_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_sem_count */
+	case 520:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		case 1:
+			p = "int32_t *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__set_sem_owner */
+	case 521:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		case 1:
+			p = "pid_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_sem_info */
+	case 522:
+		switch(ndx) {
+		case 0:
+			p = "sem_id";
+			break;
+		case 1:
+			p = "sem_info *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_next_sem_info */
+	case 523:
+		switch(ndx) {
+		case 0:
+			p = "pid_t";
+			break;
+		case 1:
+			p = "int32_t *";
+			break;
+		case 2:
+			p = "sem_info *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__create_area */
+	case 524:
+		switch(ndx) {
+		case 0:
+			p = "const char *";
+			break;
+		case 1:
+			p = "void **";
+			break;
+		case 2:
+			p = "uint32_t";
+			break;
+		case 3:
+			p = "size_t";
+			break;
+		case 4:
+			p = "uint32_t";
+			break;
+		case 5:
+			p = "uint32_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__clone_area */
+	case 525:
+		switch(ndx) {
+		case 0:
+			p = "const char *";
+			break;
+		case 1:
+			p = "void **";
+			break;
+		case 2:
+			p = "uint32_t";
+			break;
+		case 3:
+			p = "uint32_t";
+			break;
+		case 4:
+			p = "area_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__find_area */
+	case 526:
+		switch(ndx) {
+		case 0:
+			p = "const char *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__area_for */
+	case 527:
+		switch(ndx) {
+		case 0:
+			p = "void *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__delete_area */
+	case 528:
+		switch(ndx) {
+		case 0:
+			p = "area_id";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__resize_area */
+	case 529:
+		switch(ndx) {
+		case 0:
+			p = "area_id";
+			break;
+		case 1:
+			p = "size_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__set_area_protection */
+	case 530:
+		switch(ndx) {
+		case 0:
+			p = "area_id";
+			break;
+		case 1:
+			p = "uint32_t";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_area_info */
+	case 531:
+		switch(ndx) {
+		case 0:
+			p = "area_id";
+			break;
+		case 1:
+			p = "area_info *";
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys__get_next_area_info */
+	case 532:
+		switch(ndx) {
+		case 0:
+			p = "pid_t";
+			break;
+		case 1:
+			p = "ssize_t *";
+			break;
+		case 2:
+			p = "area_info *";
+			break;
+		default:
+			break;
+		};
+		break;
 	default:
 		break;
 	};
@@ -13091,6 +13514,101 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		break;
 	/* sys__write_port_etc */
 	case 513:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__create_sem */
+	case 514:
+		if (ndx == 0 || ndx == 1)
+			p = "sem_id";
+		break;
+	/* sys__delete_sem */
+	case 515:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__acquire_sem */
+	case 516:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__acquire_sem_etc */
+	case 517:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__release_sem */
+	case 518:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__release_sem_etc */
+	case 519:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__get_sem_count */
+	case 520:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__set_sem_owner */
+	case 521:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__get_sem_info */
+	case 522:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__get_next_sem_info */
+	case 523:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__create_area */
+	case 524:
+		if (ndx == 0 || ndx == 1)
+			p = "area_id";
+		break;
+	/* sys__clone_area */
+	case 525:
+		if (ndx == 0 || ndx == 1)
+			p = "area_id";
+		break;
+	/* sys__find_area */
+	case 526:
+		if (ndx == 0 || ndx == 1)
+			p = "area_id";
+		break;
+	/* sys__area_for */
+	case 527:
+		if (ndx == 0 || ndx == 1)
+			p = "area_id";
+		break;
+	/* sys__delete_area */
+	case 528:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__resize_area */
+	case 529:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__set_area_protection */
+	case 530:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__get_area_info */
+	case 531:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
+		break;
+	/* sys__get_next_area_info */
+	case 532:
 		if (ndx == 0 || ndx == 1)
 			p = "int";
 		break;

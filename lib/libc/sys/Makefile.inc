@@ -164,7 +164,13 @@ ASM=\
 	_get_next_port_info.S _get_port_info.S _port_buffer_size.S \
 	_port_buffer_size_etc.S _port_count.S _read_port.S \
 	_read_port_etc.S _set_port_owner.S _write_port.S \
-	_write_port_etc.S
+	_write_port_etc.S \
+	_create_sem.S _delete_sem.S _acquire_sem.S _acquire_sem_etc.S \
+	_release_sem.S _release_sem_etc.S _get_sem_count.S _set_sem_owner.S \
+	_get_sem_info.S _get_next_sem_info.S \
+	_create_area.S _clone_area.S _find_area.S _area_for.S \
+	_delete_area.S _resize_area.S _set_area_protection.S \
+	_get_area_info.S _get_next_area_info.S
 
 # sa compat syscalls
 SAASM+=	sa_register.S sa_stacks.S sa_enable.S sa_setconcurrency.S sa_yield.S \

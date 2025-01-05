@@ -44,7 +44,7 @@ static int                      area_total_count          = 0;
 static kmutex_t                 area_mutex                __cacheline_aligned;
 static LIST_HEAD(, karea)       karea_list                __cacheline_aligned;
 
-int
+void
 area_init(void) 
 {
 
@@ -52,7 +52,7 @@ area_init(void)
     mutex_init(&area_mutex, MUTEX_DEFAULT, IPL_NONE);
 }
 
-struct karea *
+static struct karea *
 karea_lookup_byid(area_id id)
 {
     struct karea *ka;
@@ -81,7 +81,7 @@ fill_area_info(const struct karea *ka, struct area_info *info)
         .copy_count = 0,
         .in_count = 0,
         .out_count = 0,
-        .address = ka->ka_va
+        .address = (void*)ka->ka_va
     };
 
     (void)strlcpy(info->name, ka->ka_name, AREA_MAX_NAME_LENGTH);
@@ -97,7 +97,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     vaddr_t va;
     void *address;
     struct karea *ka, *search;
-    struct uvm_object *uobj = NULL;
+    // struct uvm_object *uobj = NULL;
     bool is_clone = (source_area_id != -1);
     
     /* Reject mappings unavailable to user-mode
@@ -126,19 +126,19 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if (protection & AREA_EXECUTE_AREA)
         prot |= VM_PROT_EXECUTE;
 
-/*
     /* Load the user-supplied address */
     error = copyin(startAddress, &address, sizeof(void *));
     if (error)
         return error;
     va = (vaddr_t)address;
-*/
-	
-    /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
+
+/*	
+    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer
     error = copyin((void*)startAddress, address, sizeof(void*);
     if (error)
         return error;
     va = (vaddr_t*)address;
+*/
 
     /* Ensure the requested address and size are aligned */
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
@@ -175,7 +175,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
             kmem_free(ka, sizeof(struct karea));
             return EINVAL;
         }
-        ka->ka_uobj = uao_create(size, UAO_FLAG_CLONE);
+        ka->ka_uobj = uao_create(size, 0);
         if (ka->ka_uobj == NULL) {
             kmem_free(ka, sizeof(struct karea));
             return ENOMEM;
@@ -231,9 +231,9 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     }
 
     /* Assign an available area ID */
-    while (__predict_false((search = karea_lookup_byid(area_next_id)) != NULL))
-        area_next_id++;
-    ka->ka_id = area_next_id;
+    while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL))
+        next_area_id++;
+    ka->ka_id = next_area_id;
 
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
     area_total_count++;
@@ -289,7 +289,7 @@ sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_
 area_id
 sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, register_t *retval)
 {
-    /*
+    //
      * _create_area: Create a memory area with specified attributes.
      * {
      *      syscallarg(const char *) name;
@@ -298,8 +298,8 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
      *      syscallarg(size_t) size;
      *      syscallarg(uint32_t) lock;
      *      syscallarg(uint32_t) protection;
-     * }
-     */
+     * 
+    
 
     const char *user_name = SCARG(uap, name);
     void **startAddress = SCARG(uap, startAddress);
@@ -316,24 +316,24 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     struct karea *search;
 
 
-    /* Reject mappings unavailable to user-mode
-    /  Remap options with the same meaning */
+    // Reject mappings unavailable to user-mode
+    //  Remap options with the same meaning 
     switch (addressSpec) {
 	case AREA_EXACT_ADDRESS:
-	    /* XXX: UVM takes this as a hint only */
+	    // XXX: UVM takes this as a hint only
 	    flags |= UVM_FLAG_FIXED;
         case AREA_ANY_ADDRESS:
 	case AREA_RANDOMIZED_ANY_ADDRESS:
             break;
 	case AREA_BASE_ADDRESS:
 	case AREA_RANDOMIZED_BASE_ADDRESS:
-	    /* XXX: base addresses probably not supported by UVM */
+	    // XXX: base addresses probably not supported by UVM 
 	    break;
 	case AREA_ANY_KERNEL_ADDRESS:
  	    return EINVAL;
     }
 
-    /* Map area protection flags to UVM flags */
+    // Map area protection flags to UVM flags
     if (protection & AREA_READ_AREA)
         prot |= VM_PROT_READ;
     if (protection & AREA_WRITE_AREA)
@@ -342,13 +342,13 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
         prot |= VM_PROT_EXECUTE;
 
 	
-    /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
+    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer 
     error = copyin((void*)startAddress, address, sizeof(void*);
     if (error)
         return error;
     va = (vaddr_t*)address;
     
-    /* Make sure the requested address and size is aligned to PAGE_SIZE */
+    // Make sure the requested address and size is aligned to PAGE_SIZE 
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
 	return EINVAL;
     
@@ -377,7 +377,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
         return ENOMEM;
     }
 	
-    error = uvm_map(l->l_proc->p_vmspace, &va, size, ka->ka_uobj, 0 /* offset */, 0 /* alignment */ , 
+    error = uvm_map(l->l_proc->p_vmspace, &va, size, ka->ka_uobj, 0 , 0  , 
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
         uao_detach(ka->ka_uobj);
@@ -386,7 +386,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     }
 
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t*)address) {
-	/* XXX unmap */
+	// XXX unmap 
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return ENOMEM;
@@ -395,7 +395,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
 	if (error) {
-	    /* XXX unmap */
+	    // XXX unmap
 	    uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
             return ENOMEM;
@@ -431,7 +431,7 @@ sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, registe
 area_id
 sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_t *retval)
 {
-    /*
+    /
      * _clone_area: Clone an existing memory area.
      * {
      *      syscallarg(const char *) name;
@@ -440,7 +440,7 @@ sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_
      *      syscallarg(uint32_t) protection;
      *      syscallarg(area_id) source;
      * }
-     */
+     *
     
     return 0;
 }
@@ -531,7 +531,7 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
     }
     
     if (ka->ka_uobj != NULL) {
-        uvm_unmap(l->l_proc->p_vmspace, ka->ka_va, ka->ka_va + ka->ka_size, UVM_FLAG_VAONLY);
+        uvm_unmap(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_va + ka->ka_size);
         uao_detach(ka->ka_uobj);
         mutex_exit(&area_mutex);
     }
@@ -634,7 +634,7 @@ sys__get_area_info(struct lwp *l, const struct sys__get_area_info_args *uap, reg
     
     fill_area_info(ka, &area_info_kernel);
 
-    error = copyout(&kernel_area_info, user_area_info, sizeof(struct area_info));
+    error = copyout(&area_info_kernel, area_info_user, sizeof(struct area_info));
    
     return error;
 }
@@ -654,7 +654,7 @@ sys__get_next_area_info(struct lwp *l, const struct sys__get_next_area_info_args
     pid_t pid = SCARG(uap, pid);
     ssize_t *cookie = SCARG(uap, cookie);
     struct area_info *user_area_info = SCARG(uap, areaInfo);
-    size_t size = SCARG(uap, size);
+    // size_t size = SCARG(uap, size);
 
     int error;
     uint32_t skip, iter_cookie;
@@ -677,7 +677,7 @@ sys__get_next_area_info(struct lwp *l, const struct sys__get_next_area_info_args
                 fill_area_info(ka, &area_info_kernel);
                 mutex_exit(&area_mutex);
 
-                error = copyout(&kernel_area_info, user_area_info, sizeof(struct area_info));
+                error = copyout(&area_info_kernel, user_area_info, sizeof(struct area_info));
                 if (error)
                     return error;
                 

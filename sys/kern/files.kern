@@ -189,6 +189,7 @@ file	kern/tty_ptm.c			pty
 file	kern/tty_subr.c			kern
 file	kern/tty_tty.c			kern
 file	kern/uipc_accf.c		kern
+file	kern/uipc_area.c		kern
 file	kern/uipc_domain.c		kern
 file	kern/uipc_hsem.c		kern
 file	kern/uipc_mbuf.c		kern

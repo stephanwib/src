@@ -1446,6 +1446,63 @@
 /* syscall: "_write_port_etc" ret: "int" args: "port_id" "int" "void *" "size_t" "uint32_t" "int64_t" */
 #define	SYS__write_port_etc	513
 
-#define	SYS_MAXSYSCALL	514
+/* syscall: "_create_sem" ret: "sem_id" args: "int32_t" "const char *" */
+#define	SYS__create_sem	514
+
+/* syscall: "_delete_sem" ret: "int" args: "sem_id" */
+#define	SYS__delete_sem	515
+
+/* syscall: "_acquire_sem" ret: "int" args: "sem_id" */
+#define	SYS__acquire_sem	516
+
+/* syscall: "_acquire_sem_etc" ret: "int" args: "sem_id" "int32_t" "uint32_t" "int64_t" */
+#define	SYS__acquire_sem_etc	517
+
+/* syscall: "_release_sem" ret: "int" args: "sem_id" */
+#define	SYS__release_sem	518
+
+/* syscall: "_release_sem_etc" ret: "int" args: "sem_id" "int32_t" "uint32_t" */
+#define	SYS__release_sem_etc	519
+
+/* syscall: "_get_sem_count" ret: "int" args: "sem_id" "int32_t *" */
+#define	SYS__get_sem_count	520
+
+/* syscall: "_set_sem_owner" ret: "int" args: "sem_id" "pid_t" */
+#define	SYS__set_sem_owner	521
+
+/* syscall: "_get_sem_info" ret: "int" args: "sem_id" "sem_info *" */
+#define	SYS__get_sem_info	522
+
+/* syscall: "_get_next_sem_info" ret: "int" args: "pid_t" "int32_t *" "sem_info *" */
+#define	SYS__get_next_sem_info	523
+
+/* syscall: "_create_area" ret: "area_id" args: "const char *" "void **" "uint32_t" "size_t" "uint32_t" "uint32_t" */
+#define	SYS__create_area	524
+
+/* syscall: "_clone_area" ret: "area_id" args: "const char *" "void **" "uint32_t" "uint32_t" "area_id" */
+#define	SYS__clone_area	525
+
+/* syscall: "_find_area" ret: "area_id" args: "const char *" */
+#define	SYS__find_area	526
+
+/* syscall: "_area_for" ret: "area_id" args: "void *" */
+#define	SYS__area_for	527
+
+/* syscall: "_delete_area" ret: "int" args: "area_id" */
+#define	SYS__delete_area	528
+
+/* syscall: "_resize_area" ret: "int" args: "area_id" "size_t" */
+#define	SYS__resize_area	529
+
+/* syscall: "_set_area_protection" ret: "int" args: "area_id" "uint32_t" */
+#define	SYS__set_area_protection	530
+
+/* syscall: "_get_area_info" ret: "int" args: "area_id" "area_info *" */
+#define	SYS__get_area_info	531
+
+/* syscall: "_get_next_area_info" ret: "int" args: "pid_t" "ssize_t *" "area_info *" */
+#define	SYS__get_next_area_info	532
+
+#define	SYS_MAXSYSCALL	533
 #define	SYS_NSYSENT	1024
 #endif /* _SYS_SYSCALL_H_ */

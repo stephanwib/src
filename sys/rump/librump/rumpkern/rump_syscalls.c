@@ -8613,81 +8613,62 @@ struct sysent rump_sysent[] = {
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 },		/* 513 = _write_port_etc */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 514 = filler */
+},		/* 514 = _create_sem */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 515 = filler */
+},		/* 515 = _delete_sem */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 516 = filler */
+},		/* 516 = _acquire_sem */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 517 = filler */
+},		/* 517 = _acquire_sem_etc */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 518 = filler */
+},		/* 518 = _release_sem */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 519 = filler */
+},		/* 519 = _release_sem_etc */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 520 = filler */
+},		/* 520 = _get_sem_count */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 521 = filler */
+},		/* 521 = _set_sem_owner */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 522 = filler */
+},		/* 522 = _get_sem_info */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 523 = filler */
+},		/* 523 = _get_next_sem_info */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 524 = filler */
+},		/* 524 = _create_area */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 525 = filler */
+},		/* 525 = _clone_area */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 526 = filler */
+},		/* 526 = _find_area */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 527 = filler */
+},		/* 527 = _area_for */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 528 = filler */
+},		/* 528 = _delete_area */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 529 = filler */
+},		/* 529 = _resize_area */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 530 = filler */
+},		/* 530 = _set_area_protection */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 531 = filler */
+},		/* 531 = _get_area_info */
 	{
-		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 532 = filler */
+},		/* 532 = _get_next_area_info */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,

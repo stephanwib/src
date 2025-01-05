@@ -16,6 +16,8 @@
 #include <sys/sched.h>
 #include <sys/acl.h>
 #include <sys/port.h>
+#include <sys/hsem.h>
+#include <sys/area.h>
 #endif
 
 #include <sys/socket.h>
@@ -3478,6 +3480,164 @@ struct sys__write_port_etc_args {
 check_syscall_args(sys__write_port_etc)
 #endif /* !RUMP_CLIENT */
 
+#ifndef RUMP_CLIENT
+struct sys__create_sem_args {
+	syscallarg(int32_t) count;
+	syscallarg(const char *) name;
+};
+check_syscall_args(sys__create_sem)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__delete_sem_args {
+	syscallarg(sem_id) sem;
+};
+check_syscall_args(sys__delete_sem)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__acquire_sem_args {
+	syscallarg(sem_id) sem;
+};
+check_syscall_args(sys__acquire_sem)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__acquire_sem_etc_args {
+	syscallarg(sem_id) sem;
+	syscallarg(int32_t) count;
+	syscallarg(uint32_t) flags;
+	syscallarg(int64_t) timeout;
+};
+check_syscall_args(sys__acquire_sem_etc)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__release_sem_args {
+	syscallarg(sem_id) sem;
+};
+check_syscall_args(sys__release_sem)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__release_sem_etc_args {
+	syscallarg(sem_id) sem;
+	syscallarg(int32_t) count;
+	syscallarg(uint32_t) flags;
+};
+check_syscall_args(sys__release_sem_etc)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_sem_count_args {
+	syscallarg(sem_id) id;
+	syscallarg(int32_t *) threadCount;
+};
+check_syscall_args(sys__get_sem_count)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__set_sem_owner_args {
+	syscallarg(sem_id) id;
+	syscallarg(pid_t) pid;
+};
+check_syscall_args(sys__set_sem_owner)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_sem_info_args {
+	syscallarg(sem_id) sem;
+	syscallarg(sem_info *) info;
+};
+check_syscall_args(sys__get_sem_info)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_next_sem_info_args {
+	syscallarg(pid_t) pid;
+	syscallarg(int32_t *) cookie;
+	syscallarg(sem_info *) info;
+};
+check_syscall_args(sys__get_next_sem_info)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__create_area_args {
+	syscallarg(const char *) name;
+	syscallarg(void **) startAddress;
+	syscallarg(uint32_t) addressSpec;
+	syscallarg(size_t) size;
+	syscallarg(uint32_t) lock;
+	syscallarg(uint32_t) protection;
+};
+check_syscall_args(sys__create_area)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__clone_area_args {
+	syscallarg(const char *) name;
+	syscallarg(void **) destAddress;
+	syscallarg(uint32_t) addressSpec;
+	syscallarg(uint32_t) protection;
+	syscallarg(area_id) source;
+};
+check_syscall_args(sys__clone_area)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__find_area_args {
+	syscallarg(const char *) name;
+};
+check_syscall_args(sys__find_area)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__area_for_args {
+	syscallarg(void *) address;
+};
+check_syscall_args(sys__area_for)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__delete_area_args {
+	syscallarg(area_id) id;
+};
+check_syscall_args(sys__delete_area)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__resize_area_args {
+	syscallarg(area_id) id;
+	syscallarg(size_t) newSize;
+};
+check_syscall_args(sys__resize_area)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__set_area_protection_args {
+	syscallarg(area_id) id;
+	syscallarg(uint32_t) newProtection;
+};
+check_syscall_args(sys__set_area_protection)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_area_info_args {
+	syscallarg(area_id) id;
+	syscallarg(area_info *) areaInfo;
+};
+check_syscall_args(sys__get_area_info)
+#endif /* !RUMP_CLIENT */
+
+#ifndef RUMP_CLIENT
+struct sys__get_next_area_info_args {
+	syscallarg(pid_t) pid;
+	syscallarg(ssize_t *) cookie;
+	syscallarg(area_info *) areaInfo;
+};
+check_syscall_args(sys__get_next_area_info)
+#endif /* !RUMP_CLIENT */
+
 /*
  * System call prototypes.
  */
@@ -4429,6 +4589,44 @@ int	sys__set_port_owner(struct lwp *, const struct sys__set_port_owner_args *, r
 int	sys__write_port(struct lwp *, const struct sys__write_port_args *, register_t *);
 
 int	sys__write_port_etc(struct lwp *, const struct sys__write_port_etc_args *, register_t *);
+
+int	sys__create_sem(struct lwp *, const struct sys__create_sem_args *, register_t *);
+
+int	sys__delete_sem(struct lwp *, const struct sys__delete_sem_args *, register_t *);
+
+int	sys__acquire_sem(struct lwp *, const struct sys__acquire_sem_args *, register_t *);
+
+int	sys__acquire_sem_etc(struct lwp *, const struct sys__acquire_sem_etc_args *, register_t *);
+
+int	sys__release_sem(struct lwp *, const struct sys__release_sem_args *, register_t *);
+
+int	sys__release_sem_etc(struct lwp *, const struct sys__release_sem_etc_args *, register_t *);
+
+int	sys__get_sem_count(struct lwp *, const struct sys__get_sem_count_args *, register_t *);
+
+int	sys__set_sem_owner(struct lwp *, const struct sys__set_sem_owner_args *, register_t *);
+
+int	sys__get_sem_info(struct lwp *, const struct sys__get_sem_info_args *, register_t *);
+
+int	sys__get_next_sem_info(struct lwp *, const struct sys__get_next_sem_info_args *, register_t *);
+
+int	sys__create_area(struct lwp *, const struct sys__create_area_args *, register_t *);
+
+int	sys__clone_area(struct lwp *, const struct sys__clone_area_args *, register_t *);
+
+int	sys__find_area(struct lwp *, const struct sys__find_area_args *, register_t *);
+
+int	sys__area_for(struct lwp *, const struct sys__area_for_args *, register_t *);
+
+int	sys__delete_area(struct lwp *, const struct sys__delete_area_args *, register_t *);
+
+int	sys__resize_area(struct lwp *, const struct sys__resize_area_args *, register_t *);
+
+int	sys__set_area_protection(struct lwp *, const struct sys__set_area_protection_args *, register_t *);
+
+int	sys__get_area_info(struct lwp *, const struct sys__get_area_info_args *, register_t *);
+
+int	sys__get_next_area_info(struct lwp *, const struct sys__get_next_area_info_args *, register_t *);
 
 #endif /* !RUMP_CLIENT */
 #endif /* _SYS_SYSCALLARGS_H_ */

@@ -2503,62 +2503,91 @@ struct sysent sysent[] = {
 		.sy_call = (sy_call_t *)sys__write_port_etc
 	},		/* 513 = _write_port_etc */
 	{
-		.sy_call = sys_nosys,
-	},		/* 514 = filler */
+		ns(struct sys__create_sem_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__create_sem
+	},		/* 514 = _create_sem */
 	{
-		.sy_call = sys_nosys,
-	},		/* 515 = filler */
+		ns(struct sys__delete_sem_args),
+		.sy_call = (sy_call_t *)sys__delete_sem
+	},		/* 515 = _delete_sem */
 	{
-		.sy_call = sys_nosys,
-	},		/* 516 = filler */
+		ns(struct sys__acquire_sem_args),
+		.sy_call = (sy_call_t *)sys__acquire_sem
+	},		/* 516 = _acquire_sem */
 	{
-		.sy_call = sys_nosys,
-	},		/* 517 = filler */
+		ns(struct sys__acquire_sem_etc_args),
+		.sy_call = (sy_call_t *)sys__acquire_sem_etc
+	},		/* 517 = _acquire_sem_etc */
 	{
-		.sy_call = sys_nosys,
-	},		/* 518 = filler */
+		ns(struct sys__release_sem_args),
+		.sy_call = (sy_call_t *)sys__release_sem
+	},		/* 518 = _release_sem */
 	{
-		.sy_call = sys_nosys,
-	},		/* 519 = filler */
+		ns(struct sys__release_sem_etc_args),
+		.sy_call = (sy_call_t *)sys__release_sem_etc
+	},		/* 519 = _release_sem_etc */
 	{
-		.sy_call = sys_nosys,
-	},		/* 520 = filler */
+		ns(struct sys__get_sem_count_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__get_sem_count
+	},		/* 520 = _get_sem_count */
 	{
-		.sy_call = sys_nosys,
-	},		/* 521 = filler */
+		ns(struct sys__set_sem_owner_args),
+		.sy_call = (sy_call_t *)sys__set_sem_owner
+	},		/* 521 = _set_sem_owner */
 	{
-		.sy_call = sys_nosys,
-	},		/* 522 = filler */
+		ns(struct sys__get_sem_info_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__get_sem_info
+	},		/* 522 = _get_sem_info */
 	{
-		.sy_call = sys_nosys,
-	},		/* 523 = filler */
+		ns(struct sys__get_next_sem_info_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__get_next_sem_info
+	},		/* 523 = _get_next_sem_info */
 	{
-		.sy_call = sys_nosys,
-	},		/* 524 = filler */
+		ns(struct sys__create_area_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__create_area
+	},		/* 524 = _create_area */
 	{
-		.sy_call = sys_nosys,
-	},		/* 525 = filler */
+		ns(struct sys__clone_area_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__clone_area
+	},		/* 525 = _clone_area */
 	{
-		.sy_call = sys_nosys,
-	},		/* 526 = filler */
+		ns(struct sys__find_area_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__find_area
+	},		/* 526 = _find_area */
 	{
-		.sy_call = sys_nosys,
-	},		/* 527 = filler */
+		ns(struct sys__area_for_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__area_for
+	},		/* 527 = _area_for */
 	{
-		.sy_call = sys_nosys,
-	},		/* 528 = filler */
+		ns(struct sys__delete_area_args),
+		.sy_call = (sy_call_t *)sys__delete_area
+	},		/* 528 = _delete_area */
 	{
-		.sy_call = sys_nosys,
-	},		/* 529 = filler */
+		ns(struct sys__resize_area_args),
+		.sy_call = (sy_call_t *)sys__resize_area
+	},		/* 529 = _resize_area */
 	{
-		.sy_call = sys_nosys,
-	},		/* 530 = filler */
+		ns(struct sys__set_area_protection_args),
+		.sy_call = (sy_call_t *)sys__set_area_protection
+	},		/* 530 = _set_area_protection */
 	{
-		.sy_call = sys_nosys,
-	},		/* 531 = filler */
+		ns(struct sys__get_area_info_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__get_area_info
+	},		/* 531 = _get_area_info */
 	{
-		.sy_call = sys_nosys,
-	},		/* 532 = filler */
+		ns(struct sys__get_next_area_info_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys__get_next_area_info
+	},		/* 532 = _get_next_area_info */
 	{
 		.sy_call = sys_nosys,
 	},		/* 533 = filler */
