@@ -562,8 +562,10 @@ sys__resize_area(struct lwp *l, const struct sys__resize_area_args *uap, registe
      *      syscallarg(size_t) newSize;
      * }
      */
+
+    // XXX: Not implemented at the moment.
     
-    return 0;
+    return ENOMEM;
 }
 
 int
