@@ -230,9 +230,15 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         return ENOSPC;
     }
 
-    /* Assign an available area ID */
-    while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL))
+    do {
         next_area_id++;
+
+	/* Do not issue a negative area id */
+	if (next_area_id < 0)
+	    next_area_id = 1;
+
+    } while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL))
+
     ka->ka_id = next_area_id;
 
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
