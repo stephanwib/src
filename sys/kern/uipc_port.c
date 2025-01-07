@@ -184,7 +184,18 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
         mutex_exit(&search->kp_interlock);
         port_next_id++;
     }
-    
+
+/*    
+    do {
+        port_next_id++;
+
+	    /* Do not issue a negative port id */
+	    if (port_next_id < 0)
+	        port_next_id = 1;
+
+    } while (__predict_false((search = kport_lookup_byid(port_next_id)) != NULL))
+
+*/
     
     ret->kp_id = port_next_id;
     
