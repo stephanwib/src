@@ -460,19 +460,21 @@ sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t 
    
     const char *name = SCARG(uap, name);
     struct karea *ka = NULL;
+    bool found = false;
     
     mutex_enter(&area_mutex);
     
     LIST_FOREACH(ka, &karea_list, ka_entry) {
         if (strcmp(ka->ka_name, name) == 0) {
             *retval = ka->ka_id;
+	    found = true;
             break;
         }
     }
    
     mutex_exit(&area_mutex);
 
-    return (ka == NULL) ? ENOENT : 0; 
+    return (found) ? 0 : ENOENT; 
 }
 
 area_id
