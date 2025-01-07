@@ -39,7 +39,7 @@
 #include <uvm/uvm.h>
 
 const  int                      area_max                  = 8192;
-static int                      next_area_id              = 0;
+static int                      next_area_id              = 1;
 static int                      area_total_count          = 0;
 static kmutex_t                 area_mutex                __cacheline_aligned;
 static LIST_HEAD(, karea)       karea_list                __cacheline_aligned;
