@@ -4,7 +4,7 @@
 
 INCSDIR= /usr/include/sys
 
-INCS=	acct.h acl.h agpio.h aio.h ansi.h aout_mids.h ataio.h atomic.h \
+INCS=	acct.h acl.h agpio.h aio.h ansi.h aout_mids.h area.h ataio.h atomic.h \
 	audioio.h \
 	bitops.h bootblock.h bswap.h buf.h \
 	callback.h callout.h cdbr.h cdefs.h cdefs_aout.h \
@@ -24,7 +24,7 @@ INCS=	acct.h acl.h agpio.h aio.h ansi.h aout_mids.h ataio.h atomic.h \
 	fault.h \
 	fcntl.h fd_set.h fdio.h featuretest.h file.h filedesc.h filio.h \
 	flashio.h float_ieee754.h fstypes.h futex.h gcq.h gmon.h gpio.h hash.h \
-	hook.h idtype.h ieee754.h intr.h intrio.h inttypes.h ioccom.h ioctl.h \
+	hook.h hsem.h idtype.h ieee754.h intr.h intrio.h inttypes.h ioccom.h ioctl.h \
 	ioctl_compat.h iostat.h ipc.h ipmi.h \
 	joystick.h \
 	kcore.h kcov.h kcpuset.h kgdb.h kmem.h ksem.h ksyms.h ktrace.h \
