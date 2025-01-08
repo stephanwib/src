@@ -40,6 +40,21 @@
 
 #ifndef _OS_H
 typedef int32_t area_id;
+
+typedef struct area_info {
+	area_id		area;
+	char		name[AREA_MAX_NAME_LENGTH];
+	size_t		size;
+	uint32_t	lock;
+	uint32_t	protection;
+	pid_t		pid;
+	uint32_t	ram_size;
+	uint32_t	copy_count;
+	uint32_t	in_count;
+	uint32_t	out_count;
+	void		*address;
+} area_info;
+
 #endif /* _OS_H */
 
 
@@ -64,20 +79,6 @@ typedef int32_t area_id;
 #define AREA_EXECUTE_AREA		(1 << 2)
 #define AREA_STACK_AREA			(1 << 3)
 #define AREA_CLONEABLE_AREA		(1 << 8)
-
-typedef struct area_info {
-	area_id		area;
-	char		name[AREA_MAX_NAME_LENGTH];
-	size_t		size;
-	uint32_t	lock;
-	uint32_t	protection;
-	pid_t		pid;
-	uint32_t	ram_size;
-	uint32_t	copy_count;
-	uint32_t	in_count;
-	uint32_t	out_count;
-	void		*address;
-} area_info;
 
 
 area_id		_create_area(const char *name, void **startAddress,

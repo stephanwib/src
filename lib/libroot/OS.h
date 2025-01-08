@@ -124,16 +124,18 @@ extern status_t		delete_area(area_id id);
 extern status_t		resize_area(area_id id, size_t newSize);
 extern status_t		set_area_protection(area_id id, uint32 newProtection);
 
-/* system private, use macros instead */
-extern status_t		_get_area_info(area_id id, area_info *areaInfo, size_t size);
-extern status_t		_get_next_area_info(team_id team, ssize_t *cookie,
+extern status_t		get_area_info(area_id id, area_info *areaInfo, size_t size);
+extern status_t		get_next_area_info(team_id team, ssize_t *cookie,
 						area_info *areaInfo, size_t size);
 
+
+/*  --- only on Haiku
 #define get_area_info(id, areaInfo) \
 	_get_area_info((id), (areaInfo),sizeof(*(areaInfo)))
 #define get_next_area_info(team, cookie, areaInfo) \
 	_get_next_area_info((team), (cookie), (areaInfo), sizeof(*(areaInfo)))
 
+*/
 
 /* Ports */
 
