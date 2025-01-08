@@ -237,7 +237,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 	if (next_area_id < 0)
 	    next_area_id = 1;
 
-    } while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL))
+    } while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL));
 
     ka->ka_id = next_area_id;
 

@@ -622,8 +622,15 @@ main(void)
 	pipe_init();
 #endif
 
-	/* Initialize ports */
+	/* Initialize Haiku IPC */
 	kport_init();
+
+	printf("init: sem\n");
+	(void)khsem_init;
+
+	printf("init: area\n");
+	area_init();
+
 
 #ifdef KTRACE
 	/* Initialize ktrace. */
