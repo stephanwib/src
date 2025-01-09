@@ -172,7 +172,7 @@ extern status_t		get_port_info(port_id port, port_info *portInfo);
 extern status_t		get_next_port_info(team_id team, uint32 *cookie,
 						port_info *portInfo);
 
-/*
+/*  --- only on Haiku
 #define get_port_info(port, info) \
 	_get_port_info((port), (info), sizeof(*(info)))
 #define get_next_port_info(team, cookie, info) \
@@ -242,18 +242,18 @@ extern status_t		switch_sem_etc(sem_id semToBeReleased, sem_id id,
 extern status_t		get_sem_count(sem_id id, int32 *threadCount);
 extern status_t		set_sem_owner(sem_id id, team_id team);
 
-/* system private, use the macros instead */
-extern status_t		_get_sem_info(sem_id id, struct sem_info *info,
+extern status_t		get_sem_info(sem_id id, struct sem_info *info,
 						size_t infoSize);
-extern status_t		_get_next_sem_info(team_id team, int32 *cookie,
+extern status_t		get_next_sem_info(team_id team, int32 *cookie,
 						struct sem_info *info, size_t infoSize);
 
+/*  --- only on Haiku
 #define get_sem_info(sem, info) \
 	_get_sem_info((sem), (info), sizeof(*(info)))
 
 #define get_next_sem_info(team, cookie, info) \
 	_get_next_sem_info((team), (cookie), (info), sizeof(*(info)))
-
+*/
 
 /* Teams */
 
