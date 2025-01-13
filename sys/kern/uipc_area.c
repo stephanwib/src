@@ -180,6 +180,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         }
 
 	KASSERT(source_area->ka_uobj != NULL);
+	uao_reference(source_area->ka_uobj);
         ka->ka_uobj = source_area->ka_uobj;
 	mutex_exit(&area_mutex);
 	    
