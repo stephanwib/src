@@ -89,7 +89,7 @@ extern status_t acquire_sem(sem_id id) {
 }
 
 extern status_t acquire_sem_etc(sem_id id, int32 count, uint32 flags, bigtime_t timeout) {
-    status_t ret = _acquire_sem_etc(id, count, flags, timeout);
+    status_t ret = _acquire_sem_etc(id, count, flags, timeout / 1000);
 
     if (ret == -1) {
         return handle_sem_error(errno);
