@@ -126,19 +126,11 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if (protection & AREA_EXECUTE_AREA)
         prot |= VM_PROT_EXECUTE;
 
-    /* Load the user-supplied address */
+    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer
     error = copyin(startAddress, &address, sizeof(void *));
     if (error)
         return error;
     va = (vaddr_t)address;
-
-/*	
-    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer
-    error = copyin((void*)startAddress, address, sizeof(void*);
-    if (error)
-        return error;
-    va = (vaddr_t*)address;
-*/
 
     /* Ensure the requested address and size are aligned */
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
@@ -161,18 +153,19 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         .ka_uobj = NULL,
     };
 
-    /* Copy the area name from user space */
     error = copyinstr(user_name, ka->ka_name, sizeof(ka->ka_name), NULL);
     if (error) {
         kmem_free(ka, sizeof(struct karea));
         return error;
     }
 
-    /* If cloning, locate the source area and duplicate its UVM object */
     if (is_clone) {
+	    
+	/* Grab the lock here to allow searching and to prevent the source
+        /  area from being altered */
         mutex_enter(&area_mutex);
-        struct karea *source_area = karea_lookup_byid(source_area_id);
-        
+
+        struct karea *source_area = karea_lookup_byid(source_area_id);        
         if (source_area == NULL) {
 	    mutex_exit(&area_mutex);
             kmem_free(ka, sizeof(struct karea));
@@ -181,7 +174,6 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
 	KASSERT(source_area->ka_uobj != NULL);
         ka->ka_uobj = source_area->ka_uobj;
-	mutex_exit(&area_mutex);
 	    
     }
     else {
@@ -224,8 +216,10 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
     ka->ka_va = va;
 
-    /* Protect the area and insert it into the global list */
-    mutex_enter(&area_mutex);
+    /* If this is a clone, the lock is already held,
+    /  because the source area must not be deleted right now. */
+    if (!is_clone)
+        mutex_enter(&area_mutex);
 
     if (area_total_count >= area_max) {
         mutex_exit(&area_mutex);
@@ -295,169 +289,6 @@ sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_
                                 SCARG(uap, source), retval);
 }
 
-
-/*
-area_id
-sys__create_area(struct lwp *l, const struct sys__create_area_args *uap, register_t *retval)
-{
-    //
-     * _create_area: Create a memory area with specified attributes.
-     * {
-     *      syscallarg(const char *) name;
-     *      syscallarg(void **) startAddress;
-     *      syscallarg(uint32_t) addressSpec;
-     *      syscallarg(size_t) size;
-     *      syscallarg(uint32_t) lock;
-     *      syscallarg(uint32_t) protection;
-     * 
-    
-
-    const char *user_name = SCARG(uap, name);
-    void **startAddress = SCARG(uap, startAddress);
-    uint32_t addressSpec = SCARG(uap, addressSpec);
-    size_t size = SCARG(uap, size);
-    uint32_t lock = SCARG(uap, lock);
-    uint32_t protection = SCARG(uap, protection);
-    
-    int error, flags = 0;
-    vm_prot_t prot = VM_PROT_NONE;
-    vaddr_t va;
-    void *address;
-    struct karea *ka;
-    struct karea *search;
-
-
-    // Reject mappings unavailable to user-mode
-    //  Remap options with the same meaning 
-    switch (addressSpec) {
-	case AREA_EXACT_ADDRESS:
-	    // XXX: UVM takes this as a hint only
-	    flags |= UVM_FLAG_FIXED;
-        case AREA_ANY_ADDRESS:
-	case AREA_RANDOMIZED_ANY_ADDRESS:
-            break;
-	case AREA_BASE_ADDRESS:
-	case AREA_RANDOMIZED_BASE_ADDRESS:
-	    // XXX: base addresses probably not supported by UVM 
-	    break;
-	case AREA_ANY_KERNEL_ADDRESS:
- 	    return EINVAL;
-    }
-
-    // Map area protection flags to UVM flags
-    if (protection & AREA_READ_AREA)
-        prot |= VM_PROT_READ;
-    if (protection & AREA_WRITE_AREA)
-        prot |= VM_PROT_WRITE;
-    if (protection & AREA_EXECUTE_AREA)
-        prot |= VM_PROT_EXECUTE;
-
-	
-    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer 
-    error = copyin((void*)startAddress, address, sizeof(void*);
-    if (error)
-        return error;
-    va = (vaddr_t*)address;
-    
-    // Make sure the requested address and size is aligned to PAGE_SIZE 
-    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
-	return EINVAL;
-    
-    ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
-   
-    *ka = (struct karea) {
-        .ka_va = 0,
-        .ka_size = size,
-        .ka_lock = lock,
-        .ka_protection = protection,
-        .ka_owner = l->l_proc->p_pid,
-        .ka_uid = kauth_cred_getuid(l->l_cred),
-        .ka_gid = kauth_cred_getgid(l->l_cred),
-        .ka_uobj = NULL
-    };
-
-    error = copyinstr(user_name, ka->ka_name, sizeof(ka->ka_name), NULL);
-    if (error) {
-        kmem_free(ka, sizeof(struct karea));
-        return error;
-    }
-    
-    ka->ka_uobj = uao_create(size, 0);
-    if (ka->ka_uobj == NULL) {
-        kmem_free(ka, sizeof(struct karea));
-        return ENOMEM;
-    }
-	
-    error = uvm_map(l->l_proc->p_vmspace, &va, size, ka->ka_uobj, 0 , 0  , 
-                    UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
-    if (error) {
-        uao_detach(ka->ka_uobj);
-        kmem_free(ka, sizeof(struct karea));
-        return ENOMEM;
-    }
-
-    if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t*)address) {
-	// XXX unmap 
-        uao_detach(ka->ka_uobj);
-        kmem_free(ka, sizeof(struct karea));
-        return ENOMEM;
-    }
-
-    if (lock >= AREA_LAZY_LOCK) {
-        error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
-	if (error) {
-	    // XXX unmap
-	    uao_detach(ka->ka_uobj);
-            kmem_free(ka, sizeof(struct karea));
-            return ENOMEM;
-	}
-    }
-
-    ka->ka_va = va;
-    
-    mutex_enter(&area_mutex);
-
-    error = copyout(&va, (void*)startAddress, sizeof(void*));
-	
-    if area_total_count >= area_max {
-        mutex_exit(&area_mutex);
-        uao_detach(ka->ka_uobj);
-        kmem_free(ka, sizeof(struct karea));
-        return ENOSPC;    
-    }
-    
-    while (__predict_false((search = karea_lookup_byid(area_next_id)) != NULL))      
-        area_next_id++;
-    ka->ka_id = area_next_id;
-    
-    LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
-    area_total_count++;
-    mutex_exit(&area_mutex);
-
-    *retval = ka->ka_id;
-
-    return 0;
-}
-
-area_id
-sys__clone_area(struct lwp *l, const struct sys__clone_area_args *uap, register_t *retval)
-{
-    /
-     * _clone_area: Clone an existing memory area.
-     * {
-     *      syscallarg(const char *) name;
-     *      syscallarg(void **) destAddress;
-     *      syscallarg(uint32_t) addressSpec;
-     *      syscallarg(uint32_t) protection;
-     *      syscallarg(area_id) source;
-     * }
-     *
-    
-    return 0;
-}
-
-
-*/
 
 area_id
 sys__find_area(struct lwp *l, const struct sys__find_area_args *uap, register_t *retval)
