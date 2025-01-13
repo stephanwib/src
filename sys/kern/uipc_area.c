@@ -172,18 +172,19 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if (is_clone) {
         mutex_enter(&area_mutex);
         struct karea *source_area = karea_lookup_byid(source_area_id);
-        mutex_exit(&area_mutex);
         
         if (source_area == NULL) {
+	    mutex_exit(&area_mutex);
             kmem_free(ka, sizeof(struct karea));
             return EINVAL;
         }
-        ka->ka_uobj = uao_create(size, 0);
-        if (ka->ka_uobj == NULL) {
-            kmem_free(ka, sizeof(struct karea));
-            return ENOMEM;
-        }
-    } else {
+
+	KASSERT(source_area->ka_uobj != NULL);
+        ka->ka_uobj = source_area->ka_uobj;
+	mutex_exit(&area_mutex);
+	    
+    }
+    else {
         /* Create a new UVM object */
         ka->ka_uobj = uao_create(size, 0);
         if (ka->ka_uobj == NULL) {
