@@ -136,12 +136,10 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
         return EINVAL;
 
-    /* Allocate memory for the new karea structure */
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
     if (ka == NULL)
         return ENOMEM;
 
-    /* Initialize the karea structure */
     *ka = (struct karea){
         .ka_va = 0,
         .ka_size = size,
@@ -159,12 +157,9 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         return error;
     }
 
-    if (is_clone) {
-	    
-	/* Grab the lock here to allow searching and to prevent the source
-        /  area from being altered */
-        mutex_enter(&area_mutex);
+    mutex_enter(&area_mutex);
 
+    if (is_clone) {
         struct karea *source_area = karea_lookup_byid(source_area_id);        
         if (source_area == NULL) {
 	    mutex_exit(&area_mutex);
@@ -180,6 +175,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         /* Create a new UVM object */
         ka->ka_uobj = uao_create(size, 0);
         if (ka->ka_uobj == NULL) {
+	    mutex_exit(&area_mutex);
             kmem_free(ka, sizeof(struct karea));
             return ENOMEM;
         }
@@ -190,6 +186,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
+	mutex_exit(&area_mutex);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return error;
@@ -197,6 +194,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
     /* If the address specification was exact but the address was adjusted, unmap */
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
+	mutex_exit(&area_mutex);
         uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
@@ -207,6 +205,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
         if (error) {
+	    mutex_exit(&area_mutex);
             uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
             uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
@@ -215,11 +214,6 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     }
 
     ka->ka_va = va;
-
-    /* If this is a clone, the lock is already held,
-    /  because the source area must not be deleted right now. */
-    if (!is_clone)
-        mutex_enter(&area_mutex);
 
     if (area_total_count >= area_max) {
         mutex_exit(&area_mutex);
@@ -242,9 +236,9 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
     area_total_count++;
+
     mutex_exit(&area_mutex);
 
-    /* Return the area ID and address */
     *retval = ka->ka_id;
     error = copyout(&va, startAddress, sizeof(void *));
     return error;
