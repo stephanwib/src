@@ -34,6 +34,7 @@
 #define _SYS_PORT_H
 
 #include <sys/types.h>
+#include <sys/param.h>
 
 #define PORT_MAX_NAME_LENGTH NAME_MAX
 

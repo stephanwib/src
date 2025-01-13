@@ -34,6 +34,7 @@
 #define _SYS_HSEM_H
 
 #include <sys/types.h>
+#include <sys/param.h>
 
 #define SEM_MAX_NAME_LENGTH NAME_MAX
 

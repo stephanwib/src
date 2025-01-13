@@ -34,6 +34,7 @@
 #define _SYS_AREA_H
 
 #include <sys/types.h>
+#include <sys/param.h>
 
 #define AREA_MAX_NAME_LENGTH NAME_MAX
 
@@ -91,9 +92,8 @@ area_id		_area_for(void *address);
 int 		_delete_area(area_id id);
 int 		_resize_area(area_id id, size_t newSize);
 int 		_set_area_protection(area_id id, uint32_t newProtection);
-int		_get_area_info(area_id id, area_info *areaInfo, size_t size);
-int		_get_next_area_info(pid_t pid, ssize_t *cookie,	area_info *areaInfo,
-                                size_t size);
+int		_get_area_info(area_id id, area_info *areaInfo);
+int		_get_next_area_info(pid_t pid, ssize_t *cookie,	area_info *areaInfo);
 
 #ifdef _KERNEL
 

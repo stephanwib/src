@@ -123,8 +123,8 @@ extern int set_area_protection(area_id id, uint32 newProtection) {
     }
 }
 
-extern int get_area_info(area_id id, area_info *areaInfo, size_t size) {
-    int ret = _get_area_info(id, areaInfo, size);
+extern int get_area_info(area_id id, area_info *areaInfo) {
+    int ret = _get_area_info(id, areaInfo);
 
     if (ret == -1) {
         return handle_area_error(errno);
@@ -133,9 +133,8 @@ extern int get_area_info(area_id id, area_info *areaInfo, size_t size) {
     }
 }
 
-extern int get_next_area_info(pid_t pid, ssize_t *cookie, area_info *areaInfo,
-                               size_t size) {
-    int ret = _get_next_area_info(pid, cookie, areaInfo, size);
+extern int get_next_area_info(pid_t pid, ssize_t *cookie, area_info *areaInfo) {
+    int ret = _get_next_area_info(pid, cookie, areaInfo);
 
     if (ret == -1) {
         return handle_area_error(errno);

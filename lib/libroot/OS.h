@@ -124,9 +124,9 @@ extern status_t		delete_area(area_id id);
 extern status_t		resize_area(area_id id, size_t newSize);
 extern status_t		set_area_protection(area_id id, uint32 newProtection);
 
-extern status_t		get_area_info(area_id id, area_info *areaInfo, size_t size);
+extern status_t		get_area_info(area_id id, area_info *areaInfo);
 extern status_t		get_next_area_info(team_id team, ssize_t *cookie,
-						area_info *areaInfo, size_t size);
+						area_info *areaInfo);
 
 
 /*  --- only on Haiku
@@ -242,10 +242,9 @@ extern status_t		switch_sem_etc(sem_id semToBeReleased, sem_id id,
 extern status_t		get_sem_count(sem_id id, int32 *threadCount);
 extern status_t		set_sem_owner(sem_id id, team_id team);
 
-extern status_t		get_sem_info(sem_id id, struct sem_info *info,
-						size_t infoSize);
+extern status_t		get_sem_info(sem_id id, struct sem_info *info);
 extern status_t		get_next_sem_info(team_id team, int32 *cookie,
-						struct sem_info *info, size_t infoSize);
+						struct sem_info *info);
 
 /*  --- only on Haiku
 #define get_sem_info(sem, info) \
