@@ -94,15 +94,15 @@ static void
 khsem_free(struct khsem *khs) {
 
     struct khsem *khs_this;
-    struct khsem *khs_next;
 
     KASSERT(mutex_owned(&khs->khs_interlock));
     KASSERT(khs->khs_state == KHS_DELETED);
 
     mutex_enter(&khsem_mutex);
-    LIST_FOREACH_SAFE(khs_this, &khsem_used_list, khs_usedq_entry, khs_next) {
+    LIST_FOREACH(khs_this, &khsem_used_list, khs_usedq_entry) {
         if (khs_this == khs) {
             LIST_REMOVE(khs_this, khs_usedq_entry);
+            break;
         }
     }
 
