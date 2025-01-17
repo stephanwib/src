@@ -169,6 +169,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
 	KASSERT(source_area->ka_uobj != NULL);
         ka->ka_uobj = source_area->ka_uobj;
+	ka->ka_size = source_area->ka_size;
 	    
     }
     else {
@@ -370,7 +371,6 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
     if (ka->ka_uobj != NULL) {
         uvm_unmap(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_va + ka->ka_size);
         uao_detach(ka->ka_uobj);
-        mutex_exit(&area_mutex);
     }
 
     LIST_REMOVE(ka, ka_entry);
