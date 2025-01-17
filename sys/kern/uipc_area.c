@@ -101,13 +101,9 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
     /* XXX: Not sure if the original implementation allows zero size areas.
     /  We can not map something zero-sized as it crashes the kernel. */
-    if (size == 0)
+    if (!is_clone && (size == 0))
         return EINVAL;
-
-    /* Ensure the requested address and size are aligned */
-    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
-        return EINVAL;
-    
+  
     /* Reject mappings unavailable to user-mode
     /  Remap options with the same meaning */
     switch (addressSpec) {
@@ -140,6 +136,10 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         return error;
     va = (vaddr_t)address;
 
+    /* Ensure the requested address and size are aligned */
+    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
+        return EINVAL;
+	
     ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
     if (ka == NULL)
         return ENOMEM;
