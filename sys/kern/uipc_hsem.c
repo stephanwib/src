@@ -54,12 +54,16 @@ khsem_init(void)
     int i, sz;
     vaddr_t v;
 
+int count = 0;
+
     SIMPLEQ_INIT(&khsem_freeq);
     LIST_INIT(&khsem_used_list);
     mutex_init(&khsem_mutex, MUTEX_DEFAULT, IPL_NONE);
 
     sz = ALIGN(khsem_max * sizeof(struct khsem));
     sz = round_page(sz);
+
+printf("Alloc size: %d\n", sz);
 
     v = uvm_km_alloc(kernel_map, sz, 0, UVM_KMF_WIRED|UVM_KMF_ZERO);
 	if (v == 0) {
@@ -68,14 +72,20 @@ khsem_init(void)
 	}
 
     hsems = (struct khsem *)v;
+printf("hsem position: %p\n", hsems);
+printf("SIMPLEQ_EMPTY result before loop: %d\n", SIMPLEQ_EMPTY(&khsem_freeq));
 
     for (i = 0; i < khsem_max; i++) {
         cv_init(&hsems[i].khs_cv, "acquire_sem");
         mutex_init(&hsems[i].khs_interlock, MUTEX_DEFAULT, IPL_NONE);
-	    hsems[i].khs_state = KHS_FREE;
+        hsems[i].khs_state = KHS_FREE;
         SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
+count++;
     }
 
+printf("loop count: %d\n", count);	
+printf("SIMPLEQ_EMPTY result after loop: %d\n", SIMPLEQ_EMPTY(&khsem_freeq));
+printf("SIMPLEQ_FIRST result: %p\n", SIMPLEQ_FIRST(&khsem_freeq));
     return 0;
 }
 
@@ -256,6 +266,7 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
     mutex_enter(&khsem_mutex);
 
     if (__predict_false(SIMPLEQ_EMPTY(&khsem_freeq))) {
+	printf("create: freeq is empty, returning ENOSPC\n");
         mutex_exit(&khsem_mutex);
         return ENOSPC;
     }
