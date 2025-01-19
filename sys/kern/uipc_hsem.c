@@ -263,19 +263,23 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
             return error;
     }
 
+printf("enter khsem_mutex, address: %p\n", &khsem_mutex);
     mutex_enter(&khsem_mutex);
 
     if (__predict_false(SIMPLEQ_EMPTY(&khsem_freeq))) {
-	printf("create: freeq is empty, returning ENOSPC\n");
+printf("create: freeq is empty, returning ENOSPC, exiting mutex\n");
         mutex_exit(&khsem_mutex);
         return ENOSPC;
     }
 
     /* Pick a semaphore structure from the free queue and transfer it to the used list */
     khs = SIMPLEQ_FIRST(&khsem_freeq);
+printf("transferring khs structure, address: %p\n", khs);
     SIMPLEQ_REMOVE_HEAD(&khsem_freeq, khs_freeq_entry);
     LIST_INSERT_HEAD(&khsem_used_list, khs, khs_usedq_entry);
+printf("enter khs->khs_interlock, address: %p\n", &khs->khs_interlock);
     mutex_enter(&khs->khs_interlock);
+printf("exit khsem_mutex\n");
     mutex_exit(&khsem_mutex);
 
     *khs = (struct khsem) {
@@ -289,7 +293,9 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
     strlcpy(khs->khs_name,
             (namelen == 0) ? "unnamed semaphore" : namebuf,
             SEM_MAX_NAME_LENGTH);
-    
+            
+printf("exit khs->khs_interlock\n");
+printf("khs->khs_interlock owner: %d\n", mutex_owned(&khs->khs_interlock));
     mutex_exit(&khs->khs_interlock);
 
     *retval = PTR_TO_ID(khs);

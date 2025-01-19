@@ -171,9 +171,10 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
             return EINVAL;
         }
 
-	KASSERT(source_area->ka_uobj != NULL);
+	    KASSERT(source_area->ka_uobj != NULL);
         ka->ka_uobj = source_area->ka_uobj;
-	ka->ka_size = source_area->ka_size;
+printf("size of source area: %ld\n", source_area->ka_size);
+	    ka->ka_size = source_area->ka_size;
 	    
     }
     else {
@@ -188,7 +189,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
 
     /* Map the UVM object into the process address space */
     uao_reference(ka->ka_uobj);
-    error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, size, ka->ka_uobj, 0, 0,
+    error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
 	mutex_exit(&area_mutex);

@@ -626,7 +626,7 @@ main(void)
 	kport_init();
 
 	printf("init: sem\n");
-	(void)khsem_init;
+	(void)khsem_init();
 
 	printf("init: area\n");
 	area_init();
