@@ -199,13 +199,12 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
 
         } while (khs->khs_count - count < 0);
 
-        khs->khs_latest_holder = l->l_lid;
-        khs->khs_count -= count;
-        
-        mutex_exit(&khs->khs_interlock);
-        return 0;
     }
 
+    khs->khs_latest_holder = l->l_lid;
+    khs->khs_count -= count;
+
+    mutex_exit(&khs->khs_interlock);
     return 0;
 }
 
@@ -263,11 +262,9 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
             return error;
     }
 
-printf("enter khsem_mutex, address: %p\n", &khsem_mutex);
     mutex_enter(&khsem_mutex);
 
     if (__predict_false(SIMPLEQ_EMPTY(&khsem_freeq))) {
-printf("create: freeq is empty, returning ENOSPC, exiting mutex\n");
         mutex_exit(&khsem_mutex);
         return ENOSPC;
     }
@@ -279,9 +276,10 @@ printf("transferring khs structure, address: %p\n", khs);
     LIST_INSERT_HEAD(&khsem_used_list, khs, khs_usedq_entry);
 printf("enter khs->khs_interlock, address: %p\n", &khs->khs_interlock);
     mutex_enter(&khs->khs_interlock);
-printf("exit khsem_mutex\n");
     mutex_exit(&khsem_mutex);
 
+
+/*
     *khs = (struct khsem) {
         .khs_state = KHS_IN_USE,
         .khs_count = count,
@@ -289,17 +287,21 @@ printf("exit khsem_mutex\n");
         .khs_uid = kauth_cred_geteuid(uc),
         .khs_gid = kauth_cred_getegid(uc)
     };
+*/
+
+    khs->khs_state = KHS_IN_USE;
+    khs->khs_count = count;
+    khs->khs_owner = l->l_proc->p_pid;
+    khs->khs_uid = kauth_cred_geteuid(uc);
+    khs->khs_gid = kauth_cred_getegid(uc);
 
     strlcpy(khs->khs_name,
             (namelen == 0) ? "unnamed semaphore" : namebuf,
             SEM_MAX_NAME_LENGTH);
-            
-printf("exit khs->khs_interlock\n");
-printf("khs->khs_interlock owner: %d\n", mutex_owned(&khs->khs_interlock));
+
     mutex_exit(&khs->khs_interlock);
 
     *retval = PTR_TO_ID(khs);
-
     return 0;
 }
 

@@ -192,7 +192,8 @@ printf("size of source area: %ld\n", source_area->ka_size);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
-	mutex_exit(&area_mutex);
+printf("Error in uvm_map\n");
+	    mutex_exit(&area_mutex);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return error;
@@ -200,7 +201,8 @@ printf("size of source area: %ld\n", source_area->ka_size);
 
     /* If the address specification was exact but the address was adjusted, unmap */
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
-	mutex_exit(&area_mutex);
+printf("Error requested adress does not match\n");
+    	mutex_exit(&area_mutex);
         uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
@@ -211,7 +213,8 @@ printf("size of source area: %ld\n", source_area->ka_size);
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, size, NULL);
         if (error) {
-	    mutex_exit(&area_mutex);
+printf("Error in wirepages\n");
+	        mutex_exit(&area_mutex);
             uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
             uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
