@@ -324,13 +324,14 @@ int sys__delete_sem(struct lwp *l, const struct sys__delete_sem_args *uap, regis
     }
 
     khs->khs_state = KHS_DELETED;
-    if (khs->khs_waiters)
+    if (khs->khs_waiters) {
         cv_broadcast(&khs->khs_cv);
+        mutex_exit(&khs->khs_interlock);
+        }
     else
         khsem_free(khs);
 
     *retval = 0;
-
     return 0;
 }
 
