@@ -194,6 +194,7 @@ printf("size of source area: %ld\n", source_area->ka_size);
 
     /* Map the UVM object into the process address space */
     uao_reference(ka->ka_uobj);
+printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", &va, ka->ka_size, ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
@@ -211,7 +212,7 @@ printf("Error requested adress does not match\n");
         uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + size);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
-        return EINVAL;
+        return ENOMEM;
     }
 
     /* Wire pages if requested */
