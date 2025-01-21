@@ -107,9 +107,9 @@ khsem_free(struct khsem *khs) {
     }
 
     SIMPLEQ_INSERT_TAIL(&khsem_freeq, khs, khs_freeq_entry);
-    mutex_exit(&khsem_mutex);
-
     khs->khs_state = KHS_FREE;
+
+    mutex_exit(&khsem_mutex);
     mutex_exit(&khs->khs_interlock);
 }
 
