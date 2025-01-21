@@ -88,14 +88,16 @@ fill_area_info(const struct karea *ka, struct area_info *info)
 }
 
 static int
-create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress, 
+create_or_clone_area(struct lwp *l, const char *name, void **startAddress, 
                      uint32_t addressSpec, size_t size, uint32_t lock, uint32_t protection, 
                      area_id source_area_id, register_t *retval)
 {
     int error, flags = 0;
+    size_t namelen = 0;
     vm_prot_t prot = VM_PROT_NONE;
     vaddr_t va;
     void *address;
+    char namebuf[AREA_MAX_NAME_LENGTH];
     struct karea *ka, *search;
     bool is_clone = (source_area_id != -1);
 
@@ -103,6 +105,12 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     /  We can not map something zero-sized as it crashes the kernel. */
     if (!is_clone && (size == 0))
         return EINVAL;
+
+    if (name != NULL) {
+        error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
+        if (error)
+            return error;
+    }
   
     /* Reject mappings unavailable to user-mode
     /  Remap options with the same meaning */
@@ -140,7 +148,7 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
         return EINVAL;
 	
-    ka = kmem_zalloc(sizeof(struct karea), KM_SLEEP);
+    ka = kmem_alloc(sizeof(struct karea), KM_SLEEP);
     if (ka == NULL)
         return ENOMEM;
 
@@ -155,11 +163,9 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         .ka_uobj = NULL,
     };
 
-    error = copyinstr(user_name, ka->ka_name, sizeof(ka->ka_name), NULL);
-    if (error) {
-        kmem_free(ka, sizeof(struct karea));
-        return error;
-    }
+    strlcpy(ka->ka_name,
+            (namelen == 0) ? "unnamed area" : namebuf,
+            AREA_MAX_NAME_LENGTH);
 
     mutex_enter(&area_mutex);
 
@@ -172,13 +178,12 @@ create_or_clone_area(struct lwp *l, const char *user_name, void **startAddress,
         }
 
 	    KASSERT(source_area->ka_uobj != NULL);
-        ka->ka_uobj = source_area->ka_uobj;
+            ka->ka_uobj = source_area->ka_uobj;
 printf("size of source area: %ld\n", source_area->ka_size);
 	    ka->ka_size = source_area->ka_size;
 	    
     }
     else {
-        /* Create a new UVM object */
         ka->ka_uobj = uao_create(size, 0);
         if (ka->ka_uobj == NULL) {
 	    mutex_exit(&area_mutex);
