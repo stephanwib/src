@@ -234,6 +234,8 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
     if (khs->khs_waiters)
         cv_signal(&khs->khs_cv);
 
+    mutex_exit(&khs->khs_interlock);
+
     return 0;
 }
  
@@ -276,20 +278,10 @@ printf("transferring khs structure, address: %p\n", khs);
     LIST_INSERT_HEAD(&khsem_used_list, khs, khs_usedq_entry);
 printf("enter khs->khs_interlock, address: %p\n", &khs->khs_interlock);
     mutex_enter(&khs->khs_interlock);
-    mutex_exit(&khsem_mutex);
-
-
-/*
-    *khs = (struct khsem) {
-        .khs_state = KHS_IN_USE,
-        .khs_count = count,
-        .khs_owner = l->l_proc->p_pid,
-        .khs_uid = kauth_cred_geteuid(uc),
-        .khs_gid = kauth_cred_getegid(uc)
-    };
-*/
 
     khs->khs_state = KHS_IN_USE;
+    mutex_exit(&khsem_mutex);
+
     khs->khs_count = count;
     khs->khs_owner = l->l_proc->p_pid;
     khs->khs_uid = kauth_cred_geteuid(uc);
