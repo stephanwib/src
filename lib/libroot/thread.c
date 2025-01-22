@@ -165,42 +165,17 @@ snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
 	return snooze(amount);
 }
 
-
-/*
-
 status_t
 set_thread_priority(thread_id id, int32 priority)
 {
-	init_thread();
 
-	int i;
-	for (i = 0; i < MAX_THREADS; i++)
-	{
-		if (thread_table[i].thread == id)
-		{
-			thread_table[i].priority = priority;
-			return B_OK;
-		}
-	}
-
-	return B_BAD_THREAD_ID;
+	return B_OK;
 }
-
-
-
-
 
 
 status_t
 rename_thread(thread_id thread, const char *newName)
 {
 
-	return B_BAD_THREAD_ID;
+	return B_OK;
 }
-
-
-
-
-
-
-*/
