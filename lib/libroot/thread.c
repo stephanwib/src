@@ -131,6 +131,34 @@ find_thread(const char *name)
 	return B_NAME_NOT_FOUND;
 }
 
+status_t
+set_thread_priority(thread_id id, int32 priority)
+{
+
+	return B_OK;
+}
+
+
+status_t
+rename_thread(thread_id id, const char *newName)
+{
+	pthread_setname_np(id, "%s", (void*)name);
+
+	return B_OK;
+}
+
+status_t
+send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
+{
+	return B_BAD_THREAD_ID;
+}
+
+
+status_t
+receive_data(thread_id *sender, void *buffer, size_t bufferSize)
+{
+	return B_BAD_THREAD_ID;
+}
 
 
 status_t
@@ -165,17 +193,4 @@ snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
 	return snooze(amount);
 }
 
-status_t
-set_thread_priority(thread_id id, int32 priority)
-{
 
-	return B_OK;
-}
-
-
-status_t
-rename_thread(thread_id thread, const char *newName)
-{
-
-	return B_OK;
-}
