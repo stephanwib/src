@@ -65,6 +65,7 @@ karea_lookup_byid(area_id id)
             return ka;
         }
     }
+
     return NULL;
 }
 
@@ -170,9 +171,11 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     mutex_enter(&area_mutex);
 
     if (is_clone) {
-        struct karea *source_area = karea_lookup_byid(source_area_id);        
+printf("enter clone\n");
+        struct karea *source_area = karea_lookup_byid(source_area_id);
+printf("pointer to source: %p\n", source_area);        
         if (source_area == NULL) {
-	    mutex_exit(&area_mutex);
+	        mutex_exit(&area_mutex);
             kmem_free(ka, sizeof(struct karea));
             return EINVAL;
         }
@@ -194,7 +197,7 @@ printf("size of source area: %ld\n", source_area->ka_size);
 
     /* Map the UVM object into the process address space */
     uao_reference(ka->ka_uobj);
-printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", &va, ka->ka_size, ka->ka_uobj);
+printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", (void*)va, ka->ka_size, ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
@@ -209,7 +212,7 @@ printf("Error in uvm_map\n");
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
 printf("Error requested adress does not match\n");
     	mutex_exit(&area_mutex);
-        uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + ka->ka_size);
+        uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return ENOMEM;
@@ -221,7 +224,7 @@ printf("Error requested adress does not match\n");
         if (error) {
 printf("Error in wirepages\n");
 	        mutex_exit(&area_mutex);
-            uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + ka->ka_size);
+            uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
             uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
             return error;
@@ -232,7 +235,7 @@ printf("Error in wirepages\n");
 
     if (area_total_count >= area_max) {
         mutex_exit(&area_mutex);
-        uvm_unmap(&l->l_proc->p_vmspace->vm_map, va, va + ka->ka_size);
+        uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return ENOSPC;
@@ -383,8 +386,9 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
     }
     
     if (ka->ka_uobj != NULL) {
-        uvm_unmap(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_va + ka->ka_size);
-        uao_detach(ka->ka_uobj);
+    printf("delete_area: start: %p, size: %ld\n", (void*)ka->ka_va, ka->ka_size);
+        uvm_deallocate(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_size);
+      //  uao_detach(ka->ka_uobj);
     }
 
     LIST_REMOVE(ka, ka_entry);

@@ -149,9 +149,6 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
     if ((flags & (SEM_RELATIVE_TIMEOUT | SEM_ABSOLUTE_TIMEOUT)) == (SEM_RELATIVE_TIMEOUT | SEM_ABSOLUTE_TIMEOUT))
         return EINVAL;
 
-    if ((flags & SEM_ABSOLUTE_TIMEOUT) && timeout < 0)
-        return ETIMEDOUT;
-    
     khs = khsem_lookup_byid(id);
     if (khs == NULL)
         return ENOENT;
@@ -164,10 +161,10 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
 
     if (khs->khs_count - count < 0)
     {
-        if (flags & SEM_RELATIVE_TIMEOUT && timeout == 0)
+        if (flags & SEM_RELATIVE_TIMEOUT && timeout <= 0)
         {
             mutex_exit(&khs->khs_interlock);
-            return EAGAIN;
+            return EWOULDBLOCK;
         }
 
         // t = (flags & SEM_TIMEOUT) ? timeout : 0;
@@ -175,7 +172,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
         do
         {
             khs->khs_waiters++;
-            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_TIMEOUT) ? timeout : 0));
+            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_RELATIVE_TIMEOUT) ? timeout : 0));
             khs->khs_waiters--;
 
             if (khs->khs_state == KHS_DELETED)
