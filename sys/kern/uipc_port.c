@@ -635,13 +635,15 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
         }
     }
 
-    msg = kmem_zalloc(sizeof(*msg), KM_SLEEP);
-    msg->kp_msg_code = code;
-    msg->kp_msg_size = size;
-    msg->kp_msg_sender_uid = kauth_cred_geteuid(uc);
-    msg->kp_msg_sender_gid = kauth_cred_getegid(uc);
-    msg->kp_msg_sender_pid = l->l_proc->p_pid;
-  
+    msg = kmem_alloc(sizeof(*msg), KM_SLEEP);
+    *msg = (struct kp_msg){
+        .kp_msg_code = code,
+        .kp_msg_size = size,
+        .kp_msg_sender_uid = kauth_cred_geteuid(uc),
+        .kp_msg_sender_gid = kauth_cred_getegid(uc),
+        .kp_msg_sender_pid = l->l_proc->p_pid,
+    };
+    
     if (size)
     {
         msg->kp_msg_buffer = kmem_alloc(size, KM_SLEEP);
