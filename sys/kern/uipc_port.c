@@ -129,31 +129,21 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     struct kport *search;
     kauth_cred_t uc;
     int error;
-    size_t namelen;
-    const char UNNAMED_PORT[] = "unnamed port";
+    size_t namelen = 0;
     char namebuf[PORT_MAX_NAME_LENGTH];
 
     if (queue_length < 1 || queue_length > PORT_MAX_QUEUE_LENGTH)
         return EINVAL;
 
-    error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
-    if (error)
-        return error;
-
+    if (name != NULL) {
+        error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
+        if (error)
+            return error;
+    }
+    
     uc = l->l_cred;
 
     ret = kmem_zalloc(sizeof(*ret), KM_SLEEP);
-
-    if (namelen == 1) { /* This is just a \0 (empty name). Apply defult name for unnamed ports */
-        ret->kp_namelen = sizeof(UNNAMED_PORT);
-        ret->kp_name = kmem_alloc(ret->kp_namelen, KM_SLEEP);
-        strlcpy(ret->kp_name, UNNAMED_PORT, sizeof(UNNAMED_PORT));
-    }
-    else {
-        ret->kp_namelen = namelen;
-        ret->kp_name = kmem_alloc(ret->kp_namelen, KM_SLEEP);
-        strlcpy(ret->kp_name, namebuf, namelen);
-    }
 
     ret->kp_uid = kauth_cred_geteuid(uc);
     ret->kp_gid = kauth_cred_getegid(uc);
@@ -162,6 +152,11 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     ret->kp_nmsg = 0;
     ret->kp_qlen = queue_length;
     ret->kp_waiters = 0;
+
+    strlcpy(ret->kp_name,
+            (namelen == 0) ? "unnamed port" : namebuf,
+            sizeof(ret->kp_name);
+    
     SIMPLEQ_INIT(&ret->kp_msgq);
     mutex_init(&ret->kp_interlock, MUTEX_DEFAULT, IPL_NONE);
     cv_init(&ret->kp_rdcv, "port_read");
@@ -261,8 +256,6 @@ kport_delete_physical(struct kport *port)
  
     mutex_exit(&port->kp_interlock);
     mutex_destroy(&port->kp_interlock);
-
-    kmem_free(port->kp_name, port->kp_namelen);
     
     kmem_free(port, sizeof(*port));
 
