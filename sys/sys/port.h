@@ -89,15 +89,14 @@ enum port_state {
 
 
 struct kport {
-  LIST_ENTRY(kport)       kp_entry;        /* global list entry */
+  LIST_ENTRY(kport)       kp_entry;       /* global list entry */
   SIMPLEQ_HEAD(, kp_msg)  kp_msgq;        /* head of message queue */
   kmutex_t                kp_interlock;   /* lock on this kport */
   kcondvar_t              kp_rdcv;        /* reader CV, wait for write event */
   kcondvar_t              kp_wrcv;        /* writer CV, wait for read event */
   port_id                 kp_id;          /* id of this port */
   pid_t                   kp_owner;       /* owner PID assigned to this port */
-  char                    *kp_name;       /* name of this port */
-  size_t                  kp_namelen;     /* length of name */
+  char                    kp_name[PORT_MAX_NAME_LENGTH];       /* name of this port */
   int                     kp_state;       /* state of this port */
   int                     kp_nmsg;        /* number of messages in this port */
   int                     kp_total_count; /* number of messages already read */  
