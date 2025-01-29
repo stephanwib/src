@@ -402,10 +402,18 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
         return EACCES;
     }
     
-    if (ka->ka_uobj != NULL) {
-    printf("delete_area: start: %p, size: %ld\n", (void*)ka->ka_va, ka->ka_size);
-        uvm_deallocate(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_size);
-      //  uao_detach(ka->ka_uobj);
+
+printf("delete_area: start: %p, size: %ld\n", (void*)ka->ka_va, ka->ka_size);
+    uvm_deallocate(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_size);
+
+    /* We need to check if we are the last proc /
+    /  unmapping the memory object. If so, we   /
+    /  need to detach the final reference so    /
+    /  the memory is freed.                    */
+
+    if (NULL == karea_lookup_byuobj(ka->ka_uobj)) {
+printf("delete_area: freeing last reference\n");
+        uao_detach(ka->ka_uobj);
     }
 
     LIST_REMOVE(ka, ka_entry);
