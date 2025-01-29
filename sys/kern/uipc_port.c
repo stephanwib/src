@@ -109,14 +109,15 @@ kport_lookup_byname(const char *name)
 static void
 fill_port_info(const struct kport *kp, struct port_info *info)
 {
-    info->port = kp->kp_id;
-    info->pid = kp->kp_owner;
+    *info = (struct port_info){
+        .port = kp->kp_id,
+        .pid = kp->kp_owner,
+        .capacity = kp->kp_qlen,
+        .queue_count = kp->kp_nmsg,
+        .total_count = kp->kp_total_count,
+    };
     (void)strlcpy(info->name, kp->kp_name, PORT_MAX_NAME_LENGTH);
-    info->capacity = kp->kp_qlen;
-    info->queue_count = kp->kp_nmsg;
-    info->total_count = kp->kp_total_count;
 }
-
 
 
     /* syscall implementation functions */
