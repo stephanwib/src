@@ -251,10 +251,9 @@ kport_delete_physical(struct kport *port)
 
     while (port->kp_nmsg)   /* get rid of eventually outstanding messages */
     {
+        KASSERT(!SIMPLEQ_EMPTY(&port->kp_msgq));
+        
         msg = SIMPLEQ_FIRST(&port->kp_msgq);
-
-        KASSERT(msg != NULL);
-
         SIMPLEQ_REMOVE_HEAD(&port->kp_msgq, kp_msg_next);
 
         if (msg->kp_msg_size)
