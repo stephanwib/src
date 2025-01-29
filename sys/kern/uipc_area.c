@@ -69,6 +69,23 @@ karea_lookup_byid(area_id id)
     return NULL;
 }
 
+static struct karea *
+karea_lookup_byuobj(struct uvm_object *uobj)
+{
+    struct karea *ka;
+
+    KASSERT(mutex_owned(&area_mutex));
+    LIST_FOREACH(ka, &karea_list, ka_entry)
+    {
+        if (ka->ka_uobj == uobj)
+        {
+            return ka;
+        }
+    }
+
+    return NULL;
+}
+
 static void
 fill_area_info(const struct karea *ka, struct area_info *info)
 {
