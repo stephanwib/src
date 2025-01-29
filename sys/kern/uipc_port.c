@@ -143,8 +143,8 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     
     uc = l->l_cred;
 
-    ret = kmem_zalloc(sizeof(*ret), KM_SLEEP);
-
+    ret = kmem_alloc(sizeof(*ret), KM_SLEEP);
+/*
     ret->kp_uid = kauth_cred_geteuid(uc);
     ret->kp_gid = kauth_cred_getegid(uc);
     ret->kp_owner = l->l_proc->p_pid;
@@ -152,7 +152,18 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     ret->kp_nmsg = 0;
     ret->kp_qlen = queue_length;
     ret->kp_waiters = 0;
-
+*/
+    
+    *ret = (struct kport){
+        .kp_uid = kauth_cred_geteuid(uc),
+        .kp_gid = kauth_cred_getegid(uc),
+        .kp_owner = l->l_proc->p_pid,
+        .kp_state = KP_ACTIVE,
+        .kp_nmsg = 0,
+        .kp_qlen = queue_length,
+        .kp_waiters = 0,
+    };
+    
     strlcpy(ret->kp_name,
             (namelen == 0) ? "unnamed port" : namebuf,
             sizeof(ret->kp_name);
