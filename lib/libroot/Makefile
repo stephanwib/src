@@ -5,7 +5,7 @@
 LIB=		root
 # MAN=		root.3
 
-SRCS=		port.c thread.c area.c sem.c
+SRCS=		time.c port.c thread.c area.c sem.c
 
 LIBDPLIBS+=	pthread ${NETBSDSRCDIR}/lib/libpthread
 

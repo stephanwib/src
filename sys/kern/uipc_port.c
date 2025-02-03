@@ -144,17 +144,8 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     uc = l->l_cred;
 
     ret = kmem_alloc(sizeof(*ret), KM_SLEEP);
-/*
-    ret->kp_uid = kauth_cred_geteuid(uc);
-    ret->kp_gid = kauth_cred_getegid(uc);
-    ret->kp_owner = l->l_proc->p_pid;
-    ret->kp_state = KP_ACTIVE;
-    ret->kp_nmsg = 0;
-    ret->kp_qlen = queue_length;
-    ret->kp_waiters = 0;
-*/
     
-    *ret = (struct kport){
+    *ret = (struct kport) {
         .kp_uid = kauth_cred_geteuid(uc),
         .kp_gid = kauth_cred_getegid(uc),
         .kp_owner = l->l_proc->p_pid,
@@ -166,7 +157,7 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     
     strlcpy(ret->kp_name,
             (namelen == 0) ? "unnamed port" : namebuf,
-            sizeof(ret->kp_name);
+            sizeof(ret->kp_name));
     
     SIMPLEQ_INIT(&ret->kp_msgq);
     mutex_init(&ret->kp_interlock, MUTEX_DEFAULT, IPL_NONE);
@@ -178,7 +169,6 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     if (__predict_false(nports >= port_max))
     {
         mutex_exit(&kport_mutex);
-        kmem_free(ret->kp_name, ret->kp_namelen);
         kmem_free(ret, sizeof(*ret));
 
         return ENFILE;
@@ -208,6 +198,7 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
     *val = ret->kp_id;
 
     return 0;
+
 }
 
 static int

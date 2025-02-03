@@ -136,7 +136,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 	case AREA_EXACT_ADDRESS:
 	    /* XXX: UVM takes this as a hint only */
 	    flags |= UVM_FLAG_FIXED;
-        case AREA_ANY_ADDRESS:
+    case AREA_ANY_ADDRESS:
 	case AREA_RANDOMIZED_ANY_ADDRESS:
             break;
 	case AREA_BASE_ADDRESS:
@@ -406,6 +406,9 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
 printf("delete_area: start: %p, size: %ld\n", (void*)ka->ka_va, ka->ka_size);
     uvm_deallocate(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_size);
 
+    LIST_REMOVE(ka, ka_entry);
+    area_total_count--;
+
     /* We need to check if we are the last proc /
     /  unmapping the memory object. If so, we   /
     /  need to detach the final reference so    /
@@ -416,8 +419,7 @@ printf("delete_area: freeing last reference\n");
         uao_detach(ka->ka_uobj);
     }
 
-    LIST_REMOVE(ka, ka_entry);
-    area_total_count--;
+
     mutex_exit(&area_mutex);
 
     kmem_free(ka, sizeof(struct karea));
