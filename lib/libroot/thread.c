@@ -40,7 +40,7 @@ thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
 	pthread_t thread;
-    pthread_attr_t attr;
+	pthread_attr_t attr;
 	char namebuf[NAME_MAX];
 	void *func_ptr;
 
@@ -55,7 +55,7 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     struct sched_param schedParam;
     schedParam.sched_priority = priority;
     pthread_attr_setschedparam(&attr, &schedParam);
-	*/
+    */
 
     pthread_attr_setcreatesuspend_np(&attr);
 
@@ -142,7 +142,9 @@ set_thread_priority(thread_id id, int32 priority)
 status_t
 rename_thread(thread_id id, const char *newName)
 {
-	pthread_setname_np(id, "%s", (void*)name);
+	char namebuf[NAME_MAX];
+	strlcpy(namebuf, newName, sizeof(namebuf));
+	pthread_setname_np(id, "%s", (void*)namebuf);
 
 	return B_OK;
 }
@@ -189,7 +191,7 @@ snooze(bigtime_t timeout) {
 status_t
 snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
 {
-	// TODO: determine what timeBase and flags do
+
 	return snooze(amount);
 }
 
