@@ -116,7 +116,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     vaddr_t va;
     void *address;
     char namebuf[AREA_MAX_NAME_LENGTH];
-    struct karea *ka, *search;
+    struct karea *ka;
     bool is_clone = (source_area_id != -1);
 
     /* XXX: Not sure if the original implementation allows zero size areas.
@@ -218,14 +218,13 @@ printf("size of source area: %ld\n", source_area->ka_size);
         }
     }
 
-    /* Map the UVM object into the process address space */
     uao_reference(ka->ka_uobj);
 printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", (void*)va, ka->ka_size, ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
 printf("Error in uvm_map\n");
-	    mutex_exit(&area_mutex);
+	mutex_exit(&area_mutex);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return error;
@@ -271,8 +270,7 @@ printf("Error in wirepages\n");
 	if (next_area_id < 0)
 	    next_area_id = 1;
 
-    } while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL));
-
+    } while (__predict_false(NULL != karea_lookup_byid(next_area_id)));
     ka->ka_id = next_area_id;
 
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
