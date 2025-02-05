@@ -45,6 +45,10 @@ static struct khsem             *hsems                    __read_mostly;
 static SIMPLEQ_HEAD(, khsem)    khsem_freeq               __cacheline_aligned;
 static LIST_HEAD(, khsem)       khsem_used_list           __cacheline_aligned;
 
+/* for exithook_establish() */
+void				*eh_cookie;
+
+static void eh_handler(struct proc *p, void *v);
 
 #define PTR_TO_ID(x) (x - hsems)
 
@@ -174,7 +178,9 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
             khs->khs_waiters++;
             error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_RELATIVE_TIMEOUT) ? timeout : 0));
             khs->khs_waiters--;
-
+		
+printf("sem wakeup event. sem: %d, error code: %d, waiters: %d\n", id, error, khs->khs_waiters);
+	
             if (khs->khs_state == KHS_DELETED)
             {
                 if (khs->khs_waiters == 0)
@@ -227,15 +233,31 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
     }
 
     khs->khs_count += count;
-
-    if (khs->khs_waiters)
-        cv_signal(&khs->khs_cv);
+    cv_signal(&khs->khs_cv);
 
     mutex_exit(&khs->khs_interlock);
 
     return 0;
 }
- 
+
+static void
+eh_handler(struct proc *p, void *v)
+{
+    printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
+
+    struct khsem *khs_this, *khs_safe;
+
+    mutex_enter(&khsem_mutex);
+	
+    LIST_FOREACH_SAFE(khs_this, &khsem_used_list, khs_usedq_entry, khs_safe) {
+        if (khs_this->khs_owner == p->p_pid &&
+	    khs_this->khs_state == KHS_IN_USE) {
+		printf("sem found: %d", PTR_TO_ID(khs_this);
+	}
+    }
+
+    mutex_exit(&khsem_mutex);
+}
 
 int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, register_t *retval)
 {
