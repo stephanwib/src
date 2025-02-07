@@ -34,13 +34,50 @@
 #include <string.h>
 #include <errno.h>
 
+/*
+
+#define MSG_PRIVATE_BUFFER_SIZE     1024
+
+// static LIST_HEAD(, haiku_thread)        thread_list         __cacheline_aligned;
+LIST_HEAD(thr_list, haiku_thread);
+static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
+static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
+
+
+enum private_message {
+    THR_MSG_ABSENT  = 0,
+    THR_MSG_INTERN,
+    THR_MSG_EXTERN
+};
+
+typedef struct thread_message {
+    int32                       tm_code;                                /* private message code */
+    byte                        tm_buffer[MSG_PRIVATE_BUFFER_SIZE];     /* small message private buffer  */
+    const void                  *tm_external_buffer;                    /* large message external buffer */
+    pthread_cond_t              *tm_msg_cv;                             /* wait for message event */
+} thread_message;
+
+typedef struct haiku_thread {
+    pthread_t                   ht_pt;             /* POSIX thread*/
+    lwpid_t                     ht_lid;            /* kernel LWP ID */
+    LIST_ENTRY(haiku_thread)    ht_thread_list;    /* libroot thread list entry */
+    int                         ht_message;        /* has private thread message */
+    thread_message              ht_msg;            /* thread private message for send_data() / receive_data() */
+
+} haiku_thread;
+
+
+*/
+
+
+
 typedef void* (*pthread_entry) (void*);
 
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
 	pthread_t thread;
-    pthread_attr_t attr;
+	pthread_attr_t attr;
 	char namebuf[NAME_MAX];
 	void *func_ptr;
 
@@ -55,7 +92,7 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     struct sched_param schedParam;
     schedParam.sched_priority = priority;
     pthread_attr_setschedparam(&attr, &schedParam);
-	*/
+    */
 
     pthread_attr_setcreatesuspend_np(&attr);
 
@@ -142,7 +179,9 @@ set_thread_priority(thread_id id, int32 priority)
 status_t
 rename_thread(thread_id id, const char *newName)
 {
-	pthread_setname_np(id, "%s", (void*)name);
+	char namebuf[NAME_MAX];
+	strlcpy(namebuf, newName, sizeof(namebuf));
+	pthread_setname_np(id, "%s", (void*)namebuf);
 
 	return B_OK;
 }
@@ -189,7 +228,7 @@ snooze(bigtime_t timeout) {
 status_t
 snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
 {
-	// TODO: determine what timeBase and flags do
+
 	return snooze(amount);
 }
 

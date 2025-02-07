@@ -116,7 +116,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     vaddr_t va;
     void *address;
     char namebuf[AREA_MAX_NAME_LENGTH];
-    struct karea *ka, *search;
+    struct karea *ka;
     bool is_clone = (source_area_id != -1);
 
     /* XXX: Not sure if the original implementation allows zero size areas.
@@ -129,15 +129,30 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
         if (error)
             return error;
     }
+
+    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer
+    error = copyin(startAddress, &address, sizeof(void *));
+    if (error)
+        return error;
+    va = (vaddr_t)address;
+
+    /* Ensure the requested address and size are aligned */
+    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
+        return EINVAL;
   
     /* Reject mappings unavailable to user-mode
     /  Remap options with the same meaning */
     switch (addressSpec) {
 	case AREA_EXACT_ADDRESS:
+		
 	    /* XXX: UVM takes this as a hint only */
 	    flags |= UVM_FLAG_FIXED;
-    case AREA_ANY_ADDRESS:
+        case AREA_ANY_ADDRESS:
 	case AREA_RANDOMIZED_ANY_ADDRESS:
+		
+	    va = l->l_proc->p_emul->e_vm_default_addr(p,
+		    (vaddr_t)vm->vm_daddr, size,
+		    l->l_proc->p_vmspace->vm_map.flags & VM_MAP_TOPDOWN);
             break;
 	case AREA_BASE_ADDRESS:
 	case AREA_RANDOMIZED_BASE_ADDRESS:
@@ -155,16 +170,6 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
         prot |= VM_PROT_WRITE;
     if (protection & AREA_EXECUTE_AREA)
         prot |= VM_PROT_EXECUTE;
-
-    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer
-    error = copyin(startAddress, &address, sizeof(void *));
-    if (error)
-        return error;
-    va = (vaddr_t)address;
-
-    /* Ensure the requested address and size are aligned */
-    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
-        return EINVAL;
 	
     ka = kmem_alloc(sizeof(struct karea), KM_SLEEP);
     if (ka == NULL)
@@ -183,7 +188,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 
     strlcpy(ka->ka_name,
             (namelen == 0) ? "unnamed area" : namebuf,
-            AREA_MAX_NAME_LENGTH);
+            sizeof(ka->ka_name);
 
     mutex_enter(&area_mutex);
 
@@ -192,7 +197,7 @@ printf("enter clone\n");
         struct karea *source_area = karea_lookup_byid(source_area_id);
 printf("pointer to source: %p\n", source_area);        
         if (source_area == NULL) {
-	        mutex_exit(&area_mutex);
+	    mutex_exit(&area_mutex);
             kmem_free(ka, sizeof(struct karea));
             return EINVAL;
         }
@@ -212,14 +217,13 @@ printf("size of source area: %ld\n", source_area->ka_size);
         }
     }
 
-    /* Map the UVM object into the process address space */
     uao_reference(ka->ka_uobj);
 printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", (void*)va, ka->ka_size, ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
 printf("Error in uvm_map\n");
-	    mutex_exit(&area_mutex);
+	mutex_exit(&area_mutex);
         uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return error;
@@ -240,7 +244,7 @@ printf("Error requested adress does not match\n");
         error = uvm_obj_wirepages(ka->ka_uobj, 0, ka->ka_size, NULL);
         if (error) {
 printf("Error in wirepages\n");
-	        mutex_exit(&area_mutex);
+	    mutex_exit(&area_mutex);
             uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
             uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
@@ -265,8 +269,7 @@ printf("Error in wirepages\n");
 	if (next_area_id < 0)
 	    next_area_id = 1;
 
-    } while (__predict_false((search = karea_lookup_byid(next_area_id)) != NULL));
-
+    } while (__predict_false(NULL != karea_lookup_byid(next_area_id)));
     ka->ka_id = next_area_id;
 
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);

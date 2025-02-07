@@ -443,7 +443,8 @@ kport_read_etc(struct lwp *l, port_id id, int32_t *code, void *data, size_t size
                 port->kp_waiters++;
                 error = cv_timedwait_sig(&port->kp_rdcv, &port->kp_interlock, mstohz(t));
                 port->kp_waiters--;
-                
+
+printf("port read wakeup. port: %d, error code: %d, waiters: %d\n", id, error, port->kp_waiters);
                 if ((port->kp_state == KP_DELETED)) /* port has been logically destroyed */
                 {
                     if (port->kp_waiters == 0) /* we are the last waiter */
@@ -602,6 +603,7 @@ kport_write_etc(struct lwp *l, port_id id, int32_t code, void *data, size_t size
                 port->kp_waiters++;
                 error = cv_timedwait_sig(&port->kp_wrcv, &port->kp_interlock, mstohz(t));
                 port->kp_waiters--;
+printf("port write wakeup. port: %d, error code: %d, waiters: %d\n", id, error, port->kp_waiters);
 
                 if ((port->kp_state == KP_DELETED)) /* port has been logically destroyed */
                 {

@@ -27,8 +27,83 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "OS.h"
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#include <sys/proc.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
 
-status_t kill_team(team_id team)
+
+status_t 
+get_team_info(team_id team, team_info *info) {
+
+    struct kinfo_proc2 proc;
+    size_t size = sizeof(proc);
+    int mib[6] = {CTL_KERN, KERN_PROC2, KERN_PROC_PID, team, sizeof(proc), 1};
+
+    if (sysctl(mib, 6, &proc, &size, NULL, 0) < 0) {
+        return B_BAD_TEAM_ID; 
+    }
+
+
+    info->team = proc.p_pid;
+    info->uid = proc.p_uid;
+    info->gid = proc.p_gid;
+    strncpy(info->args, proc.p_comm, sizeof(info->args) - 1);
+    info->args[sizeof(info->args) - 1] = '\0'; // Ensure null termination
+
+    return B_OK;
+}
+
+
+status_t 
+get_next_team_info(int32_t *cookie, team_info *info) {
+
+    static struct kinfo_proc2 *proc_list = NULL;
+    static size_t proc_count = 0;
+    
+    if (*cookie == 0) {
+        int mib[6] = {CTL_KERN, KERN_PROC2, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), 0};
+
+        size_t size = 0;
+        if (sysctl(mib, 6, NULL, &size, NULL, 0) < 0) return -1;
+
+        proc_list = malloc(size);
+        if (!proc_list) return -1;
+
+        mib[5] = size / sizeof(struct kinfo_proc2);
+        if (sysctl(mib, 6, proc_list, &size, NULL, 0) < 0) {
+            free(proc_list);
+            return -1;
+        }
+        proc_count = size / sizeof(struct kinfo_proc2);
+    }
+
+    if (*cookie >= (int32_t)proc_count) {
+        free(proc_list);
+        proc_list = NULL;
+        proc_count = 0;
+        return -1;
+    }
+
+    struct kinfo_proc2 *proc = &proc_list[*cookie];
+    info->team = proc->p_pid;
+    info->uid = proc->p_uid;
+    info->gid = proc->p_gid;
+    strncpy(info->args, proc->p_comm, sizeof(info->args) - 1);
+    info->args[sizeof(info->args) - 1] = '\0';
+
+    (*cookie)++;
+
+    return 0;
+}
+
+
+status_t
+kill_team(team_id team)
 {
 	status_t ret = B_OK;
 	int err;
@@ -37,19 +112,7 @@ status_t kill_team(team_id team)
 	if (err < 0 && errno == ESRCH)
 		ret = B_BAD_TEAM_ID;
 
-	return ret;
-}
-
-
-status_t _get_team_info(team_id id, team_info *info, size_t size)
-{
-	if (size != sizeof(team_info))
-		return B_ERROR;
-		
-	if (info == NULL)
-		return B_ERROR;
-		
-	info->team = id;
-	
 	return B_OK;
 }
+
+
