@@ -28,9 +28,11 @@
  */
 
 #include "OS.h"
+#include "Errors.h"
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <sys/proc.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -53,7 +55,7 @@ get_team_info(team_id team, team_info *info) {
     info->uid = proc.p_uid;
     info->gid = proc.p_gid;
     strncpy(info->args, proc.p_comm, sizeof(info->args) - 1);
-    info->args[sizeof(info->args) - 1] = '\0'; // Ensure null termination
+    info->args[sizeof(info->args) - 1] = '\0';
 
     return B_OK;
 }
@@ -105,14 +107,13 @@ get_next_team_info(int32_t *cookie, team_info *info) {
 status_t
 kill_team(team_id team)
 {
-	status_t ret = B_OK;
-	int err;
+	int err = B_OK;
 	 
 	err = kill((pid_t)team, SIGKILL);
 	if (err < 0 && errno == ESRCH)
-		ret = B_BAD_TEAM_ID;
+		err = B_BAD_TEAM_ID;
 
-	return B_OK;
+	return err;
 }
 
 

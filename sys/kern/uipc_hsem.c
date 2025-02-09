@@ -46,9 +46,9 @@ static SIMPLEQ_HEAD(, khsem)    khsem_freeq               __cacheline_aligned;
 static LIST_HEAD(, khsem)       khsem_used_list           __cacheline_aligned;
 
 /* for exithook_establish() */
-void				*eh_cookie;
+// void				*eh_cookie;
 
-static void eh_handler(struct proc *p, void *v);
+// static void eh_handler(struct proc *p, void *v);
 
 #define PTR_TO_ID(x) (x - hsems)
 
@@ -195,6 +195,8 @@ printf("sem wakeup event. sem: %d, error code: %d, waiters: %d\n", id, error, kh
             {
                 if (error == EWOULDBLOCK)
                     error = ETIMEDOUT;
+                else if (error == ERESTART)
+				    error = EINTR; 
 
                 mutex_exit(&khs->khs_interlock);
                 return error;
@@ -240,6 +242,8 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
     return 0;
 }
 
+
+/*
 static void
 eh_handler(struct proc *p, void *v)
 {
@@ -258,6 +262,9 @@ eh_handler(struct proc *p, void *v)
 
     mutex_exit(&khsem_mutex);
 }
+
+*/
+
 
 int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, register_t *retval)
 {

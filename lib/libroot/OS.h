@@ -276,15 +276,17 @@ extern status_t		kill_team(team_id team);
 	/* see also: send_signal() */
 
 /* system private, use macros instead */
-extern status_t		_get_team_info(team_id id, team_info *info, size_t size);
-extern status_t		_get_next_team_info(int32 *cookie, team_info *info,
-						size_t size);
+extern status_t		get_team_info(team_id id, team_info *info);
+extern status_t		get_next_team_info(int32 *cookie, team_info *info);
 
+/*   --- Haiku only 				
 #define get_team_info(id, info) \
 	_get_team_info((id), (info), sizeof(*(info)))
 
 #define get_next_team_info(cookie, info) \
 	_get_next_team_info((cookie), (info), sizeof(*(info)))
+
+*/
 
 /* team usage info */
 

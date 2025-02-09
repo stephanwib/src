@@ -466,6 +466,8 @@ printf("port read wakeup. port: %d, error code: %d, waiters: %d\n", id, error, p
                 {
                     if (error == EWOULDBLOCK)
                         error = ETIMEDOUT;
+                    else if (error == ERESTART)
+                        error = EINTR; 
 
                     mutex_exit(&port->kp_interlock);
                     return error;
@@ -620,6 +622,11 @@ printf("port write wakeup. port: %d, error code: %d, waiters: %d\n", id, error, 
 
                 if (error)
                 {
+                    if (error == EWOULDBLOCK)
+                        error = ETIMEDOUT;
+                    else if (error == ERESTART)
+                        error = EINTR; 
+                    
                     mutex_exit(&port->kp_interlock);
                     return error;
                 }

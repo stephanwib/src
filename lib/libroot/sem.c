@@ -51,6 +51,8 @@ int handle_sem_error(int error_code) {
             return B_BAD_TEAM_ID;
         case EACCES:
             return B_PERMISSION_DENIED;
+        case EINTR:
+            return B_INTERRUPTED;
         case ENOENT:
         default:
             return B_BAD_SEM_ID;

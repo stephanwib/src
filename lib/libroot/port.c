@@ -43,6 +43,8 @@ int handle_port_error(int error_code) {
             return B_TIMED_OUT;
         case EAGAIN:
             return B_WOULD_BLOCK;
+        case EINTR:
+            return B_INTERRUPTED;
         case ENOENT:
         default:
             return B_BAD_PORT_ID;

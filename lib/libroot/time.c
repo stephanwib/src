@@ -7,17 +7,18 @@
 #include <time.h>
 #include <stdio.h>
 
-bigtime_t system_time() {
+
+bigtime_t system_time(void) {
     struct timeval boottime;
     size_t size = sizeof(boottime);
     struct timeval now;
-    struct timezone timezone;
+    struct timezone tz;
     
     if (sysctlbyname("kern.boottime", &boottime, &size, NULL, 0) != 0) {
         return -1;
     }
 
-    (void)gettimeofday(&now, &timezone);
+    (void)gettimeofday(&now, &tz);
 
     // Calculate the uptime in microseconds
     time_t seconds = now.tv_sec - boottime.tv_sec;
@@ -26,29 +27,31 @@ bigtime_t system_time() {
 }
 
 
-uint32 real_time_clock() {
+
+unsigned long real_time_clock(void) {
     struct timeval now;
-    struct timezone timezone;
+    struct timezone tz;
     
-    (void)gettimeofday(&now, &timezone);
+    (void)gettimeofday(&now, &tz);
         
-    return tv.tv_sec;
+    return now.tv_sec;
 }
 
-// Get the current real-time clock in microseconds
-bigtime_t real_time_clock_usecs() {
+
+
+bigtime_t real_time_clock_usecs(void) {
     struct timeval now;
-    struct timezone timezone;
+    struct timezone tz;
     
-    (void)gettimeofday(&now, &timezone);
+    (void)gettimeofday(&now, &tz);
 
-    return (bigtime_t)tv.tv_sec * 1000000 + tv.tv_usec;
+    return (bigtime_t)now.tv_sec * 1000000 + now.tv_usec;
 }
 
-// Set the real-time clock to a new value
-void set_real_time_clock(int32 new_time) {
+
+void set_real_time_clock(unsigned long new_time) {
     struct timeval tv;
-    struct timezone timezone;
+    struct timezone tz;
     
     tv.tv_sec = new_time;
     tv.tv_usec = 0;
@@ -56,5 +59,5 @@ void set_real_time_clock(int32 new_time) {
     // XXX: Call to settimeofday() may fail due to several reasons, but this void function
     // does not allow to report back errors
     
-    (void)settimeofday(&tv, &timezone);
+    (void)settimeofday(&tv, &tz);
 }

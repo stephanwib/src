@@ -29,47 +29,20 @@
 
 #include "OS.h"
 #include "Errors.h"
+#include "thread.h"
 #include <pthread.h>
 #include <unistd.h> /* for usleep() */
 #include <string.h>
 #include <errno.h>
 
+
 /*
-
-#define MSG_PRIVATE_BUFFER_SIZE     1024
-
 // static LIST_HEAD(, haiku_thread)        thread_list         __cacheline_aligned;
 LIST_HEAD(thr_list, haiku_thread);
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
 
-
-enum private_message {
-    THR_MSG_ABSENT  = 0,
-    THR_MSG_INTERN,
-    THR_MSG_EXTERN
-};
-
-typedef struct thread_message {
-    int32                       tm_code;                                /* private message code */
-    byte                        tm_buffer[MSG_PRIVATE_BUFFER_SIZE];     /* small message private buffer  */
-    const void                  *tm_external_buffer;                    /* large message external buffer */
-    pthread_cond_t              *tm_msg_cv;                             /* wait for message event */
-} thread_message;
-
-typedef struct haiku_thread {
-    pthread_t                   ht_pt;             /* POSIX thread*/
-    lwpid_t                     ht_lid;            /* kernel LWP ID */
-    LIST_ENTRY(haiku_thread)    ht_thread_list;    /* libroot thread list entry */
-    int                         ht_message;        /* has private thread message */
-    thread_message              ht_msg;            /* thread private message for send_data() / receive_data() */
-
-} haiku_thread;
-
-
 */
-
-
 
 typedef void* (*pthread_entry) (void*);
 
@@ -181,7 +154,7 @@ rename_thread(thread_id id, const char *newName)
 {
 	char namebuf[NAME_MAX];
 	strlcpy(namebuf, newName, sizeof(namebuf));
-	pthread_setname_np(id, "%s", (void*)namebuf);
+	pthread_setname_np((pthread_t)id, "%s", (void*)namebuf);
 
 	return B_OK;
 }

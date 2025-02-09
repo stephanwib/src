@@ -147,11 +147,12 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 		
 	    /* XXX: UVM takes this as a hint only */
 	    flags |= UVM_FLAG_FIXED;
-        case AREA_ANY_ADDRESS:
+        break;
+    case AREA_ANY_ADDRESS:
 	case AREA_RANDOMIZED_ANY_ADDRESS:
 		
-	    va = l->l_proc->p_emul->e_vm_default_addr(p,
-		    (vaddr_t)vm->vm_daddr, size,
+	    va = l->l_proc->p_emul->e_vm_default_addr(l->l_proc,
+		    (vaddr_t)l->l_proc->p_vmspace->vm_daddr, size,
 		    l->l_proc->p_vmspace->vm_map.flags & VM_MAP_TOPDOWN);
             break;
 	case AREA_BASE_ADDRESS:
@@ -188,7 +189,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 
     strlcpy(ka->ka_name,
             (namelen == 0) ? "unnamed area" : namebuf,
-            sizeof(ka->ka_name);
+            sizeof(ka->ka_name));
 
     mutex_enter(&area_mutex);
 
