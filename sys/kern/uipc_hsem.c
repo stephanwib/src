@@ -46,9 +46,9 @@ static SIMPLEQ_HEAD(, khsem)    khsem_freeq               __cacheline_aligned;
 static LIST_HEAD(, khsem)       khsem_used_list           __cacheline_aligned;
 
 /* for exithook_establish() */
-// void				*eh_cookie;
+static void				*eh_cookie;
 
-// static void eh_handler(struct proc *p, void *v);
+static void hsem_exithook(struct proc *p, void *v);
 
 #define PTR_TO_ID(x) (x - hsems)
 
@@ -58,16 +58,12 @@ khsem_init(void)
     int i, sz;
     vaddr_t v;
 
-int count = 0;
-
     SIMPLEQ_INIT(&khsem_freeq);
     LIST_INIT(&khsem_used_list);
     mutex_init(&khsem_mutex, MUTEX_DEFAULT, IPL_NONE);
 
     sz = ALIGN(khsem_max * sizeof(struct khsem));
     sz = round_page(sz);
-
-printf("Alloc size: %d\n", sz);
 
     v = uvm_km_alloc(kernel_map, sz, 0, UVM_KMF_WIRED|UVM_KMF_ZERO);
 	if (v == 0) {
@@ -76,20 +72,17 @@ printf("Alloc size: %d\n", sz);
 	}
 
     hsems = (struct khsem *)v;
-printf("hsem position: %p\n", hsems);
-printf("SIMPLEQ_EMPTY result before loop: %d\n", SIMPLEQ_EMPTY(&khsem_freeq));
+
 
     for (i = 0; i < khsem_max; i++) {
         cv_init(&hsems[i].khs_cv, "acquire_sem");
         mutex_init(&hsems[i].khs_interlock, MUTEX_DEFAULT, IPL_NONE);
         hsems[i].khs_state = KHS_FREE;
         SIMPLEQ_INSERT_TAIL(&khsem_freeq, &hsems[i], khs_freeq_entry);
-count++;
     }
 
-printf("loop count: %d\n", count);	
-printf("SIMPLEQ_EMPTY result after loop: %d\n", SIMPLEQ_EMPTY(&khsem_freeq));
-printf("SIMPLEQ_FIRST result: %p\n", SIMPLEQ_FIRST(&khsem_freeq));
+    eh_cookie = exithook_establish(hsem_exithook, NULL);
+	
     return 0;
 }
 
@@ -242,10 +235,8 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
     return 0;
 }
 
-
-/*
 static void
-eh_handler(struct proc *p, void *v)
+hsem_exithook(struct proc *p, void *v)
 {
     printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
 
@@ -262,8 +253,6 @@ eh_handler(struct proc *p, void *v)
 
     mutex_exit(&khsem_mutex);
 }
-
-*/
 
 
 int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, register_t *retval)
