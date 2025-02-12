@@ -247,8 +247,8 @@ hsem_exithook(struct proc *p, void *v)
     LIST_FOREACH_SAFE(khs_this, &khsem_used_list, khs_usedq_entry, khs_safe) {
         if (khs_this->khs_owner == p->p_pid &&
 	    khs_this->khs_state == KHS_IN_USE) {
-		printf("sem found: %d", PTR_TO_ID(khs_this);
-	}
+		    printf("sem found: %d", PTR_TO_ID(khs_this));
+	    }
     }
 
     mutex_exit(&khsem_mutex);

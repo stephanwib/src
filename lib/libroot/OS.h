@@ -379,16 +379,17 @@ extern status_t		snooze(bigtime_t amount);
 extern status_t		snooze_etc(bigtime_t amount, int timeBase, uint32 flags);
 extern status_t		snooze_until(bigtime_t time, int timeBase);
 
-/* system private, use macros instead */
-extern status_t		_get_thread_info(thread_id id, thread_info *info, size_t size);
-extern status_t		_get_next_thread_info(team_id team, int32 *cookie,
-						thread_info *info, size_t size);
+extern status_t		get_thread_info(thread_id id, thread_info *info);
+extern status_t		get_next_thread_info(team_id team, int32 *cookie, thread_info *info);
 
+/*
 #define get_thread_info(id, info) \
 	_get_thread_info((id), (info), sizeof(*(info)))
 
 #define get_next_thread_info(team, cookie, info) \
 	_get_next_thread_info((team), (cookie), (info), sizeof(*(info)))
+
+*/
 
 /* bridge to the pthread API */
 extern thread_id	get_pthread_thread_id(pthread_t thread);
