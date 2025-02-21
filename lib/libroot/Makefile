@@ -8,6 +8,7 @@ LIB=		root
 SRCS=		time.c port.c thread.c area.c sem.c team.c info.c
 
 LIBDPLIBS+=	pthread ${NETBSDSRCDIR}/lib/libpthread
+LIBDPLIBS+=	kvm ${NETBSDSRCDIR}/lib/libkvm
 
 INCS=		OS.h Errors.h
 INCSDIR=	/usr/include

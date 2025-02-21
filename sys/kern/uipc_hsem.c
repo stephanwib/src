@@ -31,6 +31,7 @@
 
 #include <sys/param.h>
 #include <sys/syscallargs.h>
+#include <sys/kernel.h>
 #include <uvm/uvm.h>
 #include <sys/proc.h>
 #include <sys/hsem.h>
@@ -169,20 +170,21 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
 	unsigned wait_until_hz = 0;
 	unsigned time_left_hz;
 
-        if (flags & SEM_RELATIVE_TIMEOUT)
+        if (flags & SEM_RELATIVE_TIMEOUT) {
             if (timeout <= 0) {
                 mutex_exit(&khs->khs_interlock);
                 return EWOULDBLOCK;
-	    }
+            }
+        }
 	    else
-		wait_until_hz = getticks() + mstohz(timeout);
+		    wait_until_hz = getticks() + mstohz(timeout);
 
         do
         {
             if((time_left_hz = wait_until_hz - getticks()) > INT_MAX)
 		    printf("sem: timeout\n");
 	    else
-		    printf("sem: ticks to wait left: %ld", time_left_hz);
+		    printf("sem: ticks to wait left: %u", time_left_hz);
 	
             khs->khs_waiters++;
             error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_RELATIVE_TIMEOUT) ? timeout : 0));
@@ -263,7 +265,7 @@ hsem_exithook(struct proc *p, void *v)
     LIST_FOREACH_SAFE(khs_this, &khsem_used_list, khs_usedq_entry, khs_safe) {
         if (khs_this->khs_owner == p->p_pid &&
 	    khs_this->khs_state == KHS_IN_USE) {
-		    printf("sem found: %d", PTR_TO_ID(khs_this));
+		    printf("sem found: %ld", PTR_TO_ID(khs_this));
 	    }
     }
 
