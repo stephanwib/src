@@ -10,6 +10,7 @@
 #include <sys/proc.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <uvm/uvm_extern.h>
 #include <OS.h>
 
 status_t get_thread_info(thread_id thread, thread_info *info) {
@@ -199,23 +200,6 @@ int get_next_team_info(int *cookie, team_info *info) {
 }
 
 
-
-
-/* 
- * Define a minimal version of the uvmexp2 structure.
- * (Adjust the fields if your NetBSD headers differ.)
- */
-struct uvmexp2 {
-    unsigned int pagesize;   /* bytes per page */
-    unsigned int npages;     /* total # of accessible pages */
-    unsigned int free;       /* free pages */
-    unsigned int active;     /* active pages */
-    unsigned int inactive;   /* inactive pages */
-    unsigned int wired;      /* wired pages */
-    unsigned int execpages;  /* pages used for exec */
-    unsigned int filepages;  /* file cache pages */
-};
-
 /* 
  * Macro to convert page counts to kilobytes.
  * (Multiply the number of pages by the page size and divide by 1024.)
@@ -258,7 +242,7 @@ int get_system_info(system_info *info)
      * 3. Memory Statistics via vm.uvmexp2
      *------------------------------------------------------------------*/
     int mib[2] = {CTL_VM, VM_UVMEXP2};
-    struct uvmexp2 uvmexp;
+    struct uvmexp_sysctl uvmexp;
     size = sizeof(uvmexp);
     ret = sysctl(mib, 2, &uvmexp, &size, NULL, 0);
     if (ret < 0) {
@@ -293,16 +277,15 @@ int get_system_info(system_info *info)
 
     /*------------------------------------------------------------------
      * 4. Swap Statistics
-     * (Not available via this sysctl; set both to 0)
      *------------------------------------------------------------------*/
-    info->max_swap_pages = 0;
-    info->free_swap_pages = 0;
+    info->max_swap_pages = uvmexp.swpages;
+    info->free_swap_pages = uvmexp.swpages - uvmexp.swpginuse;
 
     /*------------------------------------------------------------------
      * 5. Page Faults
      * (Not available; set to 0)
      *------------------------------------------------------------------*/
-    info->page_faults = 0;
+    info->page_faults = uvmexp.faults;
 
     /*------------------------------------------------------------------
      * 6. Semaphores, Ports, Threads, and Teams
