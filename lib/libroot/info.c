@@ -13,46 +13,43 @@
 #include <uvm/uvm_extern.h>
 #include <OS.h>
 
-status_t get_thread_info(thread_id thread, thread_info *info) {
-    if (!info) return -1;
+int get_thread_info(thread_id thread, thread_info *info) {
 
-    kvm_t *kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-    if (!kd) return -1;
+    int i;
+    int lwp_count = 0;
+    kvm_t *kd = NULL;
+    
+    kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+    if (kd == NULL)
+        return -1;
 
-    struct kinfo_lwp *lwps;
-    int count;
-    pid_t pid = getpid();
 
-    // Get thread info by LWP ID
-    lwps = kvm_getlwps(kd, pid, thread, sizeof(struct kinfo_lwp), &count);
-    if (!lwps || count == 0) {
+    struct kinfo_lwp *lwps = kvm_getlwps(kd, getpid(), 0, sizeof(struct kinfo_lwp), &lwp_count);
+    if (!lwps || lwp_count == 0) {
         kvm_close(kd);
-        return -1; // Thread not found
+        return -1;
     }
 
-    struct kinfo_lwp *lwp = &lwps[0];
-
-    // Fill the thread_info struct
-    info->thread = lwp->l_lid;
-    info->team = lwp->l_pid; // LWP belongs to a process (team)
-    info->state = lwp->l_stat; // Thread state
-    info->priority = lwp->l_priority;
-    info->sem = -1; // No direct semaphore ID mapping
-    info->user_time = lwp->l_rtime_sec * 1000000LL + lwp->l_rtime_usec; // Convert to microseconds
-    info->kernel_time = 0; // Not directly available
-    info->stack_base = NULL; // Not directly available
-    info->stack_end = NULL; // Not directly available
-
-    // Retrieve thread name
-    if (lwp->l_name) {
-        strncpy(info->name, lwp->l_name, B_OS_NAME_LENGTH - 1);
-        info->name[B_OS_NAME_LENGTH - 1] = '\0';
-    } else {
-        info->name[0] = '\0';
+    for (i = 0; i < lwp_count; i++) {
+        if (lwps[i].l_lid == thread) {
+            *info = (thread_info){
+                .thread = lwps[i].l_lid,
+                .team = lwps[i].l_pid,
+                .state = lwps[i].l_stat,
+                .priority = lwps[i].l_priority,
+                .sem = -1,
+                .user_time = lwps[i].l_rtime_sec * 1000000LL + lwps[i].l_rtime_usec,
+                .kernel_time = 0,
+                .stack_base = NULL,
+                .stack_end = NULL
+            };
+            strlcpy(info->name, lwps[i].l_name, B_OS_NAME_LENGTH);
+            return 0;
+        }
     }
 
     kvm_close(kd);
-    return 0;
+    return -1;
 }
 
 status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
