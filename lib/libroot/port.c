@@ -45,6 +45,8 @@ int handle_port_error(int error_code) {
             return B_WOULD_BLOCK;
         case EINTR:
             return B_INTERRUPTED;
+        case ENOSPC:
+            return B_NO_MORE_PORTS;
         case ENOENT:
         default:
             return B_BAD_PORT_ID;
