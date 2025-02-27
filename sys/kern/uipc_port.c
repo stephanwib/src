@@ -171,7 +171,7 @@ kport_create(struct lwp *l, const int32_t queue_length, const char *name, port_i
         mutex_exit(&kport_mutex);
         kmem_free(ret, sizeof(*ret));
 
-        return ENFILE;
+        return ENOSPC;
     }
 
  
