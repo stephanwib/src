@@ -105,97 +105,92 @@ status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) 
 
 
 int get_team_info(team_id team, team_info *info) {
-    if (!info) return -1;
+    
+    int count = 0;
+    kvm_t *kd;
 
-    kvm_t *kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-    if (!kd) return -1;
+    kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+    if (!kd)
+        return -1;
 
-    struct kinfo_proc2 *procs;
-    int count;
-
-    // Get process info
-    procs = kvm_getproc2(kd, KERN_PROC_PID, team, sizeof(struct kinfo_proc2), &count);
+    struct kinfo_proc2 *procs = kvm_getproc2(kd, KERN_PROC_PID, team,
+                                              sizeof(struct kinfo_proc2), &count);
     if (!procs || count == 0) {
         kvm_close(kd);
-        return -1; // Process not found
+        return -1;
     }
 
     struct kinfo_proc2 *proc = &procs[0];
 
-    // Fill the team_info struct
-    info->team = proc->p_pid;
-    info->thread_count = proc->p_nlwps;  // Number of threads (LWPs)
-    info->image_count = 0;               // Not directly available
-    info->area_count = 0;                // Not directly available
-    info->debugger_nub_thread = -1;      // Not applicable
-    info->debugger_nub_port = -1;        // Not applicable
-    // info->argc = proc->p_nargv;          // Number of arguments
-    info->uid = proc->p_uid;             // User ID
-    info->gid = proc->p_gid;             // Group ID
+    *info = (team_info){
+        .team                = proc->p_pid,
+        .thread_count        = proc->p_nlwps,
+        .image_count         = 0,
+        .area_count          = 0,
+        .debugger_nub_thread = -1,
+        .debugger_nub_port   = -1,
+        .argc                = proc->p_nargv,
+        .uid                 = proc->p_uid,
+        .gid                 = proc->p_gid
+    };
 
-    // Retrieve command-line arguments (limited to 64 bytes)
-    if (proc->p_comm) {
-        strncpy(info->args, proc->p_comm, sizeof(info->args) - 1);
-        info->args[sizeof(info->args) - 1] = '\0';
-    } else {
-        info->args[0] = '\0';
-    }
+    strlcpy(info->args, proc->p_comm, sizeof(info->args));
 
     kvm_close(kd);
+    
     return 0;
 }
 
 
-// Iterate through all processes
 int get_next_team_info(int *cookie, team_info *info) {
+    
     static kvm_t *kd = NULL;
     static struct kinfo_proc2 *procs = NULL;
     static int proc_count = 0;
 
-    if (!info) return -1;
+    if (!info || !cookie)
+        return -1;
 
     if (*cookie == 0) {
-        if (kd) kvm_close(kd);
+        if (kd)
+            kvm_close(kd);
         kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-        if (!kd) return -1;
+        if (!kd)
+            return -1;
 
-        procs = kvm_getproc2(kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), &proc_count);
+        procs = kvm_getproc2(kd, KERN_PROC_ALL, 0,
+                             sizeof(struct kinfo_proc2), &proc_count);
         if (!procs || proc_count == 0) {
             kvm_close(kd);
-            kd = NULL;
-            return -1; // No processes found
+            return -1;
         }
     }
 
     if (*cookie >= proc_count) {
         kvm_close(kd);
         kd = NULL;
-        return -1; // No more processes
+        return -1;
     }
 
     struct kinfo_proc2 *proc = &procs[*cookie];
     (*cookie)++;
 
-    info->team = proc->p_pid;
-    info->thread_count = proc->p_nlwps;
-    info->image_count = 0;
-    info->area_count = 0;
-    info->debugger_nub_thread = -1;
-    info->debugger_nub_port = -1;
-    // info->argc = proc->p_nargv;
-    info->uid = proc->p_uid;
-    info->gid = proc->p_gid;
+    *info = (team_info){
+        .team                = proc->p_pid,
+        .thread_count        = proc->p_nlwps,
+        .image_count         = 0,
+        .area_count          = 0,
+        .debugger_nub_thread = -1,
+        .debugger_nub_port   = -1,
+        .argc                = proc->p_nargv,
+        .uid                 = proc->p_uid,
+        .gid                 = proc->p_gid
+    };
 
-    if (proc->p_comm) {
-        strncpy(info->args, proc->p_comm, sizeof(info->args) - 1);
-        info->args[sizeof(info->args) - 1] = '\0';
-    } else {
-        info->args[0] = '\0';
-    }
+    strlcpy(info->args, proc->p_comm, sizeof(info->args));
 
     return 0;
 }
-
 
 /* 
  * Macro to convert page counts to kilobytes.
