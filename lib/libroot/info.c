@@ -55,54 +55,54 @@ status_t get_thread_info(thread_id thread, thread_info *info) {
     return 0;
 }
 
-// Iterate through all threads
-extern status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
+status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
     static kvm_t *kd = NULL;
     static struct kinfo_lwp *lwps = NULL;
     static int lwp_count = 0;
 
-    if (!info || !cookie) return -1;
-
     if (*cookie == 0) {
-        if (kd) kvm_close(kd);
+        if (kd)
+            kvm_close(kd);
         kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-        if (!kd) return -1;
+        if (!kd)
+            return -1;
 
         lwps = kvm_getlwps(kd, team, 0, sizeof(struct kinfo_lwp), &lwp_count);
         if (!lwps || lwp_count == 0) {
             kvm_close(kd);
             kd = NULL;
-            return -1; // No threads found for this team
+            return -1;
         }
     }
 
     if (*cookie >= lwp_count) {
         kvm_close(kd);
         kd = NULL;
-        return -1; // No more threads
+        return -1;  // No more threads
     }
 
     struct kinfo_lwp *lwp = &lwps[*cookie];
     (*cookie)++;
 
-    info->thread = lwp->l_lid;
-    info->team = lwp->l_pid;
-    info->state = lwp->l_stat;
-    info->priority = lwp->l_priority;
-    info->sem = -1;
-    info->user_time = lwp->l_rtime_sec * 1000000LL + lwp->l_rtime_usec;
-    info->kernel_time = 0;
-    info->stack_base = NULL;
-    info->stack_end = NULL;
+    /* Initialize the thread_info structure using a designated initializer */
+    *info = (thread_info){
+        .thread = lwp->l_lid,
+        .team = lwp->l_pid,
+        .state = lwp->l_stat,
+        .priority = lwp->l_priority,
+        .sem = -1,
+        .user_time = lwp->l_rtime_sec * 1000000LL + lwp->l_rtime_usec,
+        .kernel_time = 0,
+        .stack_base = NULL,
+        .stack_end = NULL
+    };
 
-    if (lwp->l_name) {
-        strncpy(info->name, lwp->l_name, B_OS_NAME_LENGTH - 1);
-        info->name[B_OS_NAME_LENGTH - 1] = '\0';
-    } else {
+    if (lwp->l_name)
+        strlcpy(info->name, lwp->l_name, B_OS_NAME_LENGTH);
+    else
         info->name[0] = '\0';
-    }
 
-    return 0; // Success
+    return 0;
 }
 
 
