@@ -235,7 +235,6 @@ printf("Error in uvm_map\n");
 printf("Error requested adress does not match\n");
     	mutex_exit(&area_mutex);
         uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-        uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return ENOMEM;
     }
@@ -247,7 +246,6 @@ printf("Error requested adress does not match\n");
 printf("Error in wirepages\n");
 	    mutex_exit(&area_mutex);
             uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-            uao_detach(ka->ka_uobj);
             kmem_free(ka, sizeof(struct karea));
             return error;
         }
@@ -258,7 +256,6 @@ printf("Error in wirepages\n");
     if (area_total_count >= area_max) {
         mutex_exit(&area_mutex);
         uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-        uao_detach(ka->ka_uobj);
         kmem_free(ka, sizeof(struct karea));
         return ENOSPC;
     }
