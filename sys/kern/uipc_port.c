@@ -27,6 +27,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* TODO:
+ *  - Introduce a sysctl(7) interface to provide information and adjust limits.
+ *  - Make this a module.
+ *  - Enforce limits as referenced below.
+ *  - Implement scalable and fast lookup mechanism for kport structures.
+ */
+
 
 #include <sys/kernel.h>
 #include <sys/param.h>
