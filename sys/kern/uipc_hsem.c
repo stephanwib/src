@@ -28,6 +28,17 @@
  */
 
 
+/* NOTE: This current codebase has a regression, which causes cv_signal() to wake up
+ * all waiters, insted of just one. This may introduce incorrect behaviour. The fix was commited
+ * on October 8, 2023. See: https://mail-index.netbsd.org/source-changes/2023/10/08/msg147974.html
+ * Discussion: https://mail-index.netbsd.org/tech-kern/2025/02/11/msg030023.html
+ */
+
+/* TODO:
+ *  - Introduce sysctl(7) interface to provide statistics (maybe adjust khsem_max, but complicated).
+ *  - Make this a module.
+ *  - Review the interface regarding timeout data format.
+ */
 
 #include <sys/param.h>
 #include <sys/syscallargs.h>
