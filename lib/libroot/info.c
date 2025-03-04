@@ -13,7 +13,7 @@
 #include <uvm/uvm_extern.h>
 #include <OS.h>
 
-int get_thread_info(thread_id thread, thread_info *info) {
+status_t get_thread_info(thread_id thread, thread_info *info) {
 
     int i;
     int lwp_count = 0;
@@ -31,7 +31,7 @@ int get_thread_info(thread_id thread, thread_info *info) {
     }
 
     for (i = 0; i < lwp_count; i++) {
-        if (lwps[i].l_lid == thread) {
+        if (lwps[i].l_lid == (int)thread) {
             *info = (thread_info){
                 .thread = lwps[i].l_lid,
                 .team = lwps[i].l_pid,
@@ -104,7 +104,7 @@ status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) 
 
 
 
-int get_team_info(team_id team, team_info *info) {
+status_t get_team_info(team_id team, team_info *info) {
     
     int count = 0;
     kvm_t *kd;
@@ -129,7 +129,7 @@ int get_team_info(team_id team, team_info *info) {
         .area_count          = 0,
         .debugger_nub_thread = -1,
         .debugger_nub_port   = -1,
-        .argc                = proc->p_nargv,
+      //  .argc                = proc->p_nargv,
         .uid                 = proc->p_uid,
         .gid                 = proc->p_gid
     };
@@ -142,7 +142,7 @@ int get_team_info(team_id team, team_info *info) {
 }
 
 
-int get_next_team_info(int *cookie, team_info *info) {
+status_t get_next_team_info(int *cookie, team_info *info) {
     
     static kvm_t *kd = NULL;
     static struct kinfo_proc2 *procs = NULL;
@@ -182,7 +182,7 @@ int get_next_team_info(int *cookie, team_info *info) {
         .area_count          = 0,
         .debugger_nub_thread = -1,
         .debugger_nub_port   = -1,
-        .argc                = proc->p_nargv,
+    //    .argc                = proc->p_nargv,
         .uid                 = proc->p_uid,
         .gid                 = proc->p_gid
     };
@@ -198,7 +198,7 @@ int get_next_team_info(int *cookie, team_info *info) {
  */
 #define pagetok(x, ps) (((uint64_t)(x) * (ps)) / 1024)
 
-int get_system_info(system_info *info)
+status_t get_system_info(system_info *info)
 {
     if (!info)
         return -1;
