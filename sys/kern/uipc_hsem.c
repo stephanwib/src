@@ -559,6 +559,11 @@ int sys__get_sem_info(struct lwp *l, const struct sys__get_sem_info_args *uap, r
     
     if (khs == NULL)
         return ENOENT;
+    
+    if (khs->khs_state != KHS_IN_USE) {
+        mutex_exit(&khs->khs_interlock);
+        return ENOENT;
+    }
 
     fill_hsem_info(khs, &sem_info_kernel);
     mutex_exit(&khs->khs_interlock);

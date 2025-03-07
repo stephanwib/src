@@ -247,16 +247,16 @@ status_t get_system_info(system_info *info)
     unsigned int page_size = uvmexp.pagesize;
 
     /* Total accessible pages, in kilobytes */
-    info->max_pages = pagetok(uvmexp.npages, page_size);
+    info->max_pages = uvmexp.npages;
 
     /* Used pages: for this example we consider active + wired pages as “in use” */
-    info->used_pages = pagetok(uvmexp.active + uvmexp.wired, page_size);
+    info->used_pages = uvmexp.active + uvmexp.wired;
 
     /* Cached pages: we use the inactive pages */
-    info->cached_pages = pagetok(uvmexp.inactive, page_size);
+    info->cached_pages = uvmexp.inactive;
 
     /* Block cache pages: we use file cache pages */
-    info->block_cache_pages = pagetok(uvmexp.filepages, page_size);
+    info->block_cache_pages = uvmexp.filepages;
 
     /* Ignored pages: not available – set to 0 */
     info->ignored_pages = 0;
