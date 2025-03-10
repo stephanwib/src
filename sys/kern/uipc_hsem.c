@@ -170,13 +170,6 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
 
     if (khs->khs_count - count < 0)
     {
-	/*    
-        if (flags & SEM_RELATIVE_TIMEOUT && timeout <= 0)
-        {
-            mutex_exit(&khs->khs_interlock);
-            return EWOULDBLOCK;
-        }
-        */
 	    
 	unsigned wait_until_hz = 0;
 	unsigned time_left_hz;
@@ -186,14 +179,32 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
                 mutex_exit(&khs->khs_interlock);
                 return EWOULDBLOCK;
             }
-        }
 	    else
-		    wait_until_hz = getticks() + mstohz(timeout);
+                wait_until_hz = getticks() + mstohz(timeout);
+	}
+
+        if (flags & SEM_ABSOLUTE_TIMEOUT) {
+            struct timeval uptime;
+            uint64_t uptime_ms;
+
+            getmicrouptime(&uptime);
+            uptime_ms = (uptime->tv_sec * (uint64_t)1000) + (uptime->tv_usec / 1000);
+
+            if (timeout <= uptime_ms) {
+                mutex_exit(&khs->khs_interlock);
+                return EWOULDBLOCK;
+            }
+            else
+                wait_until_hz = uptime_ms + timeout;
+        }
+
 
         do
         {
-            if((time_left_hz = wait_until_hz - getticks()) > INT_MAX)
-		    printf("sem: timeout\n");
+printf("acquire_sem: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks());
+            if((time_left_hz = wait_until_hz - getticks()) > INT_MAX) {
+		    printf("sem: timeout, time_left_hz: %u\n", time_left_hz);
+	    }
 	    else
 		    printf("sem: ticks to wait left: %u", time_left_hz);
 	
@@ -218,7 +229,7 @@ printf("sem wakeup event. sem: %d, error code: %d, waiters: %d\n", id, error, kh
                 if (error == EWOULDBLOCK)
                     error = ETIMEDOUT;
                 else if (error == ERESTART)
-				    error = EINTR; 
+                    error = EINTR; 
 
                 mutex_exit(&khs->khs_interlock);
                 return error;
