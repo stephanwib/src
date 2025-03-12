@@ -100,25 +100,25 @@ khsem_init(void)
 
 
 static void
-khsem_free(struct khsem *khs) {
+khsem_free(struct khsem *khs, bool remove) {
 
     struct khsem *khs_this;
 
+    KASSERT(mutex_owned(&khsem_mutex));
     KASSERT(mutex_owned(&khs->khs_interlock));
     KASSERT(khs->khs_state == KHS_DELETED);
 
-    mutex_enter(&khsem_mutex);
-    LIST_FOREACH(khs_this, &khsem_used_list, khs_usedq_entry) {
-        if (khs_this == khs) {
-            LIST_REMOVE(khs_this, khs_usedq_entry);
-            break;
+    if (remove)
+        LIST_FOREACH(khs_this, &khsem_used_list, khs_usedq_entry) {
+            if (khs_this == khs) {
+                LIST_REMOVE(khs_this, khs_usedq_entry);
+                break;
+            }
         }
-    }
 
     SIMPLEQ_INSERT_TAIL(&khsem_freeq, khs, khs_freeq_entry);
     khs->khs_state = KHS_FREE;
 
-    mutex_exit(&khsem_mutex);
     mutex_exit(&khs->khs_interlock);
 }
 
@@ -216,8 +216,11 @@ printf("sem wakeup event. sem: %d, error code: %d, waiters: %d\n", id, error, kh
 	
             if (khs->khs_state == KHS_DELETED)
             {
-                if (khs->khs_waiters == 0)
-                    khsem_free(khs);
+                if (khs->khs_waiters == 0) {
+                    mutex_enter(&khsem_mutex);
+		    khsem_free(khs, true);
+		    mutex_exit(&khsem_mutex);
+		    }
                 else
                     mutex_exit(&khs->khs_interlock);
 
@@ -383,8 +386,11 @@ int sys__delete_sem(struct lwp *l, const struct sys__delete_sem_args *uap, regis
         cv_broadcast(&khs->khs_cv);
         mutex_exit(&khs->khs_interlock);
         }
-    else
-        khsem_free(khs);
+    else {
+         mutex_enter(&khsem_mutex);
+         khsem_free(khs, true);
+         mutex_exit(&khsem_mutex);
+        }
 
     *retval = 0;
     return 0;
