@@ -195,19 +195,23 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
                 return EWOULDBLOCK;
             }
             else
-                wait_until_hz = uptime_ms + timeout;
+                wait_until_hz = timeout - uptime_ms;
         }
 
 
         do
         {
 printf("acquire_sem: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks());
-            if((time_left_hz = wait_until_hz - getticks()) > INT_MAX) {
-		    printf("sem: timeout, time_left_hz: %u\n", time_left_hz);
+
+	    if (flags & (SEM_RELATIVE_TIMEOUT|SEM_ABSOLUTE_TIMEOUT)) {
+printf("acquire_sem: recalculating remaining time\n");
+                if((time_left_hz = wait_until_hz - getticks()) > INT_MAX) {
+		        printf("sem: timeout, time_left_hz: %u\n", time_left_hz);
+	        }
+	        else
+		        printf("sem: ticks to wait left: %u", time_left_hz);
 	    }
-	    else
-		    printf("sem: ticks to wait left: %u", time_left_hz);
-	
+		    
             khs->khs_waiters++;
             error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_RELATIVE_TIMEOUT) ? timeout : 0));
             khs->khs_waiters--;
