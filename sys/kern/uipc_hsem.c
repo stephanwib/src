@@ -294,16 +294,20 @@ hsem_exithook(struct proc *p, void *v)
     LIST_FOREACH_SAFE(khs_this, &khsem_used_list, khs_usedq_entry, khs_safe) {
         if (khs_this->khs_owner == p->p_pid &&
 	    khs_this->khs_state == KHS_IN_USE) {
+		
 printf("sem found: %ld", PTR_TO_ID(khs_this));
+		
 		mutex_enter(&khs->khs_interlock);
+		khs_this->khs_state == KHS_DELETED;
+		
 		if (khs_this->khs_waiters) {
-		    khs_this->khs_state == KHS_DELETED;
                     cv_broadcast(&khs_this->khs_cv);
                     mutex_exit(&khs_this->khs_interlock);
 		}
 		else
 		    khsem_free(khs_this, false);
-	    
+
+		LIST_REMOVE(khs_this, khs_usedq_entry);
 	    }
         }
 
