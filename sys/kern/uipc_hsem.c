@@ -188,7 +188,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
             uint64_t uptime_ms;
 
             getmicrouptime(&uptime);
-            uptime_ms = (uptime->tv_sec * (uint64_t)1000) + (uptime->tv_usec / 1000);
+            uptime_ms = (uptime.tv_sec * (uint64_t)1000) + (uptime.tv_usec / 1000);
 
             if (timeout <= uptime_ms) {
                 mutex_exit(&khs->khs_interlock);
@@ -297,19 +297,19 @@ hsem_exithook(struct proc *p, void *v)
 		
 printf("sem found: %ld", PTR_TO_ID(khs_this));
 		
-		mutex_enter(&khs->khs_interlock);
-		khs_this->khs_state == KHS_DELETED;
-		
-		if (khs_this->khs_waiters) {
-                    cv_broadcast(&khs_this->khs_cv);
-                    mutex_exit(&khs_this->khs_interlock);
-		}
-		else
-		    khsem_free(khs_this, false);
+            mutex_enter(&khs_this->khs_interlock);
+            khs_this->khs_state = KHS_DELETED;
+            
+            if (khs_this->khs_waiters) {
+                        cv_broadcast(&khs_this->khs_cv);
+                        mutex_exit(&khs_this->khs_interlock);
+            }
+            else
+                khsem_free(khs_this, false);
 
-		LIST_REMOVE(khs_this, khs_usedq_entry);
-	    }
+            LIST_REMOVE(khs_this, khs_usedq_entry);
         }
+    }
 
     mutex_exit(&khsem_mutex);
 }
