@@ -5,12 +5,12 @@
 LIB=		root
 # MAN=		root.3
 
-SRCS=		time.c port.c thread.c area.c sem.c team.c info.c fs.c
+SRCS=		time.c port.c thread.c area.c sem.c team.c info.c fs.c image.c
 
 LIBDPLIBS+=	pthread ${NETBSDSRCDIR}/lib/libpthread
 LIBDPLIBS+=	kvm ${NETBSDSRCDIR}/lib/libkvm
 
-INCS=		OS.h Errors.h fs_attr.h fs_info.h TypeConstants.h
+INCS=		OS.h Errors.h fs_attr.h fs_info.h TypeConstants.h image.h
 INCSDIR=	/usr/include
 
 CFLAGS= -Wno-multichar
