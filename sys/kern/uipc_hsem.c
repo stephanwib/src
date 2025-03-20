@@ -205,7 +205,8 @@ printf("acquire_sem: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks())
 
 	    if (flags & (SEM_RELATIVE_TIMEOUT|SEM_ABSOLUTE_TIMEOUT)) {
 printf("acquire_sem: recalculating remaining time\n");
-                if((time_left_hz = wait_until_hz - getticks()) > INT_MAX) {
+		time_left_hz = wait_until_hz - getticks();
+                if(time_left_hz > INT_MAX || time_left_hz == 0) {
 		        printf("sem: timeout, time_left_hz: %u\n", time_left_hz);
 	        }
 	        else
@@ -213,7 +214,7 @@ printf("acquire_sem: recalculating remaining time\n");
 	    }
 		    
             khs->khs_waiters++;
-            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, mstohz((flags & SEM_RELATIVE_TIMEOUT) ? timeout : 0));
+            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, time_left_hz));
             khs->khs_waiters--;
 		
 printf("sem wakeup event. sem: %d, error code: %d, waiters: %d\n", id, error, khs->khs_waiters);
