@@ -44,6 +44,24 @@ typedef void* (*pthread_entry) (void*);
 
 lwpid_t next_lid = 0; /* HACK: Issue fake LWP IDs */
 
+static
+pthread_t find_pthread_byid(thread_id id)
+{
+    haiku_thread *ht;
+
+    pthread_mutex_lock(&threadss_lock);
+    LIST_FOREACH(ht, &thread_list, ht_entry) {
+        if (ht->ht_lid == id) {
+            pthread_mutex_unlock(&threadss_lock);
+            return ht->ht_pt;
+        }
+    }
+
+    pthread_mutex_unlock(&threadss_lock);
+    
+    return NULL;
+}
+
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
