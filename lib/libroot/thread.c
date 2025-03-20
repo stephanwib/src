@@ -36,21 +36,20 @@
 #include <errno.h>
 
 
-/*
-// static LIST_HEAD(, haiku_thread)        thread_list         __cacheline_aligned;
 LIST_HEAD(thr_list, haiku_thread);
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
 
-*/
-
 typedef void* (*pthread_entry) (void*);
+
+lwpid_t next_lid = 0; /* HACK: Issue fake LWP IDs */
 
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
 	pthread_t thread;
 	pthread_attr_t attr;
+	haiku_thread *ht;
 	char namebuf[NAME_MAX];
 	void *func_ptr;
 
@@ -72,6 +71,19 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     if (pthread_create(&thread, &attr, (pthread_entry)func_ptr, data) != 0)
 	    return B_NO_MEMORY;
 
+	
+    ht = malloc(sizeof(haiku_thread));
+    *ht = (haiku_thread) {
+        .ht_pt = thread,
+	.ht_lid = next_lid++,
+	.ht_message = 0,
+    };
+
+    pthread_mutex_lock(&threadss_lock);
+    LIST_INSERT_HEAD(&thread_list, ht, ht_entry);
+    pthread_mutex_unlock(&threadss_lock);
+
+	
     pthread_attr_destroy(&attr);
  
     pthread_setname_np(thread, "%s", (void*)namebuf);
