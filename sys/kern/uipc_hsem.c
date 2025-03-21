@@ -172,7 +172,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
     {
 	    
 	unsigned wait_until_hz = 0;
-	unsigned time_left_hz;
+	unsigned time_left_hz = 0; /* Initialize to zero = wait forever */
 
         if (flags & SEM_RELATIVE_TIMEOUT) {
             if (timeout <= 0) {
@@ -214,7 +214,7 @@ printf("acquire_sem: recalculating remaining time\n");
 	    }
 		    
             khs->khs_waiters++;
-            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, time_left_hz));
+            error = cv_timedwait_sig(&khs->khs_cv, &khs->khs_interlock, time_left_hz);
             khs->khs_waiters--;
 		
 printf("sem wakeup event. sem: %d, error code: %d, waiters: %d\n", id, error, khs->khs_waiters);
