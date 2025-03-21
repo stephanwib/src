@@ -93,15 +93,15 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     ht = malloc(sizeof(haiku_thread));
     *ht = (haiku_thread) {
         .ht_pt = thread,
-	.ht_lid = next_lid++,
-	.ht_message = 0,
+	    .ht_lid = next_lid++,
+	    .ht_message = THR_MSG_ABSENT,
+        .ht_state = THR_ACTIVE;
     };
 
     pthread_mutex_lock(&threadss_lock);
     LIST_INSERT_HEAD(&thread_list, ht, ht_entry);
     pthread_mutex_unlock(&threadss_lock);
 
-	
     pthread_attr_destroy(&attr);
  
     pthread_setname_np(thread, "%s", (void*)namebuf);
@@ -238,7 +238,41 @@ rename_thread(thread_id id, const char *newName)
 status_t
 send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 {
-	return B_BAD_THREAD_ID;
+    struct haiku_thread *ht;
+    void *dest;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+    while (ht->message != THR_MSG_ABSENT) {
+
+        /* wait for the existing message to disappear */
+        pthread_cond_wait(&ht->ht_cv, &threadss_lock);
+        
+        /* check if this thread was cancelled */
+        if (ht->ht_state != THR_ACTIVE) {
+            pthread_mutex_unlock(&threadss_lock);
+            return B_BAD_THREAD_ID;
+        }
+    }
+
+        ht->ht_msg->tm_code = code;
+        ht->ht_msg->tm_size = bufferSize;
+
+        if (bufferSize > MSG_PRIVATE_BUFFER_SIZE) {
+            dest = malloc(bufferSize);
+            ht->message = THR_MSG_EXTERN;
+        }
+        else {
+            dest = &ht->ht_msg->tm_buffer;
+            ht->message = THR_MSG_INTERN;
+        }
+        memcpy(dest, buffer, bufferSize);
+
+    pthread_mutex_unlock(&threadss_lock);
+
+	return B_OK;
 }
 
 
