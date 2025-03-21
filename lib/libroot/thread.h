@@ -5,6 +5,11 @@
 
 #define MSG_PRIVATE_BUFFER_SIZE     1024
 
+enum THREAD_STATE {
+    THR_ACTIVE,
+    THR_ENDING
+};
+
 enum THREAD_MESSAGE {
     THR_MSG_ABSENT  = 0,
     THR_MSG_INTERN,
@@ -21,7 +26,8 @@ typedef struct thread_message {
 typedef struct haiku_thread {
     pthread_t                   ht_pt;             /* POSIX thread*/
     lwpid_t                     ht_lid;            /* kernel LWP ID */
-    LIST_ENTRY(haiku_thread)    ht_entry;    /* libroot thread list entry */
+    LIST_ENTRY(haiku_thread)    ht_entry;          /* libroot thread list entry */
+    int                         ht_state;          /* state of this thread */
     int                         ht_message;        /* has private thread message */
     thread_message              ht_msg;            /* thread private message for send_data() / receive_data() */
 
