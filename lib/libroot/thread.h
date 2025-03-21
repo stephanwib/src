@@ -21,7 +21,6 @@ typedef struct thread_message {
     char                        tm_buffer[MSG_PRIVATE_BUFFER_SIZE];     /* small message private buffer  */
     size_t                      tm_size;                                /* private data bytes */
     const void                  *tm_external_buffer;                    /* large message external buffer */
-    pthread_cond_t              tm_msg_cv;                             /* wait for message event */
 } thread_message;
 
 typedef struct haiku_thread {
@@ -29,6 +28,7 @@ typedef struct haiku_thread {
     lwpid_t                     ht_lid;            /* kernel LWP ID */
     LIST_ENTRY(haiku_thread)    ht_entry;          /* libroot thread list entry */
     int                         ht_state;          /* state of this thread */
+    pthread_cond_t              ht_cv;             /* state change event */
     int                         ht_message;        /* has private thread message */
     thread_message              ht_msg;            /* thread private message for send_data() / receive_data() */
 
