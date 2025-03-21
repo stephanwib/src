@@ -21,6 +21,7 @@ typedef struct thread_message {
     char                        tm_buffer[MSG_PRIVATE_BUFFER_SIZE];     /* small message private buffer  */
     size_t                      tm_size;                                /* private data bytes */
     const void                  *tm_external_buffer;                    /* large message external buffer */
+    thread_id                   tm_sender;                              /* thread ID of the sender */
 } thread_message;
 
 typedef struct haiku_thread {
