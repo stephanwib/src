@@ -45,21 +45,20 @@ typedef void* (*pthread_entry) (void*);
 
 lwpid_t next_lid = 0; /* HACK: Issue fake LWP IDs */
 
-static
-pthread_t find_pthread_byid(thread_id id)
+
+static struct haiku_thread *
+find_haiku_thread_byid(thread_id id)
 {
     haiku_thread *ht;
 
     pthread_mutex_lock(&threadss_lock);
-    LIST_FOREACH(ht, &thread_list, ht_entry) {
+    LIST_FOREACH(ht, &threadss_lock, ht_entry) {
         if (ht->ht_lid == id) {
             pthread_mutex_unlock(&threadss_lock);
-            return ht->ht_pt;
+            return ht;
         }
     }
-
     pthread_mutex_unlock(&threadss_lock);
-    
     return NULL;
 }
 
@@ -113,7 +112,13 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 status_t
 resume_thread(thread_id id)
 {
-	if (pthread_resume_np((pthread_t) id) == 0)
+    struct haiku_thread *ht;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+	if (pthread_resume_np(ht->ht_pt) == 0)
 	    return B_OK;
 
     return B_BAD_THREAD_ID;
@@ -122,7 +127,13 @@ resume_thread(thread_id id)
 status_t
 suspend_thread(thread_id id)
 {
-	if (pthread_suspend_np((pthread_t) id) == 0)
+    struct haiku_thread *ht;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+	if (pthread_suspend_np(ht->ht_pt) == 0)
 	    return B_OK;
 
 	return B_BAD_THREAD_ID;
@@ -137,7 +148,13 @@ exit_thread(status_t status)
 status_t
 wait_for_thread(thread_id id, status_t *ret)
 {
-	if (pthread_join((pthread_t) id, (void**)ret) == 0)
+    struct haiku_thread *ht;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;   
+	
+    if (pthread_join(ht->ht_pt, (void**)ret) == 0)
 		return B_OK;
 	
 	return B_BAD_THREAD_ID;
@@ -146,7 +163,13 @@ wait_for_thread(thread_id id, status_t *ret)
 status_t
 kill_thread(thread_id id)
 {
-	if (pthread_cancel((pthread_t) id) == 0)
+    struct haiku_thread *ht;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;   
+
+	if (pthread_cancel(ht->ht_pt) == 0)
 		return B_OK;
 			
 	return B_BAD_THREAD_ID;
@@ -161,31 +184,53 @@ on_exit_thread(void (*callback)(void *), void *data)
 thread_id
 find_thread(const char *name)
 {
+    struct haiku_thread *ht;
 
-	pthread_t t;
+    pthread_mutex_lock(&threadss_lock);
+    LIST_FOREACH(ht, &thread_list, ht_entry) {
+        char thread_name[NAME_MAX];
+        pthread_getname_np(ht->ht_pt, thread_name, NAME_MAX);
+        if (strcmp(thread_name, name) == 0) {
+            pthread_mutex_unlock(&threadss_lock);
+            return ht->ht_lid;
+        }
+    }
 
-	if (name == NULL) {
-		t = pthread_self();
-		(void)t;
-	}
-
-	return B_NAME_NOT_FOUND;
+    pthread_mutex_unlock(&threadss_lock);
+    return B_NAME_NOT_FOUND;
 }
+
 
 status_t
 set_thread_priority(thread_id id, int32 priority)
 {
+    struct haiku_thread *ht;
 
-	return B_OK;
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+    struct sched_param param;
+    param.sched_priority = priority;
+    if (pthread_setschedparam(ht->ht_pt, SCHED_RR, &param) == 0)
+        return B_OK;
+
+    return B_ERROR;
 }
 
 
 status_t
 rename_thread(thread_id id, const char *newName)
 {
+    struct haiku_thread *ht;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+    
 	char namebuf[NAME_MAX];
 	strlcpy(namebuf, newName, sizeof(namebuf));
-	pthread_setname_np((pthread_t)id, "%s", (void*)namebuf);
+	pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
 
 	return B_OK;
 }
