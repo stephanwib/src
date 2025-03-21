@@ -35,6 +35,7 @@
 #include <unistd.h> /* for usleep() */
 #include <string.h>
 #include <errno.h>
+#include <sys/param.h>
 
 
 LIST_HEAD(thr_list, haiku_thread);
@@ -97,6 +98,8 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 	    .ht_message = THR_MSG_ABSENT,
         .ht_state = THR_ACTIVE;
     };
+
+    pthread_cond_init(&ht->ht_cv, NULL);
 
     pthread_mutex_lock(&threadss_lock);
     LIST_INSERT_HEAD(&thread_list, ht, ht_entry);
@@ -276,10 +279,46 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 }
 
 
-status_t
+int32_t
 receive_data(thread_id *sender, void *buffer, size_t bufferSize)
 {
-	return B_BAD_THREAD_ID;
+    int32_t code;
+    void *source;
+    struct haiku_thread *ht;
+    
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+    while (ht->message == THR_MSG_ABSENT) {
+
+        /* wait for a new message to appear */
+        pthread_cond_wait(&ht->ht_cv, &threadss_lock);
+        
+        /* check if this thread was cancelled */
+        if (ht->ht_state != THR_ACTIVE) {
+            pthread_mutex_unlock(&threadss_lock);
+            return B_BAD_THREAD_ID;
+        }
+    }
+
+    code = ht->ht_msg->tm_code;
+    *sender = ht->ht_msg->tm_sender;
+
+    if (buffer != NULL && bufferSize > 0) {
+        
+        source = (ht->message == THR_MSG_INTERN) ? &ht->ht_msg->tm_buffer : ht->ht_msg->tm_external_buffer;
+        memcpy(buffer, source, MIN(ht->ht_msg->tm_size, bufferSize));
+    }
+
+    if (ht->message == THR_MSG_EXTERN)
+        free(ht->ht_msg->tm_external_buffer);
+    
+    ht->message = THR_MSG_ABSENT;
+
+    pthread_mutex_unlock(&threadss_lock);
+    return code;
 }
 
 
