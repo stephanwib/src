@@ -66,16 +66,16 @@ find_haiku_thread_byid(thread_id id)
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
-	pthread_t thread;
-	pthread_attr_t attr;
-	haiku_thread *ht;
-	char namebuf[NAME_MAX];
-	void *func_ptr;
+    pthread_t thread;
+    pthread_attr_t attr;
+    haiku_thread *ht;
+    char namebuf[NAME_MAX];
+    void *func_ptr;
 
-	(void)priority;
-	strlcpy(namebuf, name, sizeof(namebuf));
+    (void)priority;
+    strlcpy(namebuf, name, sizeof(namebuf));
 
-	func_ptr = (void*)func;
+    func_ptr = (void*)func;
 
     pthread_attr_init(&attr);
 
@@ -94,8 +94,8 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     ht = malloc(sizeof(haiku_thread));
     *ht = (haiku_thread) {
         .ht_pt = thread,
-	    .ht_lid = next_lid++,
-	    .ht_message = THR_MSG_ABSENT,
+        .ht_lid = next_lid++,
+        .ht_message = THR_MSG_ABSENT,
         .ht_state = THR_ACTIVE;
     };
 
@@ -153,9 +153,12 @@ suspend_thread(thread_id id)
 void
 exit_thread(status_t status)
 {
+    int error;
     lwpid_t self;
+    struct haiku_thread *ht;
 
     self = _lwp_self();
+    ht  = find_haiku_thread_byid((thread_id)self);
 
     pthread_exit((void *) &status);
 }
@@ -227,6 +230,7 @@ find_thread(const char *name)
 status_t
 set_thread_priority(thread_id id, int32 priority)
 {
+    int error;
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
@@ -236,26 +240,31 @@ set_thread_priority(thread_id id, int32 priority)
     struct sched_param param;
     param.sched_priority = priority;
     if (pthread_setschedparam(ht->ht_pt, SCHED_RR, &param) == 0)
-        return B_OK;
+        error = B_OK;
+    else
+        error = B_BAD_THREAD_ID;
 
-    return B_ERROR;
+    pthread_mutex_unlock(&threadss_lock);
+    return B_NAME_NOT_FOUND;
 }
 
 
 status_t
 rename_thread(thread_id id, const char *newName)
 {
+    int error;
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
     
-	char namebuf[NAME_MAX];
-	strlcpy(namebuf, newName, sizeof(namebuf));
-	pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
+    char namebuf[NAME_MAX];
+    strlcpy(namebuf, newName, sizeof(namebuf));
+    pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
 
-	return B_OK;
+    pthread_mutex_unlock(&threadss_lock);
+    return B_OK;
 }
 
 status_t
@@ -293,9 +302,9 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
         }
         memcpy(dest, buffer, bufferSize);
 
-    pthread_mutex_unlock(&threadss_lock);
 
-	return B_OK;
+    pthread_mutex_unlock(&threadss_lock);
+    return B_OK;
 }
 
 
@@ -306,7 +315,6 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     void *source;
     struct haiku_thread *ht;
     
-
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
