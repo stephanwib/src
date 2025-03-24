@@ -30,6 +30,7 @@ typedef struct haiku_thread {
     LIST_ENTRY(haiku_thread)    ht_entry;          /* libroot thread list entry */
     int                         ht_state;          /* state of this thread */
     pthread_cond_t              ht_cv;             /* state change event */
+    int                         ht_waiters;        /* threads waiting on this object */
     int                         ht_message;        /* has private thread message */
     thread_message              ht_msg;            /* thread private message for send_data() / receive_data() */
 
