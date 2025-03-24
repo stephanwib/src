@@ -47,6 +47,7 @@ typedef void* (*pthread_entry) (void*);
 lwpid_t next_lid = 0; /* HACK: Issue fake LWP IDs */
 
 
+/* Returns a locked thread */
 static struct haiku_thread *
 find_haiku_thread_byid(thread_id id)
 {
@@ -54,11 +55,10 @@ find_haiku_thread_byid(thread_id id)
 
     pthread_mutex_lock(&threadss_lock);
     LIST_FOREACH(ht, &threadss_lock, ht_entry) {
-        if (ht->ht_lid == id) {
-            pthread_mutex_unlock(&threadss_lock);
+        if (ht->ht_lid == id)
             return ht;
-        }
     }
+
     pthread_mutex_unlock(&threadss_lock);
     return NULL;
 }
@@ -116,15 +116,19 @@ status_t
 resume_thread(thread_id id)
 {
     struct haiku_thread *ht;
+    int error;
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
-	if (pthread_resume_np(ht->ht_pt) == 0)
-	    return B_OK;
+    if (pthread_resume_np(ht->ht_pt) == 0)
+        error = B_OK;
+    else
+        error = B_BAD_THREAD_ID;
 
-    return B_BAD_THREAD_ID;
+    pthread_mutex_unlock(&threadss_lock);
+    return error;
 }
 
 status_t
