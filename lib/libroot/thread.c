@@ -54,13 +54,28 @@ find_haiku_thread_byid(thread_id id)
     haiku_thread *ht;
 
     pthread_mutex_lock(&threadss_lock);
-    LIST_FOREACH(ht, &threadss_lock, ht_entry) {
+    LIST_FOREACH(ht, &thread_list, ht_entry) {
         if (ht->ht_lid == id)
             return ht;
     }
 
     pthread_mutex_unlock(&threadss_lock);
     return NULL;
+}
+
+static void
+free_haiku_thread(struct haiku_thread *ht)
+{
+    if (ht->message == THR_MSG_EXTERN)
+        free(ht->ht_msg->tm_external_buffer);
+
+    pthread_cond_destroy(&ht->ht_cv);
+
+    LIST_REMOVE(ht, ht_entry);
+	
+    free(ht);
+
+    pthread_mutex_unlock(&threadss_lock)
 }
 
 thread_id
@@ -161,6 +176,8 @@ exit_thread(status_t status)
     ht  = find_haiku_thread_byid((thread_id)self);
 
     pthread_exit((void *) &status);
+
+    free_haiku_thread(ht);
 }
 
 status_t
@@ -178,7 +195,9 @@ wait_for_thread(thread_id id, status_t *ret)
     else
         error = B_BAD_THREAD_ID;
 
-    pthread_mutex_unlock(&threadss_lock);
+
+    free_haiku_thread(ht);
+
     return error;
 }  
 
@@ -196,8 +215,9 @@ kill_thread(thread_id id)
         return B_OK;
     else
 	error = B_BAD_THREAD_ID;
-			
-    pthread_mutex_unlock(&threadss_lock);
+
+
+    free_haiku_thread(ht);
     return error;
 }
 
