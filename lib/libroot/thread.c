@@ -135,26 +135,35 @@ status_t
 suspend_thread(thread_id id)
 {
     struct haiku_thread *ht;
+    int error;
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
-	if (pthread_suspend_np(ht->ht_pt) == 0)
-	    return B_OK;
+    if (pthread_suspend_np(ht->ht_pt) == 0)
+        error = B_OK;
+    else
+        error = B_BAD_THREAD_ID;
 
-	return B_BAD_THREAD_ID;
+    pthread_mutex_unlock(&threadss_lock);
+    return error;
 }
 
 void
 exit_thread(status_t status)
 {
-	pthread_exit((void *) &status);
+    lwpid_t self;
+
+    self = _lwp_self();
+
+    pthread_exit((void *) &status);
 }
 
 status_t
 wait_for_thread(thread_id id, status_t *ret)
 {
+    int error;
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
@@ -162,24 +171,31 @@ wait_for_thread(thread_id id, status_t *ret)
         return B_BAD_THREAD_ID;   
 	
     if (pthread_join(ht->ht_pt, (void**)ret) == 0)
-		return B_OK;
-	
-	return B_BAD_THREAD_ID;
+        error = B_OK;
+    else
+        error = B_BAD_THREAD_ID;
+
+    pthread_mutex_unlock(&threadss_lock);
+    return error;
 }  
 
 status_t
 kill_thread(thread_id id)
 {
+    int error;
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;   
 
-	if (pthread_cancel(ht->ht_pt) == 0)
-		return B_OK;
+    if (pthread_cancel(ht->ht_pt) == 0)
+        return B_OK;
+    else
+	error = B_BAD_THREAD_ID;
 			
-	return B_BAD_THREAD_ID;
+    pthread_mutex_unlock(&threadss_lock);
+    return error;
 }
 
 status_t
