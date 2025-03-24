@@ -300,7 +300,9 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
     while (ht->message != THR_MSG_ABSENT) {
 
         /* wait for the existing message to disappear */
+	ht->ht_waiters++;
         pthread_cond_wait(&ht->ht_cv, &threadss_lock);
+	ht->ht_waiters--;
         
         /* check if this thread was cancelled */
         if (ht->ht_state != THR_ACTIVE) {
@@ -342,7 +344,9 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     while (ht->message == THR_MSG_ABSENT) {
 
         /* wait for a new message to appear */
+	ht->ht_waiters++;
         pthread_cond_wait(&ht->ht_cv, &threadss_lock);
+	ht->ht_waiters--;
         
         /* check if this thread was cancelled */
         if (ht->ht_state != THR_ACTIVE) {
