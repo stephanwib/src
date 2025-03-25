@@ -13,6 +13,29 @@
 #include <uvm/uvm_extern.h>
 #include <OS.h>
 
+static int
+map_lwp_state(int lwp_state) {
+
+    switch (lwp_state) {
+
+        case LSIDL:
+            return B_THREAD_READY;
+        case LSRUN:
+        case LSONPROC:
+            return B_THREAD_RUNNING;
+        case LSSLEEP:
+            return B_THREAD_ASLEEP;
+        case LSSTOP:
+        case LSSUSPENDED:
+            return B_THREAD_SUSPENDED;
+        case LSZOMB:
+            return B_THREAD_ASLEEP;
+
+
+    }
+
+}
+
 status_t get_thread_info(thread_id thread, thread_info *info) {
 
     int i;
@@ -35,7 +58,7 @@ status_t get_thread_info(thread_id thread, thread_info *info) {
             *info = (thread_info){
                 .thread = lwps[i].l_lid,
                 .team = lwps[i].l_pid,
-                .state = lwps[i].l_stat,
+                .state = map_lwp_state(lwps[i].l_stat),
                 .priority = lwps[i].l_priority,
                 .sem = -1,
                 .user_time = lwps[i].l_rtime_sec * 1000000LL + lwps[i].l_rtime_usec,
@@ -85,7 +108,7 @@ status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) 
     *info = (thread_info){
         .thread = lwp->l_lid,
         .team = lwp->l_pid,
-        .state = lwp->l_stat,
+        .state = map_lwp_state(lwp->l_stat),
         .priority = lwp->l_priority,
         .sem = -1,
         .user_time = lwp->l_rtime_sec * 1000000LL + lwp->l_rtime_usec,
