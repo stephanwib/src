@@ -300,7 +300,7 @@ status_t
 send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 {
     struct haiku_thread *ht;
-    void *dest;
+    void *dest;  /* pointer to data buffer - internal or external */
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
@@ -322,6 +322,7 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 
         ht->ht_msg->tm_code = code;
         ht->ht_msg->tm_size = bufferSize;
+        ht->ht_msg->tm_sender = _lwp_self();
 
         if (bufferSize > MSG_PRIVATE_BUFFER_SIZE) {
             dest = malloc(bufferSize);
@@ -333,8 +334,10 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
         }
         memcpy(dest, buffer, bufferSize);
 
+    pthread_cond_broadcast(&ht->ht_cv);
 
     pthread_mutex_unlock(&threadss_lock);
+	
     return B_OK;
 }
 
@@ -346,7 +349,7 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     void *source;
     struct haiku_thread *ht;
     
-    ht = find_haiku_thread_byid(id);
+    ht = find_haiku_thread_byid((thread_id)_lwp_self());
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
@@ -378,7 +381,10 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     
     ht->message = THR_MSG_ABSENT;
 
+    pthread_cond_broadcast(&ht->ht_cv);
+	
     pthread_mutex_unlock(&threadss_lock);
+	
     return code;
 }
 
