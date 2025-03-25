@@ -35,6 +35,7 @@
 #include <unistd.h> /* for usleep() */
 #include <string.h>
 #include <errno.h>
+#include <lwp.h>
 #include <sys/param.h>
 
 
@@ -231,6 +232,14 @@ thread_id
 find_thread(const char *name)
 {
     struct haiku_thread *ht;
+
+    if (name == NULL) {
+
+        lwpid_t lid;
+	lid = _lwp_self();
+
+	return (thread_id)lid;
+    }
 
     pthread_mutex_lock(&threadss_lock);
     LIST_FOREACH(ht, &thread_list, ht_entry) {
