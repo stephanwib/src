@@ -67,8 +67,8 @@ find_haiku_thread_byid(thread_id id)
 static void
 free_haiku_thread(struct haiku_thread *ht)
 {
-    if (ht->message == THR_MSG_EXTERN)
-        free(ht->ht_msg->tm_external_buffer);
+    if (ht->ht_message == THR_MSG_EXTERN)
+        free(&ht->ht_msg.tm_external_buffer);
 
     pthread_cond_destroy(&ht->ht_cv);
 
@@ -76,7 +76,7 @@ free_haiku_thread(struct haiku_thread *ht)
 	
     free(ht);
 
-    pthread_mutex_unlock(&threadss_lock)
+    pthread_mutex_unlock(&threadss_lock);
 }
 
 thread_id
@@ -108,11 +108,11 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 
 	
     ht = malloc(sizeof(haiku_thread));
-    *ht = (haiku_thread) {
+    *ht = (struct haiku_thread) {
         .ht_pt = thread,
         .ht_lid = next_lid++,
         .ht_message = THR_MSG_ABSENT,
-        .ht_state = THR_ACTIVE;
+        .ht_state = THR_ACTIVE,
     };
 
     pthread_cond_init(&ht->ht_cv, NULL);
@@ -125,7 +125,7 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
  
     pthread_setname_np(thread, "%s", (void*)namebuf);
 
-    return (thread_id)thread;
+    return (thread_id)ht->ht_lid;
 }
 
 status_t
@@ -169,7 +169,7 @@ suspend_thread(thread_id id)
 void
 exit_thread(status_t status)
 {
-    int error;
+
     lwpid_t self;
     struct haiku_thread *ht;
 
@@ -274,14 +274,14 @@ set_thread_priority(thread_id id, int32 priority)
         error = B_BAD_THREAD_ID;
 
     pthread_mutex_unlock(&threadss_lock);
-    return B_NAME_NOT_FOUND;
+    return error;
 }
 
 
 status_t
 rename_thread(thread_id id, const char *newName)
 {
-    int error;
+
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
@@ -302,11 +302,11 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
     struct haiku_thread *ht;
     void *dest;  /* pointer to data buffer - internal or external */
 
-    ht = find_haiku_thread_byid(id);
+    ht = find_haiku_thread_byid(thread);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
-    while (ht->message != THR_MSG_ABSENT) {
+    while (ht->ht_message != THR_MSG_ABSENT) {
 
         /* wait for the existing message to disappear */
 	ht->ht_waiters++;
@@ -320,17 +320,17 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
         }
     }
 
-        ht->ht_msg->tm_code = code;
-        ht->ht_msg->tm_size = bufferSize;
-        ht->ht_msg->tm_sender = _lwp_self();
+        ht->ht_msg.tm_code = code;
+        ht->ht_msg.tm_size = bufferSize;
+        ht->ht_msg.tm_sender = _lwp_self();
 
         if (bufferSize > MSG_PRIVATE_BUFFER_SIZE) {
             dest = malloc(bufferSize);
-            ht->message = THR_MSG_EXTERN;
+            ht->ht_message = THR_MSG_EXTERN;
         }
         else {
-            dest = &ht->ht_msg->tm_buffer;
-            ht->message = THR_MSG_INTERN;
+            dest = &ht->ht_msg.tm_buffer;
+            ht->ht_message = THR_MSG_INTERN;
         }
         memcpy(dest, buffer, bufferSize);
 
@@ -353,7 +353,7 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
-    while (ht->message == THR_MSG_ABSENT) {
+    while (ht->ht_message == THR_MSG_ABSENT) {
 
         /* wait for a new message to appear */
 	ht->ht_waiters++;
@@ -367,19 +367,19 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
         }
     }
 
-    code = ht->ht_msg->tm_code;
-    *sender = ht->ht_msg->tm_sender;
+    code = ht->ht_msg.tm_code;
+    *sender = ht->ht_msg.tm_sender;
 
     if (buffer != NULL && bufferSize > 0) {
         
-        source = (ht->message == THR_MSG_INTERN) ? &ht->ht_msg->tm_buffer : ht->ht_msg->tm_external_buffer;
-        memcpy(buffer, source, MIN(ht->ht_msg->tm_size, bufferSize));
+        source = (ht->ht_message == THR_MSG_INTERN) ? &ht->ht_msg.tm_buffer : ht->ht_msg.tm_external_buffer;
+        memcpy(buffer, source, MIN(ht->ht_msg.tm_size, bufferSize));
     }
 
-    if (ht->message == THR_MSG_EXTERN)
-        free(ht->ht_msg->tm_external_buffer);
+    if (ht->ht_message == THR_MSG_EXTERN)
+        free(ht->ht_msg.tm_external_buffer);
     
-    ht->message = THR_MSG_ABSENT;
+    ht->ht_message = THR_MSG_ABSENT;
 
     pthread_cond_broadcast(&ht->ht_cv);
 	

@@ -65,8 +65,9 @@ typedef int32 sem_id;
 typedef int32 team_id;
 /* XXX: Convert thread_id to unsigned long so it can take a pthread_t */
 // typedef struct __pthread_st* thread_id;
-typedef unsigned long thread_id;
+// typedef unsigned long thread_id;
 
+typedef int32 thread_id;
 
 /* Areas */
 

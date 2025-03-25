@@ -30,8 +30,8 @@ map_lwp_state(int lwp_state) {
             return B_THREAD_SUSPENDED;
         case LSZOMB:
             return B_THREAD_ASLEEP;
-
-
+        default:
+            return B_THREAD_RUNNING;
     }
 
 }
