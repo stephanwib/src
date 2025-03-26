@@ -193,6 +193,12 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 
     mutex_enter(&area_mutex);
 
+    if (area_total_count >= area_max) {
+        mutex_exit(&area_mutex);
+        kmem_free(ka, sizeof(struct karea));
+        return ENOSPC;
+    }
+
     if (is_clone) {
 printf("enter clone\n");
         struct karea *source_area = karea_lookup_byid(source_area_id);
@@ -252,13 +258,6 @@ printf("Error in wirepages\n");
     }
 
     ka->ka_va = va;
-
-    if (area_total_count >= area_max) {
-        mutex_exit(&area_mutex);
-        uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-        kmem_free(ka, sizeof(struct karea));
-        return ENOSPC;
-    }
 
     do {
         next_area_id++;
