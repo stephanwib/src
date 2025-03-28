@@ -330,7 +330,12 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
         
         /* check if this thread was cancelled */
         if (ht->ht_state != THR_ACTIVE) {
-            pthread_mutex_unlock(&threadss_lock);
+
+            if (ht->ht_waiters == 0)
+                free_haiku_thread(ht);
+	    else
+                pthread_mutex_unlock(&threadss_lock);
+
             return B_BAD_THREAD_ID;
         }
     }
@@ -350,7 +355,6 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
         memcpy(dest, buffer, bufferSize);
 
     pthread_cond_broadcast(&ht->ht_cv);
-
     pthread_mutex_unlock(&threadss_lock);
 	
     return B_OK;
@@ -377,7 +381,12 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
         
         /* check if this thread was cancelled */
         if (ht->ht_state != THR_ACTIVE) {
-            pthread_mutex_unlock(&threadss_lock);
+
+	    if (ht->ht_waiters == 0)
+                free_haiku_thread(ht);
+	    else
+                pthread_mutex_unlock(&threadss_lock);
+
             return B_BAD_THREAD_ID;
         }
     }
@@ -398,6 +407,7 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
 
     pthread_cond_broadcast(&ht->ht_cv);
     pthread_mutex_unlock(&threadss_lock);
+
     return code;
 }
 
