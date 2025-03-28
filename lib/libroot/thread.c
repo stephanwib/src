@@ -175,10 +175,19 @@ exit_thread(status_t status)
 
     self = _lwp_self();
     ht  = find_haiku_thread_byid((thread_id)self);
+    if (ht == NULL)
+        return; /* XXX should not happen */   
+
+    if (ht->ht_waiters > 0) {
+        ht->ht_state = THR_ENDING;
+	pthread_cond_broadcast(&ht->ht_cv);
+	pthread_mutex_unlock(&threadss_lock);
+    }
+    else
+        free_haiku_thread(ht);
 
     pthread_exit((void *) &status);
 
-    free_haiku_thread(ht);
 }
 
 status_t
@@ -213,12 +222,18 @@ kill_thread(thread_id id)
         return B_BAD_THREAD_ID;   
 
     if (pthread_cancel(ht->ht_pt) == 0)
-        return B_OK;
+        error = B_OK;
     else
 	error = B_BAD_THREAD_ID;
 
+    if (ht->ht_waiters > 0) {
+        ht->ht_state = THR_ENDING;
+	pthread_cond_broadcast(&ht->ht_cv);
+	pthread_mutex_unlock(&threadss_lock);
+    }
+    else
+        free_haiku_thread(ht);
 
-    free_haiku_thread(ht);
     return error;
 }
 
