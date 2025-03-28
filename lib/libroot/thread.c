@@ -382,10 +382,25 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     ht->ht_message = THR_MSG_ABSENT;
 
     pthread_cond_broadcast(&ht->ht_cv);
-	
     pthread_mutex_unlock(&threadss_lock);
-	
     return code;
+}
+
+
+bool 
+has_data(thread_id thread) {
+	
+    struct haiku_thread *ht;
+    bool has_data;
+   
+    ht = find_haiku_thread_byid(thread);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+    has_data = (ht->ht_message != THR_MSG_ABSENT);
+
+    pthread_mutex_unlock(&threadss_lock);
+    return has_data;
 }
 
 
