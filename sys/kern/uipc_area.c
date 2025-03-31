@@ -44,12 +44,18 @@ static int                      area_total_count          = 0;
 static kmutex_t                 area_mutex                __cacheline_aligned;
 static LIST_HEAD(, karea)       karea_list                __cacheline_aligned;
 
+/* for exithook_establish() */
+static void				*eh_cookie;
+
+static void karea_exithook(struct proc *p, void *v);
+
 void
 area_init(void) 
 {
 
     LIST_INIT(&karea_list);
     mutex_init(&area_mutex, MUTEX_DEFAULT, IPL_NONE);
+    eh_cookie = karea_exithook(hsem_exithook, NULL);
 }
 
 static struct karea *
@@ -277,6 +283,24 @@ printf("Error in wirepages\n");
     *retval = ka->ka_id;
     error = copyout(&va, startAddress, sizeof(void *));
     return error;
+}
+
+static void
+karea_exithook(struct proc *p, void *v)
+{
+    struct karea *ka, *ka_safe;
+
+    mutex_enter(&area_mutex);
+    LIST_FOREACH_SAFE(ka, &karea_list, ka_entry, ka_safe)
+    {
+        if (ka->ka_owner == p->p_pid)
+        {
+		
+            printf("area found\n");
+        }
+    }
+
+    mutex_exit(&area_mutex);
 }
 
 int
