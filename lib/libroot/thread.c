@@ -31,6 +31,7 @@
 #include "Errors.h"
 #include "thread.h"
 #include <stdlib.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
@@ -50,9 +51,9 @@ typedef void* (*pthread_entry) (void*);
 
 static void
 init_main_thread() {
-    haiku_thread *ht;
+    struct haiku_thread *ht;
 
-    ht = malloc(sizeof(haiku_thread));
+    ht = malloc(sizeof(struct haiku_thread));
     *ht = (struct haiku_thread) {
         .ht_pt = NULL,
 
@@ -64,7 +65,13 @@ init_main_thread() {
         .ht_message = THR_MSG_ABSENT,
         .ht_state = THR_ACTIVE,
     };
-	
+
+    pthread_cond_init(&ht->ht_cv, NULL);
+
+    pthread_mutex_lock(&threadss_lock);
+    LIST_INSERT_HEAD(&thread_list, ht, ht_entry);
+    has_main_thread = true;
+    pthread_mutex_unlock(&threadss_lock);
 }
 
 /* Returns a locked thread */
