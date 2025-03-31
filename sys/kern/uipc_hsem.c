@@ -206,8 +206,12 @@ printf("acquire_sem: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks())
 	    if (flags & (SEM_RELATIVE_TIMEOUT|SEM_ABSOLUTE_TIMEOUT)) {
 printf("acquire_sem: recalculating remaining time\n");
 		time_left_hz = wait_until_hz - getticks();
+		    
                 if(time_left_hz > INT_MAX || time_left_hz == 0) {
 		        printf("sem: timeout, time_left_hz: %u\n", time_left_hz);
+			mutex_exit(&khs->khs_interlock);
+
+			return ETIMEDOUT;
 	        }
 	        else
 		        printf("sem: ticks to wait left: %u", time_left_hz);
