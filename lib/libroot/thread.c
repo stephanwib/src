@@ -204,9 +204,14 @@ wait_for_thread(thread_id id, status_t *ret)
         error = B_OK;
     else
         error = B_BAD_THREAD_ID;
-
-
-    free_haiku_thread(ht);
+ 
+    if (ht->ht_waiters > 0) {
+        ht->ht_state = THR_ENDING;
+	pthread_cond_broadcast(&ht->ht_cv);
+	pthread_mutex_unlock(&threadss_lock);
+    }
+    else
+        free_haiku_thread(ht);
 
     return error;
 }  
