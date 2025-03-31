@@ -32,7 +32,7 @@
 #include "thread.h"
 #include <stdlib.h>
 #include <pthread.h>
-#include <unistd.h> /* for usleep() */
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <lwp.h>
@@ -42,11 +42,30 @@
 LIST_HEAD(thr_list, haiku_thread);
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
+static lwpid_t                          next_lid               = 0; /* HACK: Issue fake LWP IDs */
+static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
 
 typedef void* (*pthread_entry) (void*);
 
-lwpid_t next_lid = 0; /* HACK: Issue fake LWP IDs */
 
+static void
+init_main_thread() {
+    haiku_thread *ht;
+
+    ht = malloc(sizeof(haiku_thread));
+    *ht = (struct haiku_thread) {
+        .ht_pt = NULL,
+
+	/*  Since NetBSD 10, PIDs and LWP IDs share the same name space.
+         *  Hence, the PID of a process is the LWP ID of the main thread.
+	 */
+        .ht_lid = (lwpid_t)getpid(),
+
+        .ht_message = THR_MSG_ABSENT,
+        .ht_state = THR_ACTIVE,
+    };
+	
+}
 
 /* Returns a locked thread */
 static struct haiku_thread *
@@ -87,6 +106,9 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     haiku_thread *ht;
     char namebuf[NAME_MAX];
     void *func_ptr;
+
+    if (!has_main_thread)
+        init_main_thread();
 
     (void)priority;
     strlcpy(namebuf, name, sizeof(namebuf));
