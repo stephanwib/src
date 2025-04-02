@@ -31,6 +31,7 @@
 #include <dlfcn.h>
 
 /*
+
 thread_id load_image(int32 argc, const char **argv, const char **envp)
 {
 	pid_t pid;
@@ -47,11 +48,13 @@ thread_id load_image(int32 argc, const char **argv, const char **envp)
 	else
 	{
 		// We're in the child process
-		execvpe(argv[0], (char* const*)argv, (char* const*)envp);
+		//execvpe(argv[0], (char* const*)argv, (char* const*)envp);
+		execvpe(argv[0], (char * const*)argv, envp);
 	}
 
 	return B_ERROR;
 }
+
 
 
 image_id load_add_on(const char* path)

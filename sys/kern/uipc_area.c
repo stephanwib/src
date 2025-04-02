@@ -55,7 +55,7 @@ area_init(void)
 
     LIST_INIT(&karea_list);
     mutex_init(&area_mutex, MUTEX_DEFAULT, IPL_NONE);
-    eh_cookie = karea_exithook(hsem_exithook, NULL);
+    eh_cookie = exithook_establish(karea_exithook, NULL);
 }
 
 static struct karea *

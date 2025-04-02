@@ -50,7 +50,8 @@ typedef void* (*pthread_entry) (void*);
 
 
 static void
-init_main_thread() {
+init_main_thread(void)
+{
     struct haiku_thread *ht;
 
     ht = malloc(sizeof(struct haiku_thread));
