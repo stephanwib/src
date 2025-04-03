@@ -4,12 +4,12 @@
 #include <errno.h>
 #include <time.h>
 #include <kvm.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/proc.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <uvm/uvm_extern.h>
 #include <OS.h>
 
@@ -339,4 +339,18 @@ status_t get_system_info(system_info *info)
     info->abi = 0;
 
     return 0;
+}
+
+
+int32
+is_computer_on(void)
+{
+	return true;
+}
+
+
+double
+is_computer_on_fire(void)
+{
+	return 0.63739;
 }
