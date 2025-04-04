@@ -275,7 +275,7 @@ kill_thread(thread_id id)
 status_t
 on_exit_thread(void (*callback)(void *), void *data)
 {
-    return B_NO_MEMORY;
+    pthread_cleanup_push(callback, data);
 }
 
 thread_id
