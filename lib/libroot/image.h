@@ -10,7 +10,9 @@
 #include <sys/param.h>
 
 
-typedef	int32 image_id;
+// typedef	int32 image_id;
+
+typedef	void* image_id; /* XXX: As used by dlopen() etc. */
 
 typedef enum {
 	B_APP_IMAGE			= 1,
