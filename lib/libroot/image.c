@@ -65,10 +65,10 @@ load_image(int32 argc, const char **argv, const char **envp) {
         execvpe(new_argv[0], new_argv, new_envp);
 
         perror("execvpe failed");
-        exit(127);
+        return B_ERROR;
     }
 
-    return B_ERROR; // Should never reach here
+    return B_ERROR; /* NOTREACHED */
 }
 
 
