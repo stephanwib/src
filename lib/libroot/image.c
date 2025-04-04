@@ -24,11 +24,53 @@
 //------------------------------------------------------------------------------
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include "Errors.h"
 
 #include "image.h"
 #include <dlfcn.h>
+
+
+thread_id 
+load_image(int32 argc, const char **argv, const char **envp) {
+
+    int i;
+    pid_t pid;
+
+    if ((pid = fork()) < 0) {
+        return B_ERROR;
+    }
+    else if (pid > 0) {
+        return (thread_id)pid;
+    }
+    else {
+     
+        // Create writable copies of argv and envp
+        char *new_argv[argc + 1];
+        char *new_envp[256]; // Assuming a reasonable limit for envp entries
+
+        for (int i = 0; i < argc; i++) {
+            new_argv[i] = strdup(argv[i]);
+        }
+        new_argv[argc] = NULL;
+
+        // Copy envp
+        
+        for (i = 0; envp[i] != NULL && i < 255; i++) {
+            new_envp[i] = strdup(envp[i]);
+        }
+        new_envp[i] = NULL;
+
+        execvpe(new_argv[0], new_argv, new_envp);
+
+        perror("execvpe failed");
+        exit(127);
+    }
+
+    return B_ERROR; // Should never reach here
+}
+
 
 /*
 
