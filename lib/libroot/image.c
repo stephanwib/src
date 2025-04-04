@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include "Errors.h"
 
 #include "image.h"
@@ -50,7 +51,7 @@ load_image(int32 argc, const char **argv, const char **envp) {
         char *new_argv[argc + 1];
         char *new_envp[256]; // Assuming a reasonable limit for envp entries
 
-        for (int i = 0; i < argc; i++) {
+        for (i = 0; i < argc; i++) {
             new_argv[i] = strdup(argv[i]);
         }
         new_argv[argc] = NULL;
@@ -69,32 +70,6 @@ load_image(int32 argc, const char **argv, const char **envp) {
     }
 
     return B_ERROR; /* NOTREACHED */
-}
-
-
-/*
-
-thread_id load_image(int32 argc, const char **argv, const char **envp)
-{
-	pid_t pid;
-  
-	if ((pid = fork()) < 0)
-	{
-		return B_ERROR;
-	}
-	else if (pid == 0)
-	{
-	
-		return (thread_id)pid;
-	}
-	else
-	{
-		// We're in the child process
-		//execvpe(argv[0], (char* const*)argv, (char* const*)envp);
-		execvpe(argv[0], (char * const*)argv, envp);
-	}
-
-	return B_ERROR;
 }
 
 
@@ -133,7 +108,7 @@ status_t get_image_symbol(image_id imid, const char* name, int32 sclass, void** 
 	return B_OK;
 }
 
-*/
+
 
 status_t
 _get_image_info(image_id image, image_info *info, size_t size)
@@ -146,7 +121,6 @@ _get_image_info(image_id image, image_info *info, size_t size)
 }
 
 
-/*
 
 status_t
 _get_next_image_info(team_id team, int32 *cookie, image_info *info, size_t size)
@@ -178,4 +152,3 @@ _get_next_image_info(team_id team, int32 *cookie, image_info *info, size_t size)
 	return B_ERROR;
 }
 
-*/

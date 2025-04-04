@@ -275,7 +275,9 @@ kill_thread(thread_id id)
 status_t
 on_exit_thread(void (*callback)(void *), void *data)
 {
-    pthread_cleanup_push(callback, data);
+    // pthread_cleanup_push(callback, data);
+
+    return B_OK;
 }
 
 thread_id
