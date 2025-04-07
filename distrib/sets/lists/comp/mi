@@ -29581,3 +29581,7 @@
 ./usr/share/misc/style				comp-c-share		share
 ./var/db/libc.tags				comp-c-root
 ./var/db/obsolete/comp				base-sys-root
+./usr/include/fs_attr.h              comp-c-include
+./usr/include/fs_info.h              comp-c-include
+./usr/include/TypeConstants.h        comp-c-include
+./usr/include/image.h                comp-c-include
