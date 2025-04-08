@@ -167,7 +167,7 @@ status_t get_team_info(team_id team, team_info *info) {
 
 int get_next_team_info(int32_t *cookie, team_info *info) {
   
-    int i, nprocs = 0, found = 0;
+    int i, nprocs = 0;
     struct kinfo_proc2 *proc, *procs;
 	
     kvm_t *kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
@@ -183,30 +183,24 @@ int get_next_team_info(int32_t *cookie, team_info *info) {
         return -1;
     }
 
-    for (i = 0; i < nprocs; i++) {
-        if (found == *cookie) {
-            proc = &procs[i];
-            *info = (team_info){
-                .team = proc->p_pid,
-                .thread_count = proc->p_nlwps,
-                .image_count = 0, // Not available directly
-                .area_count = 0,  // Not available directly
-                .debugger_nub_thread = 0,
-                .debugger_nub_port = 0,
-                // .argc = proc->p_acflag,
-                .uid = proc->p_uid,
-                .gid = proc->p_gid,
-            };
-            strlcpy(info->args, proc->p_comm, sizeof(info->args));
-            (*cookie)++;
-            kvm_close(kd);
-            return 0;
-        }
-        found++;
+    if (*cookie < 0 || *cookie >= nprocs) {
+        kvm_close(kd);
+        return -1;
     }
 
-    kvm_close(kd);
-    return -1;
+    proc = &procs[*cookie];
+    *info = (team_info){
+        .team = proc->p_pid,
+        .thread_count = proc->p_nlwps,
+        .argc = proc->p_acflag, // again placeholder
+        .uid = proc->p_uid,
+        .gid = proc->p_gid,
+    };
+    strlcpy(info->args, proc->p_comm, sizeof(info->args));
+
+    (*cookie)++;
+
+    return B_OK;
 }
 
 /* 
