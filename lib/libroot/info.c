@@ -36,7 +36,8 @@ map_lwp_state(int lwp_state) {
 
 }
 
-status_t get_thread_info(thread_id thread, thread_info *info) {
+status_t 
+get_thread_info(thread_id thread, thread_info *info) {
 
     int i;
     int lwp_count = 0;
@@ -75,7 +76,8 @@ status_t get_thread_info(thread_id thread, thread_info *info) {
     return -1;
 }
 
-status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
+status_t 
+get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
     static kvm_t *kd = NULL;
     static struct kinfo_lwp *lwps = NULL;
     static int lwp_count = 0;
@@ -127,23 +129,26 @@ status_t get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) 
 
 
 
-status_t get_team_info(team_id team, team_info *info) {
+status_t
+get_team_info(team_id team, team_info *info) {
     
     int count = 0;
     kvm_t *kd;
+    struct kinfo_proc2 *proc, *procs;
 
     kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
     if (!kd)
-        return -1;
+        return B_BAD_TEAM_ID;
 
-    struct kinfo_proc2 *procs = kvm_getproc2(kd, KERN_PROC_PID, team,
-                                              sizeof(struct kinfo_proc2), &count);
-    if (!procs || count == 0) {
-        kvm_close(kd);
-        return -1;
-    }
+    procs = kvm_getproc2(kd, KERN_PROC_PID, team,
+                         sizeof(struct kinfo_proc2), &count);
+    kvm_close(kd);
 
-    struct kinfo_proc2 *proc = &procs[0];
+    if (!procs || count == 0)
+        return B_BAD_TEAM_ID;
+    
+
+    proc = &procs[0];
 
     *info = (team_info){
         .team                = proc->p_pid,
@@ -158,14 +163,13 @@ status_t get_team_info(team_id team, team_info *info) {
     };
 
     strlcpy(info->args, proc->p_comm, sizeof(info->args));
-
-    kvm_close(kd);
     
-    return 0;
+    return B_OK;
 }
 
 
-int get_next_team_info(int32_t *cookie, team_info *info) {
+status_t
+get_next_team_info(int32_t *cookie, team_info *info) {
   
     int i, nprocs = 0;
     struct kinfo_proc2 *proc, *procs;
@@ -173,20 +177,19 @@ int get_next_team_info(int32_t *cookie, team_info *info) {
     kvm_t *kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
     if (!kd) {
         fprintf(stderr, "kvm_openfiles failed: %s\n", errbuf);
-        return -1;
+        return B_BAD_TEAM_ID;
     }
 
     procs = kvm_getproc2(kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), &nprocs);
+    kvm_close(kd);
+
     if (!procs) {
         fprintf(stderr, "kvm_getproc2 failed: %s\n", kvm_geterr(kd));
-        kvm_close(kd);
-        return -1;
+        return B_BAD_TEAM_ID;
     }
 
-    if (*cookie < 0 || *cookie >= nprocs) {
-        kvm_close(kd);
-        return -1;
-    }
+    if (*cookie < 0 || *cookie >= nprocs)
+        return B_BAD_TEAM_ID;
 
     proc = &procs[*cookie];
     *info = (team_info){
@@ -196,6 +199,7 @@ int get_next_team_info(int32_t *cookie, team_info *info) {
         .uid = proc->p_uid,
         .gid = proc->p_gid,
     };
+	
     strlcpy(info->args, proc->p_comm, sizeof(info->args));
 
     (*cookie)++;
