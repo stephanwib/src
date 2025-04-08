@@ -165,54 +165,48 @@ status_t get_team_info(team_id team, team_info *info) {
 }
 
 
-status_t get_next_team_info(int *cookie, team_info *info) {
-    
-    static kvm_t *kd = NULL;
-    static struct kinfo_proc2 *procs = NULL;
-    static int proc_count = 0;
-
-    if (!info || !cookie)
+int get_next_team_info(int32_t *cookie, team_info *info) {
+  
+    int i, nprocs = 0, found = 0;
+    struct kinfo_proc2 *proc, *procs;
+	
+    kvm_t *kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+    if (!kd) {
+        fprintf(stderr, "kvm_openfiles failed: %s\n", errbuf);
         return -1;
-
-    if (*cookie == 0) {
-        if (kd)
-            kvm_close(kd);
-        kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-        if (!kd)
-            return -1;
-
-        procs = kvm_getproc2(kd, KERN_PROC_ALL, 0,
-                             sizeof(struct kinfo_proc2), &proc_count);
-        if (!procs || proc_count == 0) {
-            kvm_close(kd);
-            return -1;
-        }
     }
 
-    if (*cookie >= proc_count) {
+    procs = kvm_getproc2(kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc2), &nprocs);
+    if (!procs) {
+        fprintf(stderr, "kvm_getproc2 failed: %s\n", kvm_geterr(kd));
         kvm_close(kd);
-        kd = NULL;
         return -1;
     }
 
-    struct kinfo_proc2 *proc = &procs[*cookie];
-    (*cookie)++;
+    for (i = 0; i < nprocs; i++) {
+        if (found == *cookie) {
+            proc = &procs[i];
+            *info = (team_info){
+                .team = proc->p_pid,
+                .thread_count = proc->p_nlwps,
+                .image_count = 0, // Not available directly
+                .area_count = 0,  // Not available directly
+                .debugger_nub_thread = 0,
+                .debugger_nub_port = 0,
+                // .argc = proc->p_acflag,
+                .uid = proc->p_uid,
+                .gid = proc->p_gid,
+            };
+            strlcpy(info->args, proc->p_comm, sizeof(info->args));
+            (*cookie)++;
+            kvm_close(kd);
+            return 0;
+        }
+        found++;
+    }
 
-    *info = (team_info){
-        .team                = proc->p_pid,
-        .thread_count        = proc->p_nlwps,
-        .image_count         = 0,
-        .area_count          = 0,
-        .debugger_nub_thread = -1,
-        .debugger_nub_port   = -1,
-    //    .argc                = proc->p_nargv,
-        .uid                 = proc->p_uid,
-        .gid                 = proc->p_gid
-    };
-
-    strlcpy(info->args, proc->p_comm, sizeof(info->args));
-
-    return 0;
+    kvm_close(kd);
+    return -1;
 }
 
 /* 
