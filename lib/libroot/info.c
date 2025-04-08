@@ -42,20 +42,22 @@ get_thread_info(thread_id thread, thread_info *info) {
     int i;
     int lwp_count = 0;
     kvm_t *kd = NULL;
+    struct kinfo_lwp *lwps;
     
     kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
     if (kd == NULL)
-        return -1;
+        return B_BAD_VALUE;
 
+    lwps = kvm_getlwps(kd, getpid(), 0, sizeof(struct kinfo_lwp), &lwp_count);
+    kvm_close(kd);
 
-    struct kinfo_lwp *lwps = kvm_getlwps(kd, getpid(), 0, sizeof(struct kinfo_lwp), &lwp_count);
-    if (!lwps || lwp_count == 0) {
-        kvm_close(kd);
-        return -1;
-    }
-
+    if (!lwps || lwp_count == 0)
+        return B_BAD_VALUE;
+    
     for (i = 0; i < lwp_count; i++) {
+	    
         if (lwps[i].l_lid == (int)thread) {
+		
             *info = (thread_info){
                 .thread = lwps[i].l_lid,
                 .team = lwps[i].l_pid,
@@ -67,46 +69,37 @@ get_thread_info(thread_id thread, thread_info *info) {
                 .stack_base = NULL,
                 .stack_end = NULL
             };
+		
             strlcpy(info->name, lwps[i].l_name, B_OS_NAME_LENGTH);
-            return 0;
+		
+            return B_OK;
         }
     }
 
-    kvm_close(kd);
-    return -1;
+    return B_BAD_VALUE;
 }
 
 status_t 
 get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
-    static kvm_t *kd = NULL;
-    static struct kinfo_lwp *lwps = NULL;
-    static int lwp_count = 0;
+    kvm_t *kd = NULL;
+    struct kinfo_lwp *lwp, *lwps;
+    int lwp_count = 0;
 
-    if (*cookie == 0) {
-        if (kd)
-            kvm_close(kd);
-        kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-        if (!kd)
-            return -1;
+    kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
+    if (!kd)
+        return B_BAD_VALUE;
 
-        lwps = kvm_getlwps(kd, team, 0, sizeof(struct kinfo_lwp), &lwp_count);
-        if (!lwps || lwp_count == 0) {
-            kvm_close(kd);
-            kd = NULL;
-            return -1;
-        }
-    }
+    lwps = kvm_getlwps(kd, team, 0, sizeof(struct kinfo_lwp), &lwp_count);
+    kvm_close(kd);
+        
+    if (!lwps || lwp_count == 0)
+        return B_BAD_VALUE;
 
-    if (*cookie >= lwp_count) {
-        kvm_close(kd);
-        kd = NULL;
-        return -1;  // No more threads
-    }
-
-    struct kinfo_lwp *lwp = &lwps[*cookie];
-    (*cookie)++;
-
-    /* Initialize the thread_info structure using a designated initializer */
+    if (*cookie >= lwp_count)
+        return B_BAD_VALUE;
+    
+    lwp = &lwps[*cookie];
+    
     *info = (thread_info){
         .thread = lwp->l_lid,
         .team = lwp->l_pid,
@@ -119,12 +112,11 @@ get_next_thread_info(team_id team, int32_t *cookie, thread_info *info) {
         .stack_end = NULL
     };
 
-    if (lwp->l_name)
-        strlcpy(info->name, lwp->l_name, B_OS_NAME_LENGTH);
-    else
-        info->name[0] = '\0';
+    strlcpy(info->name, lwp->l_name, B_OS_NAME_LENGTH);
 
-    return 0;
+    (*cookie)++;
+	
+    return B_OK;
 }
 
 
