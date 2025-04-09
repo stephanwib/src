@@ -12,6 +12,7 @@
 #include <sys/proc.h>
 #include <uvm/uvm_extern.h>
 #include <OS.h>
+#include <Errors.h>
 
 static int
 map_lwp_state(int lwp_state) {
@@ -163,12 +164,11 @@ get_team_info(team_id team, team_info *info) {
 status_t
 get_next_team_info(int32_t *cookie, team_info *info) {
   
-    int i, nprocs = 0;
+    int nprocs = 0;
     struct kinfo_proc2 *proc, *procs;
 	
     kvm_t *kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, NULL);
     if (!kd) {
-        fprintf(stderr, "kvm_openfiles failed: %s\n", errbuf);
         return B_BAD_TEAM_ID;
     }
 
