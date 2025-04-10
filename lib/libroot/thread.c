@@ -41,10 +41,12 @@
 
 
 LIST_HEAD(thr_list, haiku_thread);
+pthread_once_t                          init_control           = PTHREAD_ONCE_INIT;
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
 static lwpid_t                          next_lid               = 0; /* HACK: Issue fake LWP IDs */
 static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
+
 
 typedef void* (*pthread_entry) (void*);
 
@@ -109,14 +111,16 @@ free_haiku_thread(struct haiku_thread *ht)
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
+    int error;
     pthread_t thread;
     pthread_attr_t attr;
     haiku_thread *ht;
     char namebuf[NAME_MAX];
     void *func_ptr;
 
-    if (!has_main_thread)
-        init_main_thread();
+    error = pthread_once(&init_control, init_main_thread);
+    if (error)
+        return B_NO_MEMORY;
 
     (void)priority;
     strlcpy(namebuf, name, sizeof(namebuf));
@@ -404,6 +408,10 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     int32_t code;
     void *source;
     struct haiku_thread *ht;
+
+    error = pthread_once(&init_control, init_main_thread);
+    if (error)
+        return B_NO_MEMORY;
     
     ht = find_haiku_thread_byid((thread_id)_lwp_self());
     if (ht == NULL)
