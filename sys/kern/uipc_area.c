@@ -141,8 +141,12 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     bool is_clone = (source_area_id != -1);
     vm_prot_t prot = map_uvm_protection(protection);
 
-    /* XXX: Not sure if the original implementation allows zero size areas.
-    /  We can not map something zero-sized as it crashes the kernel. */
+
+    /* 
+     * XXX: Not sure if the original implementation allows zero size areas.
+     * We can not map something zero-sized as it crashes the kernel. 
+     */
+	
     if (!is_clone && (size == 0))
         return EINVAL;
 
@@ -152,18 +156,26 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
             return error;
     }
 
-    // We are provided a pointer to a user-mode pointer, so load its content into our local pointer
+    /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
     error = copyin(startAddress, &address, sizeof(void *));
     if (error)
         return error;
     va = (vaddr_t)address;
 
-    /* Ensure the requested address and size are aligned */
+
+    /*
+     * Ensure the requested address and size are aligned
+     */
+	
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
         return EINVAL;
-  
-    /* Reject mappings unavailable to user-mode
-    /  Remap options with the same meaning */
+
+	
+    /*
+     * Reject mappings unavailable to user-mode
+     * Remap options with the same meaning 
+     */
+	
     switch (addressSpec) {
 	case AREA_EXACT_ADDRESS:
 		
@@ -185,7 +197,11 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 	default:
  	    return EINVAL;
     }
-	
+
+    /*
+     *  Create and initialize karea control structure
+     */
+
     ka = kmem_alloc(sizeof(struct karea), KM_SLEEP);
     if (ka == NULL)
         return ENOMEM;
@@ -212,6 +228,11 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 	goto out;
     }
 
+
+    /*
+     *  Obtain uobj from the cloned area, or create a new one.
+     */
+	
     if (is_clone) {
         struct karea *source_area = karea_lookup_byid(source_area_id);  
         if (source_area == NULL) {
@@ -231,6 +252,11 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
         }
     }
 
+
+    /*
+     *  Map the uobj
+     */
+
     uao_reference(ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
@@ -241,14 +267,22 @@ printf("Error in uvm_map\n");
     }
     ka->ka_va = va;
 
-    /* If the address specification was exact but the address was adjusted, unmap */
+	
+    /* 
+     * If the address specification was exact but the address was adjusted, unmap
+     */
+	
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
 printf("Error requested adress does not match\n");
         error = ENOMEM;
 	goto deallocate_out;
     }
 
-    /* Wire pages if requested */
+	
+    /* 
+     * Wire pages if requested
+     */
+
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, ka->ka_size, NULL);
         if (error) {
@@ -256,6 +290,11 @@ printf("Error in wirepages\n")
             goto deallocate_out;
         }
     }
+
+	
+    /*
+     *  Assign the next free area id.
+     */
 
     do {
         next_area_id++;
@@ -266,6 +305,11 @@ printf("Error in wirepages\n")
 
     } while (__predict_false(NULL != karea_lookup_byid(next_area_id)));
     ka->ka_id = next_area_id;
+
+	
+    /*
+     *  Copyout mapped address, update area count and list of areas.
+     */
 
     error = copyout(&va, startAddress, sizeof(void *));
     if (error) 
