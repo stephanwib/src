@@ -45,7 +45,7 @@ static kmutex_t                 area_mutex                __cacheline_aligned;
 static LIST_HEAD(, karea)       karea_list                __cacheline_aligned;
 
 /* for exithook_establish() */
-static void				*eh_cookie;
+static void                     *eh_cookie;
 
 static void karea_exithook(struct proc *p, void *v);
 
@@ -123,7 +123,7 @@ map_uvm_protection(uint32_t protection)
     if (protection & AREA_EXECUTE_AREA)
         uvm_p |= VM_PROT_EXECUTE;
 
-	return uvm_p;
+    return uvm_p;
 }
 
 static int
