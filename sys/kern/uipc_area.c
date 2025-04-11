@@ -232,7 +232,6 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     }
 
     uao_reference(ka->ka_uobj);
-printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", (void*)va, ka->ka_size, ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
@@ -240,6 +239,7 @@ printf("Error in uvm_map\n");
         uao_detach(ka->ka_uobj);
         goto out;
     }
+    ka->ka_va = va;
 
     /* If the address specification was exact but the address was adjusted, unmap */
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
@@ -257,8 +257,6 @@ printf("Error in wirepages\n")
         }
     }
 
-    ka->ka_va = va;
-
     do {
         next_area_id++;
 
@@ -269,13 +267,16 @@ printf("Error in wirepages\n")
     } while (__predict_false(NULL != karea_lookup_byid(next_area_id)));
     ka->ka_id = next_area_id;
 
+    error = copyout(&va, startAddress, sizeof(void *));
+    if (error) 
+        goto deallocate_out;
+
     LIST_INSERT_HEAD(&karea_list, ka, ka_entry);
     area_total_count++;
 
     mutex_exit(&area_mutex);
 
     *retval = ka->ka_id;
-    error = copyout(&va, startAddress, sizeof(void *));
     return error;
 
 
