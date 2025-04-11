@@ -132,13 +132,14 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
                      area_id source_area_id, register_t *retval)
 {
     int error, flags = 0;
+    struct karea *ka;
     size_t namelen = 0;
-    vm_prot_t prot = VM_PROT_NONE;
     vaddr_t va;
     void *address;
     char namebuf[AREA_MAX_NAME_LENGTH];
     struct karea *ka;
     bool is_clone = (source_area_id != -1);
+    vm_prot_t prot = map_uvm_protection(protection);
 
     /* XXX: Not sure if the original implementation allows zero size areas.
     /  We can not map something zero-sized as it crashes the kernel. */
@@ -184,14 +185,6 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
 	default:
  	    return EINVAL;
     }
-
-    /* Map area protection flags to UVM flags */
-    if (protection & AREA_READ_AREA)
-        prot |= VM_PROT_READ;
-    if (protection & AREA_WRITE_AREA)
-        prot |= VM_PROT_WRITE;
-    if (protection & AREA_EXECUTE_AREA)
-        prot |= VM_PROT_EXECUTE;
 	
     ka = kmem_alloc(sizeof(struct karea), KM_SLEEP);
     if (ka == NULL)
@@ -495,17 +488,10 @@ sys__set_area_protection(struct lwp *l, const struct sys__set_area_protection_ar
 
     area_id id = SCARG(uap, id);
     uint32_t newProtection = SCARG(uap, newProtection);
-    struct karea *ka;
-    vm_prot_t prot = VM_PROT_NONE;
     int error = 0;
-
-    if (newProtection & AREA_READ_AREA)
-        prot |= VM_PROT_READ;
-    if (newProtection & AREA_WRITE_AREA)
-        prot |= VM_PROT_WRITE;
-    if (newProtection & AREA_EXECUTE_AREA)
-        prot |= VM_PROT_EXECUTE;
-
+    struct karea *ka;
+    vm_prot_t prot = map_uvm_protection(newProtection);
+    
     mutex_enter(&area_mutex);
 
     ka = karea_lookup_byid(id);
