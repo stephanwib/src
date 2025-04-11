@@ -213,19 +213,15 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     }
 
     if (is_clone) {
-printf("enter clone\n");
-        struct karea *source_area = karea_lookup_byid(source_area_id);
-printf("pointer to source: %p\n", source_area);        
+        struct karea *source_area = karea_lookup_byid(source_area_id);  
         if (source_area == NULL) {
             error = EINVAL;
             goto out;
         }
 
-	    KASSERT(source_area->ka_uobj != NULL);
-            ka->ka_uobj = source_area->ka_uobj;
-printf("size of source area: %ld\n", source_area->ka_size);
-	    ka->ka_size = source_area->ka_size;
-	    
+	KASSERT(source_area->ka_uobj != NULL);
+        ka->ka_uobj = source_area->ka_uobj;
+	ka->ka_size = source_area->ka_size;
     }
     else {
         ka->ka_uobj = uao_create(size, 0);
@@ -248,9 +244,8 @@ printf("Error in uvm_map\n");
     /* If the address specification was exact but the address was adjusted, unmap */
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
 printf("Error requested adress does not match\n");
-        uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
         error = ENOMEM;
-	goto out;
+	goto deallocate_out;
     }
 
     /* Wire pages if requested */
@@ -258,8 +253,7 @@ printf("Error requested adress does not match\n");
         error = uvm_obj_wirepages(ka->ka_uobj, 0, ka->ka_size, NULL);
         if (error) {
 printf("Error in wirepages\n")
-            uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-            goto out;
+            goto deallocate_out;
         }
     }
 
@@ -284,10 +278,14 @@ printf("Error in wirepages\n")
     error = copyout(&va, startAddress, sizeof(void *));
     return error;
 
+
+deallocate_out:
+    uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
+	
 out:
     mutex_exit(&area_mutex);
     kmem_free(ka, sizeof(struct karea));
-    return ENOSPC;
+    return error;
 }
 
 static void
