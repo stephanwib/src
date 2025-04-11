@@ -286,6 +286,27 @@ printf("Error in wirepages\n");
 }
 
 static void
+area_free(struct karea *ka, struct proc *p)
+{
+    KASSERT(mutex_owned(&area_mutex));
+	
+    uvm_deallocate(&p->p_vmspace->vm_map, ka->ka_va, ka->ka_size);
+
+    area_total_count--;
+
+    /* We need to check if we are the last proc unmapping the memory object. If so, we   /
+    /  need to detach the final reference so the memory is freed.  
+    */
+    if (NULL == karea_lookup_byuobj(ka->ka_uobj)) {
+printf("delete_area: freeing last reference\n");
+        uao_detach(ka->ka_uobj);
+    }
+
+    kmem_free(ka, sizeof(struct karea));
+
+}
+
+static void
 karea_exithook(struct proc *p, void *v)
 {
     struct karea *ka, *ka_safe;
@@ -427,27 +448,10 @@ sys__delete_area(struct lwp *l, const struct sys__delete_area_args *uap, registe
     }
     
 
-printf("delete_area: start: %p, size: %ld\n", (void*)ka->ka_va, ka->ka_size);
-    uvm_deallocate(&l->l_proc->p_vmspace->vm_map, ka->ka_va, ka->ka_size);
-
     LIST_REMOVE(ka, ka_entry);
-    area_total_count--;
-
-    /* We need to check if we are the last proc /
-    /  unmapping the memory object. If so, we   /
-    /  need to detach the final reference so    /
-    /  the memory is freed.                    */
-
-    if (NULL == karea_lookup_byuobj(ka->ka_uobj)) {
-printf("delete_area: freeing last reference\n");
-        uao_detach(ka->ka_uobj);
-    }
-
-
+    area_free(ka, l->l_proc);
     mutex_exit(&area_mutex);
-
-    kmem_free(ka, sizeof(struct karea));
-
+	
     return 0;
 }
 
