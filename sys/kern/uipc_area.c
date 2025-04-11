@@ -208,9 +208,8 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     mutex_enter(&area_mutex);
 
     if (area_total_count >= area_max) {
-        mutex_exit(&area_mutex);
-        kmem_free(ka, sizeof(struct karea));
-        return ENOSPC;
+        error = ENOSPC;
+	goto out;
     }
 
     if (is_clone) {
@@ -218,9 +217,8 @@ printf("enter clone\n");
         struct karea *source_area = karea_lookup_byid(source_area_id);
 printf("pointer to source: %p\n", source_area);        
         if (source_area == NULL) {
-	    mutex_exit(&area_mutex);
-            kmem_free(ka, sizeof(struct karea));
-            return EINVAL;
+            error = EINVAL;
+            goto out;
         }
 
 	    KASSERT(source_area->ka_uobj != NULL);
@@ -232,9 +230,8 @@ printf("size of source area: %ld\n", source_area->ka_size);
     else {
         ka->ka_uobj = uao_create(size, 0);
         if (ka->ka_uobj == NULL) {
-	    mutex_exit(&area_mutex);
-            kmem_free(ka, sizeof(struct karea));
-            return ENOMEM;
+            error = ENOMEM;
+            goto out;
         }
     }
 
@@ -244,30 +241,25 @@ printf("about to map area. Address: %p, Size: %ld, UVM Obj: %p\n", (void*)va, ka
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
     if (error) {
 printf("Error in uvm_map\n");
-	mutex_exit(&area_mutex);
         uao_detach(ka->ka_uobj);
-        kmem_free(ka, sizeof(struct karea));
-        return error;
+        goto out;
     }
 
     /* If the address specification was exact but the address was adjusted, unmap */
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
 printf("Error requested adress does not match\n");
-    	mutex_exit(&area_mutex);
         uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-        kmem_free(ka, sizeof(struct karea));
-        return ENOMEM;
+        error = ENOMEM;
+	goto out;
     }
 
     /* Wire pages if requested */
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, ka->ka_size, NULL);
         if (error) {
-printf("Error in wirepages\n");
-	    mutex_exit(&area_mutex);
+printf("Error in wirepages\n")
             uvm_deallocate(&l->l_proc->p_vmspace->vm_map, va, ka->ka_size);
-            kmem_free(ka, sizeof(struct karea));
-            return error;
+            goto out;
         }
     }
 
@@ -291,6 +283,11 @@ printf("Error in wirepages\n");
     *retval = ka->ka_id;
     error = copyout(&va, startAddress, sizeof(void *));
     return error;
+
+out:
+    mutex_exit(&area_mutex);
+    kmem_free(ka, sizeof(struct karea));
+    return ENOSPC;
 }
 
 static void
