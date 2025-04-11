@@ -111,6 +111,21 @@ fill_area_info(const struct karea *ka, struct area_info *info)
     (void)strlcpy(info->name, ka->ka_name, AREA_MAX_NAME_LENGTH);
 }
 
+static vm_prot_t
+map_uvm_protection(uint32_t protection)
+{
+    vm_prot_t uvm_p = VM_PROT_NONE;
+
+    if (protection & AREA_READ_AREA)
+        uvm_p |= VM_PROT_READ;
+    if (protection & AREA_WRITE_AREA)
+        uvm_p |= VM_PROT_WRITE;
+    if (protection & AREA_EXECUTE_AREA)
+        uvm_p |= VM_PROT_EXECUTE;
+
+	return uvm_p;
+}
+
 static int
 create_or_clone_area(struct lwp *l, const char *name, void **startAddress, 
                      uint32_t addressSpec, size_t size, uint32_t lock, uint32_t protection, 
