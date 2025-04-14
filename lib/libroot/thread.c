@@ -66,6 +66,7 @@ init_main_thread(void)
         .ht_lid = (lwpid_t)getpid(),
 
         .ht_message = THR_MSG_ABSENT,
+        .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
 
@@ -146,6 +147,7 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
         .ht_pt = thread,
         .ht_lid = next_lid++,
         .ht_message = THR_MSG_ABSENT,
+        .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
 
