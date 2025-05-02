@@ -137,7 +137,6 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     vaddr_t va;
     void *address;
     char namebuf[AREA_MAX_NAME_LENGTH];
-    struct karea *ka;
     bool is_clone = (source_area_id != -1);
     vm_prot_t prot = map_uvm_protection(protection);
 
@@ -286,7 +285,7 @@ printf("Error requested adress does not match\n");
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, ka->ka_size, NULL);
         if (error) {
-printf("Error in wirepages\n")
+printf("Error in wirepages\n");
             goto deallocate_out;
         }
     }

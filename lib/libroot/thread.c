@@ -31,6 +31,7 @@
 #include "Errors.h"
 #include "thread.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -279,7 +280,8 @@ kill_thread(thread_id id)
 status_t
 on_exit_thread(void (*callback)(void *), void *data)
 {
-    // pthread_cleanup_push(callback, data);
+    printf("Callback: %p\n", callback);
+    //pthread_cleanup_push(callback, data);
 
     return B_OK;
 }
@@ -405,6 +407,7 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 int32_t
 receive_data(thread_id *sender, void *buffer, size_t bufferSize)
 {
+    int error;
     int32_t code;
     void *source;
     struct haiku_thread *ht;

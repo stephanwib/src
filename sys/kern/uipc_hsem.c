@@ -290,7 +290,7 @@ khsem_release(sem_id id, int32_t count, uint32_t flags) {
 static void
 hsem_exithook(struct proc *p, void *v)
 {
-    printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
+    //printf("Exithook: %s, %d\n", p->p_path, p->p_pid);
 
     struct khsem *khs_this, *khs_safe;
 
