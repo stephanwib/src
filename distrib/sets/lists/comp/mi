@@ -29585,3 +29585,5 @@
 ./usr/include/fs_info.h              comp-c-include
 ./usr/include/TypeConstants.h        comp-c-include
 ./usr/include/image.h                comp-c-include
+./usr/include/SupportDefs.h          comp-c-include
+./usr/include/StorageDefs.h          comp-c-include
