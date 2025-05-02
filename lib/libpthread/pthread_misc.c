@@ -162,6 +162,20 @@ pthread_kill(pthread_t thread, int sig)
 }
 
 int
+pthread_getlwpid_np(pthread_t thread, int *lwp)
+{
+	pthread__error(EINVAL, "Invalid thread",
+	    thread->pt_magic == PT_MAGIC);
+
+	if (pthread__find(thread) != 0)
+		return ESRCH;
+	
+	*lwp = (int)thread->pt_lid;
+
+	return 0;
+}
+
+int
 pthread_sigmask(int how, const sigset_t *set, sigset_t *oset)
 {
 	if (_sys___sigprocmask14(how, set, oset))

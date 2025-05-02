@@ -12,8 +12,8 @@
 #include <sys/types.h>
 #include <stdbool.h>
 
-// #include <SupportDefs.h>
-// #include <StorageDefs.h>
+#include <SupportDefs.h>
+#include <StorageDefs.h>
 
 
 #ifdef __cplusplus
@@ -27,23 +27,22 @@ extern "C" {
 #define B_OS_NAME_LENGTH	32
 #define B_INFINITE_TIMEOUT	(9223372036854775807LL)
 
-#define B_PAGE_SIZE			PAGESIZE
+#define B_PAGE_SIZE		PAGESIZE
 
 enum {
-	B_TIMEOUT						= 0x8,	/* relative timeout */
+	B_TIMEOUT					= 0x8,	/* relative timeout */
 	B_RELATIVE_TIMEOUT				= 0x8,	/* fails after a relative timeout
 												with B_TIMED_OUT */
 	B_ABSOLUTE_TIMEOUT				= 0x10,	/* fails after an absolute timeout
 												with B_TIMED_OUT */
 
 	/* experimental Haiku only API */
-	B_TIMEOUT_REAL_TIME_BASE		= 0x40,
-	B_ABSOLUTE_REAL_TIME_TIMEOUT	= B_ABSOLUTE_TIMEOUT
-										| B_TIMEOUT_REAL_TIME_BASE
+	B_TIMEOUT_REAL_TIME_BASE			= 0x40,
+	B_ABSOLUTE_REAL_TIME_TIMEOUT	= B_ABSOLUTE_TIMEOUT|B_TIMEOUT_REAL_TIME_BASE
 };
 
 
-/* Types */
+/* Types
 
 typedef int8_t int8;
 typedef int16_t int16;
@@ -55,6 +54,8 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
+*/
+
 typedef int64_t bigtime_t;
 typedef int64_t nanotime_t;
 typedef int status_t;
@@ -63,10 +64,6 @@ typedef int32 area_id;
 typedef int32 port_id;
 typedef int32 sem_id;
 typedef int32 team_id;
-/* XXX: Convert thread_id to unsigned long so it can take a pthread_t */
-// typedef struct __pthread_st* thread_id;
-// typedef unsigned long thread_id;
-
 typedef int32 thread_id;
 
 /* Areas */

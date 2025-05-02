@@ -162,6 +162,7 @@ int	pthread_setname_np(pthread_t, const char *, void *);
 int 	pthread_attr_setcreatesuspend_np(pthread_attr_t *);
 int	pthread_suspend_np(pthread_t);
 int	pthread_resume_np(pthread_t);
+int	pthread_getlwpid_np(pthread_t thread, int *lwp);
 
 unsigned int	pthread_curcpu_np(void);
 
