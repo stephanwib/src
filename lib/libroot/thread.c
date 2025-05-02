@@ -45,7 +45,7 @@ LIST_HEAD(thr_list, haiku_thread);
 pthread_once_t                          init_control           = PTHREAD_ONCE_INIT;
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
-static lwpid_t                          next_lid               = 0; /* HACK: Issue fake LWP IDs */
+//static lwpid_t                          next_lid               = 0; /* HACK: Issue fake LWP IDs */
 static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
 
 
@@ -146,11 +146,13 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     ht = malloc(sizeof(haiku_thread));
     *ht = (struct haiku_thread) {
         .ht_pt = thread,
-        .ht_lid = next_lid++,
+        //.ht_lid = next_lid++,
         .ht_message = THR_MSG_ABSENT,
         .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
+
+    error = pthread_getlwpid_np(thread, &ht->ht_lid);
 
     pthread_cond_init(&ht->ht_cv, NULL);
 
