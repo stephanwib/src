@@ -46,12 +46,12 @@ enum sem_flags {
 
 #ifndef _OS_H
 typedef int32_t sem_id;
-typedef int64_t thread_id;
+typedef int32_t thread_id;
 
 typedef struct sem_info {
-	sem_id  		sem;
-	pid_t       pid;
-	char		    name[SEM_MAX_NAME_LENGTH];
+	sem_id            sem;
+	pid_t             pid;
+	char		  name[SEM_MAX_NAME_LENGTH];
 	int32_t		  count;
 	thread_id	  latest_holder;
 } sem_info;
