@@ -24,10 +24,10 @@ extern "C" {
 
 #define B_FILE_NAME_LENGTH  NAME_MAX
 
-#define B_OS_NAME_LENGTH	32
+#define B_OS_NAME_LENGTH	NAME_MAX
 #define B_INFINITE_TIMEOUT	(9223372036854775807LL)
 
-#define B_PAGE_SIZE		PAGESIZE
+#define B_PAGE_SIZE		4096 /* XXX: Where to get from? */
 
 enum {
 	B_TIMEOUT					= 0x8,	/* relative timeout */
@@ -41,20 +41,6 @@ enum {
 	B_ABSOLUTE_REAL_TIME_TIMEOUT	= B_ABSOLUTE_TIMEOUT|B_TIMEOUT_REAL_TIME_BASE
 };
 
-
-/* Types
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-*/
 
 typedef int64_t bigtime_t;
 typedef int64_t nanotime_t;
