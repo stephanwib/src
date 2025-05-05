@@ -43,13 +43,14 @@
 status_t
 kill_team(team_id team)
 {
-	int err = B_OK;
+	int error = B_OK;
 	 
-	err = kill((pid_t)team, SIGKILL);
-	if (err < 0 && errno == ESRCH)
-		err = B_BAD_TEAM_ID;
+	error = kill((pid_t)team, SIGKILL);
+	
+	if (error < 0 && errno == ESRCH)
+		error = B_BAD_TEAM_ID;
 
-	return err;
+	return error;
 }
 
 
