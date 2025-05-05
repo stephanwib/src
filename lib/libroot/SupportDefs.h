@@ -28,6 +28,24 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
+
+/* XXX: taken from Haiku config/types.h */
+
+#define __HAIKU_ARCH_64_BIT
+
+/* printf()/scanf() format prefixes */
+#define	__HAIKU_STD_PRI_PREFIX_32	""
+#ifdef __HAIKU_ARCH_64_BIT
+#	define	__HAIKU_STD_PRI_PREFIX_64	"l"
+#else
+#	define	__HAIKU_STD_PRI_PREFIX_64	"ll"
+#endif
+
+#define __HAIKU_PRI_PREFIX_ADDR			"l"
+
+
+
+
 /*
 
 // fixed-size integer types
