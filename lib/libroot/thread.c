@@ -237,13 +237,17 @@ wait_for_thread(thread_id id, status_t *ret)
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
-        return B_BAD_THREAD_ID;   
+        return B_BAD_THREAD_ID;
+
+    pthread_mutex_unlock(&threadss_lock);
+    /* XXX: Possible race with kill_thread() ? */
 	
     if (pthread_join(ht->ht_pt, (void**)ret) == 0)
         error = B_OK;
     else
         error = B_BAD_THREAD_ID;
- 
+
+    pthread_mutex_lock(&threadss_lock);
     if (ht->ht_waiters > 0) {
         ht->ht_state = THR_ENDING;
 	pthread_cond_broadcast(&ht->ht_cv);
@@ -297,10 +301,12 @@ find_thread(const char *name)
 
     if (name == NULL) {
 
+/*
         lwpid_t lid;
 	lid = _lwp_self();
+*/
 
-	return (thread_id)lid;
+	return (thread_id) _lwp_self();
     }
 
     pthread_mutex_lock(&threadss_lock);
