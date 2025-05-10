@@ -1,4 +1,10 @@
 
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <OS.h>
+
+
 void
 debugger(const char *message)
 {

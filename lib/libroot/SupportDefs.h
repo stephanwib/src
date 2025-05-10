@@ -18,7 +18,7 @@
 
 // Types via NetBSD definitions
 
-typedef vaddr_t addr_t;  /* XXX: Normally defined elsewhere I think */
+typedef void* addr_t;  /* XXX: Normally defined elsewhere I think */
 
 typedef int8_t int8;
 typedef int16_t int16;

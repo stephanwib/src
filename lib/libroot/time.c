@@ -62,10 +62,3 @@ void set_real_time_clock(unsigned long new_time) {
     (void)settimeofday(&tv, &tz);
 }
 
-status_t
-set_timezone(const char *timezone)
-{
-    printf("%s unimplemented\n", __func__);
-    
-    return B_ERROR;
-}
