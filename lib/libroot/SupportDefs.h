@@ -33,7 +33,9 @@ typedef uint64_t uint64;
 
 /* XXX: taken from Haiku config/types.h */
 
-#define __HAIKU_ARCH_64_BIT
+#if defined(__x86_64__) || defined(__aarch64__)
+#    define __HAIKU_ARCH_64_BIT
+#endif
 
 /* printf()/scanf() format prefixes */
 #define	__HAIKU_STD_PRI_PREFIX_32	""
