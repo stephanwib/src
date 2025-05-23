@@ -18,8 +18,8 @@ class KMessage;
 
 
 port_id		get_launch_daemon_port();
-status_t	send_request_to_launch_daemon(KMessage& request, KMessage& reply);
-status_t	get_launch_data(const char* signature, KMessage& data);
+// status_t	send_request_to_launch_daemon(KMessage& request, KMessage& reply);
+// status_t	get_launch_data(const char* signature, KMessage& data);
 
 
 }	// namespace BPrivate
