@@ -349,155 +349,154 @@ is_computer_on_fire(void)
 */
 
 
-status_t 
-get_cpu_topology_info(cpu_topology_node_info* topologyInfos, uint32* topologyInfoCount)
+status_t get_cpu_topology_info(cpu_topology_node_info* topologyInfos,
+						uint32* topologyInfoCount)
 {
-*topologyInfoCount = 3;
+	*topologyInfoCount = 3;
 
-if (topologyInfos == NULL)
-return B_ERROR;
+	if (topologyInfos == NULL)
+		return B_ERROR;
 
-topologyInfos[0].type = B_TOPOLOGY_ROOT;
+	topologyInfos[0].type = B_TOPOLOGY_ROOT;
 
-#if defined(__x86_64__) || defined(_M_X64)
-topologyInfos[0].data.root.platform = B_CPU_x86_64;
-#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
-topologyInfos[0].data.root.platform = B_CPU_x86;
-#elif defined(__aarch64__) || defined(_M_ARM64)
-topologyInfos[0].data.root.platform = B_CPU_ARM_64;
-#elif defined(mips) || defined(__mips__) || defined(__mips)
-topologyInfos[0].data.root.platform = B_CPU_MIPS;
-#elif defined(__sh__)
-topologyInfos[0].data.root.platform = B_CPU_SH;
-#elif defined(__powerpc) || defined(__powerpc__) || defined(__powerpc64__) || defined(__POWERPC__) || defined(__ppc__) || defined(__PPC__) || defined(_ARCH_PPC)
-topologyInfos[0].data.root.platform = B_CPU_PPC;
-#elif defined(__PPC64__) || defined(__ppc64__) || defined(_ARCH_PPC64)
-topologyInfos[0].data.root.platform = B_CPU_PPC_64;
-#elif defined(__sparc__) || defined(__sparc)
-topologyInfos[0].data.root.platform = B_CPU_SPARC;
-#elif defined(__m68k__)
-topologyInfos[0].data.root.platform = B_CPU_M68K,
-#else
-topologyInfos[0].data.root.platform = B_CPU_UNKNOWN;
-#endif
+	#if defined(__x86_64__) || defined(_M_X64)
+	topologyInfos[0].data.root.platform = B_CPU_x86_64;
+	#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+	topologyInfos[0].data.root.platform = B_CPU_x86;
+	#elif defined(__aarch64__) || defined(_M_ARM64)
+	topologyInfos[0].data.root.platform = B_CPU_ARM_64;
+	#elif defined(mips) || defined(__mips__) || defined(__mips)
+	topologyInfos[0].data.root.platform = B_CPU_MIPS;
+	#elif defined(__sh__)
+	topologyInfos[0].data.root.platform = B_CPU_SH;
+	#elif defined(__powerpc) || defined(__powerpc__) || defined(__powerpc64__) || defined(__POWERPC__) || defined(__ppc__) || defined(__PPC__) || defined(_ARCH_PPC)
+	topologyInfos[0].data.root.platform = B_CPU_PPC;
+	#elif defined(__PPC64__) || defined(__ppc64__) || defined(_ARCH_PPC64)
+	topologyInfos[0].data.root.platform = B_CPU_PPC_64;
+	#elif defined(__sparc__) || defined(__sparc)
+	topologyInfos[0].data.root.platform = B_CPU_SPARC;
+	#elif defined(__m68k__)
+	topologyInfos[0].data.root.platform = B_CPU_M68K,
+	#else
+	topologyInfos[0].data.root.platform = B_CPU_UNKNOWN;
+	#endif
 
-topologyInfos[1].type = B_TOPOLOGY_PACKAGE;
+	topologyInfos[1].type = B_TOPOLOGY_PACKAGE;
+	
+	#if defined(__x86_64__) || defined(_M_X64)
+	topologyInfos[1].data.package.vendor = B_CPU_VENDOR_INTEL;
+	#elif defined(__aarch64__) || defined(_M_ARM64)
+	topologyInfos[1].data.package.vendor = B_CPU_VENDOR_ARM;
+	#endif
 
-#if defined(__x86_64__) || defined(_M_X64)
-topologyInfos[1].data.package.vendor = B_CPU_VENDOR_INTEL;
-#elif defined(__aarch64__) || defined(_M_ARM64)
-topologyInfos[1].data.package.vendor = B_CPU_VENDOR_ARM;
-#endif
+	topologyInfos[2].type = B_TOPOLOGY_CORE;
 
-topologyInfos[2].type = B_TOPOLOGY_CORE;
+	FILE *cpuinfo = fopen("/proc/cpuinfo", "r");
+	if (cpuinfo != NULL)
+	{
+		char line[256];
+		float speed;
+		int model;
 
-FILE *cpuinfo = fopen("/proc/cpuinfo", "r");
-if (cpuinfo != NULL)
-{
-char line[256];
-float speed;
-int model;
+		while (fgets(line, sizeof(line), cpuinfo))
+		{
+			if (sscanf(line, "cpu MHz		: %f", &speed) == 1)
+			{
+				topologyInfos[2].data.core.default_frequency = (uint64)(speed * 1000000.0);
+			}
 
-while (fgets(line, sizeof(line), cpuinfo))
-{
-if (sscanf(line, "cpu MHz		: %f", &speed) == 1)
-{
-topologyInfos[2].data.core.default_frequency = (uint64)(speed * 1000000.0);
+			if (sscanf(line, "model		: %d", &model) == 1)
+			{
+				topologyInfos[2].data.core.model = model;
+			}
+		}
+
+		fclose(cpuinfo);
+	}
+
+	return B_OK;
 }
 
-if (sscanf(line, "model		: %d", &model) == 1)
+
+status_t _get_cpu_info_etc(uint32 firstCPU, uint32 cpuCount, cpu_info* info, size_t size)
 {
-topologyInfos[2].data.core.model = model;
-}
-}
+	if (info == NULL)
+		return B_ERROR;
 
-fclose(cpuinfo);
-}
+	if (size != sizeof(cpu_info))
+		return B_ERROR;
 
-return B_OK;
-}
+	FILE*         fp;
+	int           ncpu;
+	char          buf[80];
+	char*         p;
 
+	ncpu = 1;
+	if( (fp = fopen( "/proc/cpuinfo", "r" )) != NULL )
+	{
+		while( fgets( buf, sizeof(buf), fp ) != NULL )
+		{
+			if ( strncmp( buf, "processor\t", 10 ) == 0 )
+			{
+				ncpu++;
+			}
 
-status_t 
-_get_cpu_info_etc(uint32 firstCPU, uint32 cpuCount, cpu_info* info, size_t size)
-{
-if (info == NULL)
-return B_ERROR;
-
-if (size != sizeof(cpu_info))
-return B_ERROR;
-
-FILE*         fp;
-int           ncpu;
-char          buf[80];
-char*         p;
-
-ncpu = 1;
-if( (fp = fopen( "/proc/cpuinfo", "r" )) != NULL )
-{
-while( fgets( buf, sizeof(buf), fp ) != NULL )
-{
-if ( strncmp( buf, "processor\t", 10 ) == 0 )
-{
-ncpu++;
-}
-
-if (strncmp( buf, "cpu MHz\t", 8 ) == 0)
-{
-p = strchr( buf, ':' );
-if( p != NULL )
-{
-info->current_frequency = atoi( p+2 );
-}
-}
-}
-fclose( fp );
-}
+			if (strncmp( buf, "cpu MHz\t", 8 ) == 0)
+			{
+				p = strchr( buf, ':' );
+				if( p != NULL )
+				{
+					info->current_frequency = atoi( p+2 );
+				}
+			}
+		}
+		fclose( fp );
+	}
 
 #if 0
-bigtime_t     systime;
-bigtime_t     idletime;
-unsigned long n1, n2, n3, nidle;
+	bigtime_t     systime;
+	bigtime_t     idletime;
+	unsigned long n1, n2, n3, nidle;
 
-psInfo->cpu_count = ncpu;
+	psInfo->cpu_count = ncpu;
 
-if( (fp = fopen( "/proc/stat", "r" )) != NULL )
-{
-while( fgets( buf, sizeof(buf), fp ) != NULL )
-{
-if( ncpu == 1 && strncmp( buf, "cpu ", 4 ) == 0 )
-{
-/* there are no cpuN lines, use the overall stat */
-sscanf( buf+4, "%lu %lu %lu %lu", &n1, &n2, &n3, &nidle );
-idletime = (bigtime_t)nidle * 10000LL;
-info->cpu_infos[0].active_time = systime - idletime;
-break;
-}
+	if( (fp = fopen( "/proc/stat", "r" )) != NULL )
+	{
+		while( fgets( buf, sizeof(buf), fp ) != NULL )
+		{
+			if( ncpu == 1 && strncmp( buf, "cpu ", 4 ) == 0 )
+			{
+				/* there are no cpuN lines, use the overall stat */
+				sscanf( buf+4, "%lu %lu %lu %lu", &n1, &n2, &n3, &nidle );
+				idletime = (bigtime_t)nidle * 10000LL;
+				info->cpu_infos[0].active_time = systime - idletime;
+				break;
+			}
 
-if( strncmp( buf, "cpu", 3 ) == 0 )
-{
-sscanf( buf+3, "%d %lu %lu %lu %lu", &ncpu, &n1, &n2, &n3, &nidle );
-if( ncpu < info->cpu_count )
-{
-idletime = (bigtime_t)nidle * 10000LL;
-info->cpu_infos[ncpu].active_time = systime - idletime;
-}
-}
-}
-fclose( fp );
-}
+			if( strncmp( buf, "cpu", 3 ) == 0 )
+			{
+				sscanf( buf+3, "%d %lu %lu %lu %lu", &ncpu, &n1, &n2, &n3, &nidle );
+				if( ncpu < info->cpu_count )
+				{
+					idletime = (bigtime_t)nidle * 10000LL;
+					info->cpu_infos[ncpu].active_time = systime - idletime;
+				}
+			}
+		}
+		fclose( fp );
+	}
 #endif
 
-
-info->enabled = true;
-return B_OK;
+	info->enabled = true;
+	return B_OK;
 }
+
 
 #if defined(__i386__) || defined(__x86_64__)
 status_t
 get_cpuid(cpuid_info *info, uint32 eaxRegister, uint32 cpuNum)
 {
-return B_ERROR;
+	return B_ERROR;
 }
 #endif
 

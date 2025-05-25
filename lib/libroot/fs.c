@@ -128,6 +128,16 @@ int	fs_stat_attr(int fd, const char *attribute, struct attr_info *attrInfo)
 }
 
 
+/*
+int
+fs_stat_index(dev_t device, const char *name, struct index_info *indexInfo)
+{
+	//XXX not implemented, comes from kerne/fs_attr.h?
+	return B_ERROR;
+}
+
+*/
+
 status_t _kstart_watching_vnode_(dev_t device, ino_t node,
 											uint32 flags, port_id port,
 											int32 handlerToken)
