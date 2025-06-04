@@ -1,4 +1,4 @@
-ROOT.a		/		ffs	rw		1 1
+ROOT.a		/		ffs	rw,log		1 1
 ROOT.b		none		none	sw		0 0
 ptyfs		/dev/pts	ptyfs	rw		0 0
 kernfs		/kern		kernfs	rw,noauto	0 0

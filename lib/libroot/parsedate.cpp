@@ -4,7 +4,7 @@
  */
 
 
-#include <parsedate.h>
+#include "parsedate.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include <OS.h>
+#include "OS.h"
 
 
 #define TRACE_PARSEDATE 0

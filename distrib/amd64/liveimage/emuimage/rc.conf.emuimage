@@ -30,6 +30,7 @@ resize_root_flags="-p"
 resize_root_postcmd="/sbin/reboot -n"
 dhcpcd=YES
 sshd=YES
+wscons=YES
 ec2_init=$(is_ec2)
 
 if checkyesno ec2_init; then
