@@ -38,11 +38,11 @@ typedef uint64_t uint64;
 #endif
 
 /* printf()/scanf() format prefixes */
-#define	__HAIKU_STD_PRI_PREFIX_32	""
+#define	__HAIKU_PRI_PREFIX_32	""
 #ifdef __HAIKU_ARCH_64_BIT
-#	define	__HAIKU_STD_PRI_PREFIX_64	"l"
+#	define	__HAIKU_PRI_PREFIX_64	"l"
 #else
-#	define	__HAIKU_STD_PRI_PREFIX_64	"ll"
+#	define	__HAIKU_PRI_PREFIX_64	"ll"
 #endif
 
 #define __HAIKU_PRI_PREFIX_ADDR			"l"
