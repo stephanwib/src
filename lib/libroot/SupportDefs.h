@@ -13,12 +13,13 @@
 #include <Errors.h>
 
 #include <inttypes.h>
+#include <stdint.h>
 #include <sys/types.h>
 
 
 // Types via NetBSD definitions
 
-typedef void* addr_t;  /* XXX: Normally defined elsewhere I think */
+typedef uintptr_t addr_t;  /* XXX: Normally defined elsewhere I think */
 
 typedef int8_t int8;
 typedef int16_t int16;

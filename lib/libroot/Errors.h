@@ -5,7 +5,7 @@
 #ifndef _ERRORS_H
 #define _ERRORS_H
 
-
+#include <errno.h>
 #include <limits.h>
 
 
