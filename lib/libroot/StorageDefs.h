@@ -31,11 +31,24 @@
 
 /* Node Flavors */
 enum node_flavor {
-	B_FILE_NODE			= 0x01,
+	B_FILE_NODE		= 0x01,
 	B_SYMLINK_NODE		= 0x02,
 	B_DIRECTORY_NODE	= 0x04,
-	B_ANY_NODE			= 0x07
+	B_ANY_NODE		= 0x07
 };
+
+/* POSIX/BSD compatibility */
+#ifndef O_RWMASK
+#define O_RWMASK O_ACCMODE
+#endif
+
+#ifndef O_NOTRAVERSE
+#define O_NOTRAVERSE O_NOFOLLOW
+#endif
+
+#ifndef S_IUMSK
+#define S_IUMSK ALLPERMS
+#endif
 
 
 #endif /* _DEF_STORAGE_H */
