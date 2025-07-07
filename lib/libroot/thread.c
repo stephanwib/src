@@ -512,6 +512,21 @@ snooze(bigtime_t timeout) {
 }
 
 status_t
+snooze_until(bigtime_t timeout, int timeBase)
+{
+    bigtime_t now;
+
+    (void)timeBase;
+
+    now = system_time();
+	
+    if (timeout <= now)
+        return B_OK;
+
+    return snooze(timeout - now);
+}
+
+status_t
 snooze_etc(bigtime_t amount, int timeBase, uint32 flags)
 {
 
