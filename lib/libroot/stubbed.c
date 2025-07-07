@@ -12,3 +12,6 @@ void convert_to_stat_beos() {}
 
 /* filesystem or similar */
 void find_path_etc() {}
+
+/* IPC or memory */
+void _kern_transfer_area() {}
