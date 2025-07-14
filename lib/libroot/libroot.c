@@ -59,7 +59,6 @@ __get_haiku_revision(void)
 }
 
 
-/*
 float
 __swap_float(float value)
 {
@@ -76,11 +75,7 @@ __swap_float(float value)
    return retVal;
 }
 
-
-
-
-
-
+/*
 
 #define __gcc_noalias__(x) (*(volatile struct { int value; } *)x)
 
