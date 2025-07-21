@@ -29,6 +29,7 @@
 #include "system_revision.h"
 
 void save_arg(int argc, char **argv, char **env);
+float __swap_float(float value);
 
 int __libc_argc;
 char** __libc_argv;
