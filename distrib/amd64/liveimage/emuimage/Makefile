@@ -3,7 +3,7 @@
 LIVEIMGBASE=	NetBSD-${DISTRIBVER}-amd64-live	# gives ${IMGBASE}.img
 
 #EMUIMAGEMB?=	1907            	# 2GB USB flash memories aren't 2GiB
-EMUIMAGEMB?=	3500            	# 2GB USB flash memories aren't 2GiB
+EMUIMAGEMB?=	4000            	# 2GB USB flash memories aren't 2GiB
 LIVEIMAGEMB=	${EMUIMAGEMB}
 SWAPMB=		0			# No swap
 IMAGEHOSTNAME=	netbsd
