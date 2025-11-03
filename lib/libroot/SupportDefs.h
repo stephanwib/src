@@ -32,10 +32,11 @@ typedef uint32_t uint32;
 typedef uint64_t uint64;
 
 
-/* XXX: taken from Haiku config/types.h */
+/* XXX: taken from Haiku config/types.h or config/HaikuConfig.h */
 
 #if defined(__x86_64__) || defined(__aarch64__)
 #    define __HAIKU_ARCH_64_BIT
+#	 define __HAIKU_ARCH_BITS			64
 #endif
 
 /* printf()/scanf() format prefixes */
