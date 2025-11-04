@@ -13,7 +13,7 @@ LIBDPLIBS+=	kvm ${NETBSDSRCDIR}/lib/libkvm
 INCS=		OS.h Errors.h fs_attr.h fs_info.h TypeConstants.h image.h SupportDefs.h StorageDefs.h
 INCSDIR=	/usr/include
 
-CFLAGS= -Wno-multichar -Wno-implicit-fallthrough -Wno-missing-field-initializers
+CFLAGS= -g -Wno-multichar -Wno-implicit-fallthrough -Wno-missing-field-initializers
 
 WARNS=		5
 
