@@ -353,10 +353,8 @@ int sys__create_sem(struct lwp *l, const struct sys__create_sem_args *uap, regis
 
     /* Pick a semaphore structure from the free queue and transfer it to the used list */
     khs = SIMPLEQ_FIRST(&khsem_freeq);
-printf("transferring khs structure, address: %p\n", khs);
     SIMPLEQ_REMOVE_HEAD(&khsem_freeq, khs_freeq_entry);
     LIST_INSERT_HEAD(&khsem_used_list, khs, khs_usedq_entry);
-printf("enter khs->khs_interlock, address: %p\n", &khs->khs_interlock);
     mutex_enter(&khs->khs_interlock);
 
     khs->khs_state = KHS_IN_USE;
