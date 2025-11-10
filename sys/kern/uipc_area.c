@@ -572,7 +572,10 @@ sys__get_area_info(struct lwp *l, const struct sys__get_area_info_args *uap, reg
     struct area_info *area_info_user = SCARG(uap, areaInfo);
     struct area_info area_info_kernel;
     int error;
-    
+
+	if (id < 0)
+        return ENOENT;
+	
     mutex_enter(&area_mutex);
     struct karea *ka = karea_lookup_byid(id);
     mutex_exit(&area_mutex);
