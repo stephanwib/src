@@ -325,6 +325,9 @@ kport_get_info(port_id id, struct port_info *p_info_user)
     struct port_info p_info_kernel;
     int error;
 
+    if (id < 0)
+        return ENOENT;
+
     mutex_enter(&kport_mutex);
     port = kport_lookup_byid(id);
     mutex_exit(&kport_mutex);
