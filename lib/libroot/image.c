@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/statvfs.h>
 #include "Errors.h"
 
 #include "image.h"
@@ -127,9 +128,23 @@ _get_next_image_info(team_id team, int32 *cookie, image_info *info, size_t size)
 {
 	// Cosmoe-specific implementation
 	// Only supports 1 image
-
+	
+    struct statvfs vfs;
 	char buffer[64];
+
 	snprintf(buffer, 64, "/proc/%d/exe", (team == B_CURRENT_TEAM) ? getpid() : team);
+
+    if (statvfs("/proc", &vfs) != 0) {
+        fprintf(stderr, "_get_next_image_info: cannot statvfs(/proc): %s\n",
+                strerror(errno));
+        return B_ERROR;
+    }
+
+	if (strcmp(vfs.f_fstypename, "procfs") != 0) {
+        fprintf(stderr, "_get_next_image_info: /proc is not a procfs mount (found: %s)\n",
+                vfs.f_fstypename);
+        return B_ERROR;
+    }
 
 	if (cookie && (*cookie == 0))
 	{
