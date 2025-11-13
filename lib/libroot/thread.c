@@ -137,12 +137,16 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     */
 
     pthread_attr_setcreatesuspend_np(&attr);
-
-    if (pthread_create(&thread, &attr, (pthread_entry)func_ptr, data) != 0)
-	    return B_NO_MEMORY;
-
+    
+	ht = malloc(sizeof(haiku_thread));
+	if (ht == NULL)
+		return B_NO_MEMORY;
 	
-    ht = malloc(sizeof(haiku_thread));
+    if (pthread_create(&thread, &attr, (pthread_entry)func_ptr, data) != 0) {
+		free(ht);
+	    return B_NO_MEMORY;
+	}
+
     *ht = (struct haiku_thread) {
         .ht_pt = thread,
         .ht_message = THR_MSG_ABSENT,
