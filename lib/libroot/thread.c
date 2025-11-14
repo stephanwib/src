@@ -379,16 +379,16 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
     while (ht->ht_message != THR_MSG_ABSENT) {
 
         /* wait for the existing message to disappear */
-	ht->ht_waiters++;
+        ht->ht_waiters++;
         pthread_cond_wait(&ht->ht_cv, &threadss_lock);
-	ht->ht_waiters--;
+        ht->ht_waiters--;
         
         /* check if this thread was cancelled */
         if (ht->ht_state != THR_ACTIVE) {
 
             if (ht->ht_waiters == 0)
                 free_haiku_thread(ht);
-	    else
+            else
                 pthread_mutex_unlock(&threadss_lock);
 
             return B_BAD_THREAD_ID;
@@ -401,6 +401,10 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 
         if (bufferSize > MSG_PRIVATE_BUFFER_SIZE) {
             dest = malloc(bufferSize);
+			if (dest == NULL) {
+                pthread_mutex_unlock(&threadss_lock);
+				return B_NO_MEMORY;
+			}
             ht->ht_message = THR_MSG_EXTERN;
         }
         else {
