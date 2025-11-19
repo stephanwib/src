@@ -57,12 +57,17 @@ init_main_thread(void)
     struct haiku_thread *ht;
 
     ht = malloc(sizeof(struct haiku_thread));
+	if (ht == NULL) {
+        fprintf(stderr, "FATAL: Cannot allocate memory for main thread.\n");
+		return;
+	}
+
     *ht = (struct haiku_thread) {
         .ht_pt = NULL,
 
-	/*  Since NetBSD 10, PIDs and LWP IDs share the same name space.
+	    /*  Since NetBSD 10, PIDs and LWP IDs share the same name space.
          *  Hence, the PID of a process is the LWP ID of the main thread.
-	 */
+	     */
         .ht_lid = (lwpid_t)getpid(),
 
         .ht_message = THR_MSG_ABSENT,
