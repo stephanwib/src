@@ -8,7 +8,7 @@
 #include <OS.h>
 //#include <TLS.h>
 
-#include <tls.h>
+#include <sys/tls.h>
 #include <user_thread_defs.h>
 
 
