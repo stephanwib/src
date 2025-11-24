@@ -6,7 +6,8 @@ LIB=		root
 # MAN=		root.3
 
 SRCS=		time.c port.c thread.c area.c sem.c team.c info.c fs.c image.c debug.c libroot.c parsedate.cpp \
-        launch.cpp stubbed.c init_once.cpp rw_lock.cpp
+                launch.cpp stubbed.c init_once.cpp rw_lock.cpp
+
 
 LIBDPLIBS+=	pthread ${NETBSDSRCDIR}/lib/libpthread
 LIBDPLIBS+=	kvm ${NETBSDSRCDIR}/lib/libkvm
@@ -14,6 +15,7 @@ LIBDPLIBS+=	kvm ${NETBSDSRCDIR}/lib/libkvm
 INCS=		OS.h Errors.h fs_attr.h fs_info.h TypeConstants.h image.h SupportDefs.h StorageDefs.h
 INCSDIR=	/usr/include
 
+CPPFLAGS+= -I${.CURDIR}
 CFLAGS= -g -Wno-multichar -Wno-implicit-fallthrough -Wno-missing-field-initializers
 
 WARNS=		5
