@@ -5,7 +5,8 @@
 LIB=		root
 # MAN=		root.3
 
-SRCS=		time.c port.c thread.c area.c sem.c team.c info.c fs.c image.c debug.c libroot.c parsedate.cpp launch.cpp stubbed.c init_once.cpp
+SRCS=		time.c port.c thread.c area.c sem.c team.c info.c fs.c image.c debug.c libroot.c parsedate.cpp \
+        launch.cpp stubbed.c init_once.cpp rw_lock.cpp
 
 LIBDPLIBS+=	pthread ${NETBSDSRCDIR}/lib/libpthread
 LIBDPLIBS+=	kvm ${NETBSDSRCDIR}/lib/libkvm
