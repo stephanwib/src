@@ -6,7 +6,7 @@
 #define _LIBROOT_USER_THREAD_H
 
 #include <OS.h>
-#include <TLS.h>
+//#include <TLS.h>
 
 #include <tls.h>
 #include <user_thread_defs.h>
