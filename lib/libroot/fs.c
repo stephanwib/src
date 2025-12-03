@@ -1,5 +1,5 @@
 /*------------------------------------------------------------------------------
-//	Copyright (c) 2004-2024, Bill Hayden
+//	Copyright (c) 2004-2025, Bill Hayden
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a
 //	copy of this software and associated documentation files (the "Software"),
@@ -46,23 +46,41 @@ status_t _kstop_notifying_(port_id port, int32 handlerToken);
 
 
 
-ssize_t  read_pos(int fd, off_t pos, void *buffer, size_t count)
+ssize_t
+read_pos(int fd, off_t pos, void *buffer, size_t count)
 {
-	long origPos = lseek(fd, 0, SEEK_CUR);
-	lseek(fd, pos, SEEK_SET);
+	off_t origPos = lseek(fd, 0, SEEK_CUR);
+	if (origPos < 0)
+		return -1;
+	
+	if (lseek(fd, pos, SEEK_SET) < 0)
+		return -1;
+	
 	ssize_t result = read(fd, buffer, count);
+	
+	// Restore original position (best effort)
 	lseek(fd, origPos, SEEK_SET);
 	return result;
 }
 
-ssize_t  write_pos(int fd, off_t pos, const void *buffer, size_t count)
+ssize_t 
+write_pos(int fd, off_t pos, const void *buffer, size_t count)
 {
-	long origPos = lseek(fd, 0, SEEK_CUR);
-	lseek(fd, pos, SEEK_SET);
+	off_t origPos = lseek(fd, 0, SEEK_CUR);
+	if (origPos < 0)
+		return -1;
+	
+	if (lseek(fd, pos, SEEK_SET) < 0)
+		return -1;
+	
 	ssize_t result = write(fd, buffer, count);
+	
+	// Restore original position (best effort)
 	lseek(fd, origPos, SEEK_SET);
 	return result;
 }
+
+
 
 dev_t dev_for_path(const char *path)
 {
@@ -82,37 +100,103 @@ int	fs_stat_dev(dev_t dev, fs_info *info)
 }
 
 
-ssize_t	fs_write_attr(int fd, const char *attribute, uint32 type, off_t pos, const void *buffer, size_t readBytes)
+ssize_t
+fs_write_attr(int fd, const char *attribute, uint32 type, off_t pos, const void *buffer, size_t writeBytes)
 {
-	char attrName[B_OS_NAME_LENGTH];
-	snprintf(attrName, B_OS_NAME_LENGTH, "user.%s", attribute);
-	return fsetxattr(fd, attrName, buffer, readBytes, 0);
+	if (!attribute) {
+		errno = B_BAD_VALUE;
+		return -1;
+	}
+	
+	if (strlen(attribute) > B_ATTR_NAME_LENGTH) {
+		// Setting errno a B_ value intentionally to match BeBook API
+		errno = B_NAME_TOO_LONG;
+		return -1;
+	}
+
+	char attrName[B_ATTR_NAME_LENGTH];
+	snprintf(attrName, sizeof(attrName), "user.%s", attribute);
+	int err = fsetxattr(fd, attrName, buffer, writeBytes, 0);
+	if (err != 0) {
+		// Setting errno a B_ value intentionally to match BeBook API
+		errno = B_BAD_VALUE;
+		return (ssize_t)-1;
+	}
+	
+	errno = 0;
+	return (ssize_t)writeBytes;
 }
 
 
-ssize_t	fs_read_attr(int fd, const char *attribute, uint32 type, off_t pos, void *buffer, size_t readBytes)
+ssize_t
+fs_read_attr(int fd, const char *attribute, uint32 type, off_t pos, void *buffer, size_t readBytes)
 {
+	if (!attribute) {
+		errno = B_BAD_VALUE;
+		return -1;
+	}
+	
+	if (strlen(attribute) > B_ATTR_NAME_LENGTH) {
+		// Setting errno a B_ value intentionally to match BeBook API
+		errno = B_NAME_TOO_LONG;
+		return -1;
+	}
 
-	char attrName[B_OS_NAME_LENGTH];
-	snprintf(attrName, B_OS_NAME_LENGTH, "user.%s", attribute);
+	char attrName[B_ATTR_NAME_LENGTH];
+	snprintf(attrName, sizeof(attrName), "user.%s", attribute);
 
-	return fgetxattr(fd, attrName, buffer, readBytes);
+	ssize_t err = fgetxattr(fd, attrName, buffer, readBytes);
+	if (err < 0) {
+		// Setting errno a B_ value intentionally to match BeBook API
+		errno = B_ENTRY_NOT_FOUND;
+		return (ssize_t)-1;
+	}
+
+	errno = 0;
+	return err;
 }
 
 
-int	fs_remove_attr(int fd, const char *attribute)
-{
 
-	char attrName[B_OS_NAME_LENGTH];
-	snprintf(attrName, B_OS_NAME_LENGTH, "user.%s", attribute);
-	return fremovexattr(fd, attrName);
+int
+fs_remove_attr(int fd, const char *attribute)
+{
+	if (!attribute) {
+		errno = B_BAD_VALUE;
+		return -1;
+	}
+	
+	if (strlen(attribute) > B_ATTR_NAME_LENGTH) {
+		// Setting errno a B_ value intentionally to match BeBook API
+		errno = B_NAME_TOO_LONG;
+		return -1;
+	}
+
+	char attrName[B_ATTR_NAME_LENGTH];
+	snprintf(attrName, sizeof(attrName), "user.%s", attribute);
+	int err = fremovexattr(fd, attrName);
+	if (err < 0) {
+		// Setting errno a B_ value intentionally to match BeBook API
+		errno = B_ENTRY_NOT_FOUND;
+		return -1;
+	}
+
+	errno = 0;
+	return B_OK;
 }
 
 
-int	fs_stat_attr(int fd, const char *attribute, struct attr_info *attrInfo)
+
+int
+fs_stat_attr(int fd, const char *attribute, struct attr_info *attrInfo)
 {
-	char attrName[B_OS_NAME_LENGTH];
-	snprintf(attrName, B_OS_NAME_LENGTH, "user.%s", attribute);
+	if (!attribute) {
+		errno = B_BAD_VALUE;
+		return -1;
+	}
+	
+	char attrName[B_ATTR_NAME_LENGTH];
+	snprintf(attrName, sizeof(attrName), "user.%s", attribute);
 
 	int size = fgetxattr(fd, attrName, NULL, 0);
 
@@ -126,6 +210,7 @@ int	fs_stat_attr(int fd, const char *attribute, struct attr_info *attrInfo)
 
 	return B_OK;
 }
+
 
 
 /*
