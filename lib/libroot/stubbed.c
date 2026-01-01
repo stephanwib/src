@@ -21,7 +21,6 @@ void find_paths_etc(void);
 void find_path_for_path_etc(void);
 void fs_stat_index(void);
 void fs_create_index(void);
-void find_directory(void);
 void _kern_transfer_area(void);
 void _kern_get_safemode_option(void);
 
@@ -49,7 +48,6 @@ void find_paths_etc(void)                   { STUB_WARNING(); }
 void find_path_for_path_etc(void)           { STUB_WARNING(); }
 void fs_stat_index(void)                    { STUB_WARNING(); }
 void fs_create_index(void)                  { STUB_WARNING(); }
-void find_directory(void)                   { STUB_WARNING(); }
 
 /* kernel */
 void _kern_transfer_area(void)              { STUB_WARNING(); }
