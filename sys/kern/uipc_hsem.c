@@ -300,7 +300,7 @@ hsem_exithook(struct proc *p, void *v)
         if (khs_this->khs_owner == p->p_pid &&
 	    khs_this->khs_state == KHS_IN_USE) {
 		
-printf("sem found: %ld", PTR_TO_ID(khs_this));
+//printf("sem found: %ld", PTR_TO_ID(khs_this));
 		
             mutex_enter(&khs_this->khs_interlock);
             khs_this->khs_state = KHS_DELETED;
