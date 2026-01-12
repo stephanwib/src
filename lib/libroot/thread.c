@@ -50,7 +50,8 @@ static bool                             has_main_thread        = 0; /* LWP of ma
 
 typedef void* (*pthread_entry) (void*);
 
-
+// XXX convert to
+// void __attribute__ ((constructor))
 static void
 init_main_thread(void)
 {
