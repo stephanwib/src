@@ -357,19 +357,25 @@ set_thread_priority(thread_id id, int32 priority)
 status_t
 rename_thread(thread_id id, const char *newName)
 {
-
+    int error;
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
     
-    char namebuf[NAME_MAX];
-    strlcpy(namebuf, newName, sizeof(namebuf));
-    pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
+    /* char namebuf[NAME_MAX];
+    * strlcpy(namebuf, newName, sizeof(namebuf));
+    * pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
+    */
 
+	/*
+	 * pthread_setname_np() cannot be used, since the main() thread has no pthread_t structure.
+	 */
+    error = _lwp_setname(ht->ht_lid, newName);
+	
     pthread_mutex_unlock(&threadss_lock);
-    return B_OK;
+    return error ? B_ERROR : B_OK;
 }
 
 status_t
