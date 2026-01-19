@@ -37,6 +37,7 @@ int handle_area_error(int);
 
 int handle_area_error(int error_code) {
     switch (error_code) {
+        case EFAULT:
         case EINVAL:
             return B_BAD_VALUE;
         case ENOMEM:
