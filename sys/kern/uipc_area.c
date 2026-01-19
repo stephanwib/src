@@ -169,7 +169,7 @@ printf("3 Copyin address pointer\n");
 //printf("4 Check address and size alignment\n");
 //    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
 //        return EINVAL;
-
+printf("Adress %p, Requested size: %ld\n", va, size);
 	printf("4 Align size\n");
 	/* XXX BeBook says size must always be page aligned, but non-aligned requests from libbe were seen.
 	* Eventually Haiku (and BeOS?) allow this as well. Relax this for now.
@@ -206,7 +206,7 @@ printf("5 Switch address spec\n");
 	default:
  	    return EINVAL;
     }
-
+printf("After adjustment: Adress %p, Requested size: %ld\n", va, size);
     /*
      *  Create and initialize karea control structure
      */
