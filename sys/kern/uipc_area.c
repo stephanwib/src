@@ -145,16 +145,17 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
      * XXX: Not sure if the original implementation allows zero size areas.
      * We can not map something zero-sized as it crashes the kernel. 
      */
-	
+printf("1 Check zero size\n");
     if (!is_clone && (size == 0))
         return EINVAL;
-
+	
+printf("2 Copy or assign name\n");
     if (name != NULL) {
         error = copyinstr(name, namebuf, sizeof(namebuf), &namelen);
         if (error)
             return error;
     }
-
+printf("3 Copyin address pointer\n");
     /* We are provided a pointer to a user-mode pointer, so load its content into our local pointer */
     error = copyin(startAddress, &address, sizeof(void *));
     if (error)
@@ -165,7 +166,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     /*
      * Ensure the requested address and size are aligned
      */
-	
+printf("4 Check address and size alignment\n");
     if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
         return EINVAL;
 
@@ -174,7 +175,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
      * Reject mappings unavailable to user-mode
      * Remap options with the same meaning 
      */
-	
+printf("5 Switch address spec\n");
     switch (addressSpec) {
 	case AREA_EXACT_ADDRESS:
 		
@@ -231,8 +232,9 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     /*
      *  Obtain uobj from the cloned area, or create a new one.
      */
-	
+printf("6 Check is_clone\n");
     if (is_clone) {
+		printf("Clone found\n");
         struct karea *source_area = karea_lookup_byid(source_area_id);  
         if (source_area == NULL) {
             error = EINVAL;
@@ -255,7 +257,7 @@ create_or_clone_area(struct lwp *l, const char *name, void **startAddress,
     /*
      *  Map the uobj
      */
-
+printf("7 UVM map\n");
     uao_reference(ka->ka_uobj);
     error = uvm_map(&l->l_proc->p_vmspace->vm_map, &va, ka->ka_size, ka->ka_uobj, 0, 0,
                     UVM_MAPFLAG(prot, prot, UVM_INH_SHARE, UVM_ADV_RANDOM, flags));
@@ -270,7 +272,7 @@ printf("Error in uvm_map\n");
     /* 
      * If the address specification was exact but the address was adjusted, unmap
      */
-	
+printf("8 Check exact address\n");
     if ((addressSpec == AREA_EXACT_ADDRESS) && (va != (vaddr_t)address)) {
 printf("Error requested adress does not match\n");
         error = ENOMEM;
@@ -281,7 +283,7 @@ printf("Error requested adress does not match\n");
     /* 
      * Wire pages if requested
      */
-
+printf("9 Assign lock\n");
     if (lock >= AREA_LAZY_LOCK) {
         error = uvm_obj_wirepages(ka->ka_uobj, 0, ka->ka_size, NULL);
         if (error) {
@@ -309,7 +311,7 @@ printf("Error in wirepages\n");
     /*
      *  Copyout mapped address, update area count and list of areas.
      */
-
+printf("10 Copyout va\n");
     error = copyout(&va, startAddress, sizeof(void *));
     if (error) 
         goto deallocate_out;
