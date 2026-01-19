@@ -166,10 +166,15 @@ printf("3 Copyin address pointer\n");
     /*
      * Ensure the requested address and size are aligned
      */
-printf("4 Check address and size alignment\n");
-    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
-        return EINVAL;
+//printf("4 Check address and size alignment\n");
+//    if ((va % PAGE_SIZE != 0) || (size % PAGE_SIZE != 0))
+//        return EINVAL;
 
+	printf("4 Align size\n");
+	/* XXX BeBook says size must always be page aligned, but non-aligned requests from libbe were seen.
+	* Eventually Haiku (and BeOS?) allow this as well. Relax this for now.
+	*/
+	size = round_page(size);
 	
     /*
      * Reject mappings unavailable to user-mode
@@ -178,7 +183,11 @@ printf("4 Check address and size alignment\n");
 printf("5 Switch address spec\n");
     switch (addressSpec) {
 	case AREA_EXACT_ADDRESS:
-		
+
+		/* Make sure the address is page-aligned */
+		if (va % PAGE_SIZE != 0)
+			return EFAULT;
+
 	    /* XXX: UVM takes this as a hint only */
 	    flags |= UVM_FLAG_FIXED;
         break;
