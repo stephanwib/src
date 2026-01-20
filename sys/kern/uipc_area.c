@@ -206,7 +206,7 @@ printf("5 Switch address spec\n");
 	default:
  	    return EINVAL;
     }
-printf("After adjustment: Adress %p, Requested size: %ld\n", va, size);
+printf("After adjustment: Adress %p, Requested size: %ld\n", (void*)va, size);
     /*
      *  Create and initialize karea control structure
      */
