@@ -378,6 +378,23 @@ rename_thread(thread_id id, const char *newName)
     return error ? B_ERROR : B_OK;
 }
 
+int
+send_signal(thread_id id, unsigned int signal)
+{
+	int error;
+    struct haiku_thread *ht;
+
+    ht = find_haiku_thread_byid(id);
+    if (ht == NULL)
+        return B_BAD_THREAD_ID;
+
+	error = pthread_kill(ht->ht_lid, signal);
+
+	pthread_mutex_unlock(&threadss_lock);
+    return error ? B_ERROR : B_OK;
+}
+
+
 status_t
 send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 {
