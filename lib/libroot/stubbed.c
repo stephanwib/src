@@ -49,6 +49,8 @@ void _kern_create_child_partition(void);
 void _kern_delete_child_partition(void);
 void _kern_start_watching_disks(void);
 void _kern_stop_watching_disks(void);
+void fs_mount_volume(void);
+void fs_unmount_volume(void);
 
 
 
@@ -112,3 +114,7 @@ void _kern_delete_child_partition(void) { STUB_WARNING(); }
 /* disk change notification */
 void _kern_start_watching_disks(void) { STUB_WARNING(); }
 void _kern_stop_watching_disks(void) { STUB_WARNING(); }
+
+
+void fs_mount_volume(void) { STUB_WARNING(); }
+void fs_unmount_volume(void) { STUB_WARNING(); }
