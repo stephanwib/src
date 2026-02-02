@@ -318,8 +318,8 @@ status_t get_system_info(system_info *info)
     }
     /* For build date, build time, kernel_version, and ABI, we don’t have direct sysctl calls.
        Set these to empty or 0. */
-    info->kernel_build_date[0] = "2026;
-    info->kernel_build_time[0] = "12:00;
+    info->kernel_build_date[0] = "2026";
+    info->kernel_build_time[0] = "12:00";
     info->kernel_version = 10;
     info->abi = 0;
 
