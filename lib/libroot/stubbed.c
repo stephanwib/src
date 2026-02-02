@@ -23,6 +23,32 @@ void fs_stat_index(void);
 void fs_create_index(void);
 void _kern_transfer_area(void);
 void _kern_get_safemode_option(void);
+void _kern_get_next_disk_device_id(void);
+void _kern_find_disk_device(void);
+void _kern_find_partition(void);
+void _kern_find_file_disk_device(void);
+void _kern_get_disk_device_data(void);
+void _kern_register_file_device(void);
+void _kern_unregister_file_device(void);
+void _kern_get_file_disk_device_path(void);
+void _kern_get_disk_system_info(void);
+void _kern_get_next_disk_system_info(void);
+void _kern_find_disk_system(void);
+void _kern_defragment_partition(void);
+void _kern_repair_partition(void);
+void _kern_resize_partition(void);
+void _kern_move_partition(void);
+void _kern_set_partition_name(void);
+void _kern_set_partition_content_name(void);
+void _kern_set_partition_type(void);
+void _kern_set_partition_parameters(void);
+void _kern_set_partition_content_parameters(void);
+void _kern_initialize_partition(void);
+void _kern_uninitialize_partition(void);
+void _kern_create_child_partition(void);
+void _kern_delete_child_partition(void);
+void _kern_start_watching_disks(void);
+void _kern_stop_watching_disks(void);
 
 
 
@@ -52,3 +78,37 @@ void fs_create_index(void)                  { STUB_WARNING(); }
 /* kernel */
 void _kern_transfer_area(void)              { STUB_WARNING(); }
 void _kern_get_safemode_option(void)        { STUB_WARNING(); }
+
+/* disk device */
+void _kern_get_next_disk_device_id(void) { STUB_WARNING(); }
+void _kern_find_disk_device(void) { STUB_WARNING(); }
+void _kern_find_partition(void) { STUB_WARNING(); }
+void _kern_find_file_disk_device(void) { STUB_WARNING(); }
+void _kern_get_disk_device_data(void) { STUB_WARNING(); }
+void _kern_register_file_device(void) { STUB_WARNING(); }
+void _kern_unregister_file_device(void) { STUB_WARNING(); }
+void _kern_get_file_disk_device_path(void) { STUB_WARNING(); }
+
+/* disk systems */
+void _kern_get_disk_system_info(void) { STUB_WARNING(); }
+void _kern_get_next_disk_system_info(void) { STUB_WARNING(); }
+void _kern_find_disk_system(void) { STUB_WARNING(); }
+
+/* disk device modification */
+void _kern_defragment_partition(void) { STUB_WARNING(); }
+void _kern_repair_partition(void) { STUB_WARNING(); }
+void _kern_resize_partition(void) { STUB_WARNING(); }
+void _kern_move_partition(void) { STUB_WARNING(); }
+void _kern_set_partition_name(void) { STUB_WARNING(); }
+void _kern_set_partition_content_name(void) { STUB_WARNING(); }
+void _kern_set_partition_type(void) { STUB_WARNING(); }
+void _kern_set_partition_parameters(void) { STUB_WARNING(); }
+void _kern_set_partition_content_parameters(void) { STUB_WARNING(); }
+void _kern_initialize_partition(void) { STUB_WARNING(); }
+void _kern_uninitialize_partition(void) { STUB_WARNING(); }
+void _kern_create_child_partition(void) { STUB_WARNING(); }
+void _kern_delete_child_partition(void) { STUB_WARNING(); }
+
+/* disk change notification */
+void _kern_start_watching_disks(void) { STUB_WARNING(); }
+void _kern_stop_watching_disks(void) { STUB_WARNING(); }
