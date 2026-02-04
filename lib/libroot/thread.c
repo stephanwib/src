@@ -389,7 +389,7 @@ send_signal(thread_id id, unsigned int signal)
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
-	error = pthread_kill(ht->ht_lid, signal);
+	error = pthread_kill(ht->ht_pt, signal);
 
 	pthread_mutex_unlock(&threadss_lock);
     return error ? B_ERROR : B_OK;
