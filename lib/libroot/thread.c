@@ -386,9 +386,10 @@ send_signal(thread_id id, unsigned int signal)
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
-    if (ht == NULL)
+    if (ht == NULL) {
         return B_BAD_THREAD_ID;
-
+	}
+	
 	error = pthread_kill(ht->ht_pt, signal);
 
 	pthread_mutex_unlock(&threadss_lock);
