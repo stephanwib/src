@@ -83,11 +83,21 @@ write_pos(int fd, off_t pos, const void *buffer, size_t count)
 
 
 
+// We're in a bit of a bind here since dev_t is unsigned on Linux (XXX NetBSD?), but
+// was signed on BeOS. So we treat -1 as invalid, and everything else as valid.
 dev_t dev_for_path(const char *path)
 {
-	printf( "Cosmoe: UNIMPLEMENTED: dev_for_path\n" );
-	return B_FILE_ERROR;
+	if (!path) {
+		return (dev_t)-1;
+	}
+	struct stat st;
+	if (stat(path, &st) != 0) {
+		return (dev_t)-1;
+	}
+	return st.st_dev;
 }
+
+
 
 dev_t next_dev(int32 *pos)
 {
