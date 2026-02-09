@@ -26,6 +26,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
+
+#include <stdint.h>
+
 
 #include "Errors.h"
 
@@ -97,12 +103,55 @@ dev_t dev_for_path(const char *path)
 	return st.st_dev;
 }
 
-
-
-dev_t next_dev(int32 *pos)
+dev_t
+next_dev(int32 *pos)
 {
-	printf( "Cosmoe: UNIMPLEMENTED: next_dev\n" );
-	return B_BAD_VALUE;
+	if (!pos || *pos < 0)
+		return (dev_t)-1;
+
+	struct statvfs *mnts;
+	int count = getmntinfo(&mnts, MNT_NOWAIT);
+	if (count <= 0)
+		return (dev_t)-1;
+
+	int32 targetIndex = *pos;
+	int32 found = 0;
+	dev_t result = (dev_t)-1;
+
+	/* Deduplication list */
+	dev_t seen[256];
+	int seenCount = 0;
+
+	for (int i = 0; i < count; i++) {
+		struct stat st;
+
+		if (stat(mnts[i].f_mntonname, &st) != 0)
+			continue;
+
+		/* dedupe */
+		int alreadySeen = 0;
+		for (int j = 0; j < seenCount; j++) {
+			if (seen[j] == st.st_dev) {
+				alreadySeen = 1;
+				break;
+			}
+		}
+		if (alreadySeen)
+			continue;
+
+		if (seenCount < (int)(sizeof(seen) / sizeof(seen[0])))
+			seen[seenCount++] = st.st_dev;
+
+		if (found == targetIndex) {
+			result = st.st_dev;
+			*pos = targetIndex + 1; /* advance cookie */
+			break;
+		}
+
+		found++;
+	}
+
+	return result;
 }
 
 int	fs_stat_dev(dev_t dev, fs_info *info)
