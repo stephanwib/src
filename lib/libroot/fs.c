@@ -24,25 +24,21 @@
 //----------------------------------------------------------------------------*/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
-
-#include <stdint.h>
+#include <sys/xattr.h>
 
 
 #include "Errors.h"
 
 #include "fs_attr.h"
 #include "fs_info.h"
-
 #include "TypeConstants.h"
-
-
-#include <sys/xattr.h>
-
 
 
 status_t _kstart_watching_vnode_(dev_t device, ino_t node,
@@ -91,7 +87,8 @@ write_pos(int fd, off_t pos, const void *buffer, size_t count)
 
 // We're in a bit of a bind here since dev_t is unsigned on Linux (XXX NetBSD?), but
 // was signed on BeOS. So we treat -1 as invalid, and everything else as valid.
-dev_t dev_for_path(const char *path)
+dev_t
+dev_for_path(const char *path)
 {
 	if (!path) {
 		return (dev_t)-1;
@@ -128,7 +125,7 @@ next_dev(int32 *pos)
 		if (stat(mnts[i].f_mntonname, &st) != 0)
 			continue;
 
-		/* dedupe */
+		/* dedup */
 		int alreadySeen = 0;
 		for (int j = 0; j < seenCount; j++) {
 			if (seen[j] == st.st_dev) {
@@ -154,11 +151,72 @@ next_dev(int32 *pos)
 	return result;
 }
 
-int	fs_stat_dev(dev_t dev, fs_info *info)
+int
+fs_stat_dev(dev_t dev, fs_info *info)
 {
-	return -1;
-}
+	int i, ret = -1, count;
+	struct statvfs *mnts;
+	
+	if (dev == (dev_t)-1 || info == NULL) {
+		errno = B_BAD_VALUE;
+		return -1;
+	}
 
+	count = getmntinfo(&mnts, MNT_NOWAIT);
+	if (count <= 0) {
+		return B_BAD_VALUE;
+	}
+
+	for (i = 0; i < count; i++) {
+		struct stat st;
+
+		if (stat(mnts[i].f_mntonname, &st) != 0)
+			continue;
+
+		if (st.st_dev != dev)
+			continue;
+
+		/* Found matching mount */
+		memset(info, 0, sizeof(*info));
+		info->dev = dev;
+
+		info->block_size   = (off_t)mnts[i].f_bsize;
+		info->total_blocks = (off_t)mnts[i].f_blocks;
+		info->free_blocks  = (off_t)mnts[i].f_bfree;
+
+		/* Device name (e.g. /dev/wd0a) */
+		strncpy(info->device_name,
+			mnts[i].f_mntfromname,
+			sizeof(info->device_name) - 1);
+
+		/* Volume name: basename of mount point */
+		const char *base = strrchr(mnts[i].f_mntonname, '/');
+		if (base && base[1] != '\0')
+			strncpy(info->volume_name,
+				base + 1,
+				sizeof(info->volume_name) - 1);
+		else
+			strncpy(info->volume_name,
+				mnts[i].f_mntonname,
+				sizeof(info->volume_name) - 1);
+
+		/* Filesystem name (e.g. ffs, nfs, tmpfs) */
+		strncpy(info->fsh_name,
+			mnts[i].f_fstypename,
+			sizeof(info->fsh_name) - 1);
+
+		/* Flags */
+		info->flags = 0;
+		if (mnts[i].f_flag & ST_RDONLY)
+			info->flags |= B_FS_IS_READONLY;
+
+		ret = 0;
+		break;
+	}
+
+	errno = (ret == 0) ? 0 : B_BAD_VALUE;
+	return ret;
+}
 
 ssize_t
 fs_write_attr(int fd, const char *attribute, uint32 type, off_t pos, const void *buffer, size_t writeBytes)
