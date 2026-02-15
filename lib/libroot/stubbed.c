@@ -52,7 +52,8 @@ void _kern_stop_watching_disks(void);
 void fs_mount_volume(void);
 void fs_unmount_volume(void);
 
-
+status_t __start_watching_system(int32 object, uint32 flags, port_id port, int32 token);
+status_t __stop_watching_system(int32 object, uint32 flags, port_id port, int32 token);
 
 /* driver API */
 void delete_driver_settings(void)           { STUB_WARNING(); }
@@ -118,3 +119,19 @@ void _kern_stop_watching_disks(void) { STUB_WARNING(); }
 
 void fs_mount_volume(void) { STUB_WARNING(); }
 void fs_unmount_volume(void) { STUB_WARNING(); }
+
+
+
+status_t
+__start_watching_system(int32 object, uint32 flags, port_id port, int32 token)
+{
+	return B_ERROR;
+}
+
+
+status_t
+__stop_watching_system(int32 object, uint32 flags, port_id port, int32 token)
+{
+	return B_ERROR;
+}
+
