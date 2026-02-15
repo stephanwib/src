@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "OS.h"
 
 #define STUB_WARNING() \
     fprintf(stderr, "STUB CALLED: %s() in %s:%d\n", __func__, __FILE__, __LINE__)
