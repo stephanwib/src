@@ -75,7 +75,8 @@ load_image(int32 argc, const char **argv, const char **envp) {
 
 
 
-image_id load_add_on(const char* path)
+image_id
+load_add_on(const char* path)
 {
 	void* hdll = dlopen(path, RTLD_LAZY);
 
@@ -86,14 +87,16 @@ image_id load_add_on(const char* path)
 }
 
 
-status_t unload_add_on(image_id imageID)
+status_t
+unload_add_on(image_id imageID)
 {
 	void* hdll = (void*)imageID;
 	return dlclose(hdll) ? B_ERROR : B_OK;
 }
 
 
-status_t get_image_symbol(image_id imid, const char* name, int32 sclass, void** pptr)
+status_t
+get_image_symbol(image_id imid, const char* name, int32 sclass, void** pptr)
 {
 	void* hdll = (void*)imid;
 	const char* err = NULL;
