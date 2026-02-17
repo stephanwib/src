@@ -29,6 +29,7 @@
 
 #include "OS.h"
 #include "Errors.h"
+#include <stdio.h>
 #include <sys/port.h>
 #include <errno.h>
 
@@ -86,6 +87,8 @@ extern status_t delete_port(port_id port) {
 
 extern port_id find_port(const char *port_name) {
     status_t ret = _find_port(port_name);
+
+    printf("find_port() called: %s\n", (name == NULL) ? "no name" : port_name);
 
     if (ret == -1) {
         return handle_port_error(errno);
