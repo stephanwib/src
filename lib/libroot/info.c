@@ -206,13 +206,14 @@ get_next_team_info(int32_t *cookie, team_info *info) {
  */
 #define pagetok(x, ps) (((uint64_t)(x) * (ps)) / 1024)
 
-status_t get_system_info(system_info *info)
+status_t
+get_system_info(system_info *info)
 {
-    if (!info)
-        return -1;
-
-    int ret;
+	int ret;
     size_t size;
+	
+    if (!info)
+        return B_ERROR;
 
     /*------------------------------------------------------------------
      * 1. Boot Time
@@ -222,7 +223,7 @@ status_t get_system_info(system_info *info)
     ret = sysctlbyname("kern.boottime", &boottime, &size, NULL, 0);
     if (ret < 0) {
         perror("sysctl kern.boottime failed");
-        return -1;
+        return B_ERROR;
     }
     info->boot_time = ((bigtime_t)boottime.tv_sec * 1000000LL) + boottime.tv_usec;
 
@@ -234,7 +235,7 @@ status_t get_system_info(system_info *info)
     ret = sysctlbyname("hw.ncpu", &ncpu, &size, NULL, 0);
     if (ret < 0) {
         perror("sysctl hw.ncpu failed");
-        return -1;
+        return B_ERROR;
     }
     info->cpu_count = (uint32_t) ncpu;
 
@@ -247,7 +248,7 @@ status_t get_system_info(system_info *info)
     ret = sysctl(mib, 2, &uvmexp, &size, NULL, 0);
     if (ret < 0) {
         fprintf(stderr, "sysctl VM_UVMEXP2 failed: %s\n", strerror(errno));
-        return -1;
+        return B_ERROR;
     }
     /* 
      * Use uvmexp.pagesize from the sysctl result (this should match getpagesize()).
@@ -323,7 +324,7 @@ status_t get_system_info(system_info *info)
     info->kernel_version = 10;
     info->abi = 0;
 
-    return 0;
+    return B_OK;
 }
 
 
@@ -348,8 +349,8 @@ is_computer_on_fire(void)
 * XXX: NetBSD variant should be rewritten to using /dev/cpuctl
 */
 
-
-status_t get_cpu_topology_info(cpu_topology_node_info* topologyInfos,
+status_t
+get_cpu_topology_info(cpu_topology_node_info* topologyInfos,
 						uint32* topologyInfoCount)
 {
 	*topologyInfoCount = 3;
@@ -418,7 +419,8 @@ status_t get_cpu_topology_info(cpu_topology_node_info* topologyInfos,
 }
 
 
-status_t _get_cpu_info_etc(uint32 firstCPU, uint32 cpuCount, cpu_info* info, size_t size)
+status_t
+_get_cpu_info_etc(uint32 firstCPU, uint32 cpuCount, cpu_info* info, size_t size)
 {
 	if (info == NULL)
 		return B_ERROR;
@@ -493,11 +495,13 @@ status_t _get_cpu_info_etc(uint32 firstCPU, uint32 cpuCount, cpu_info* info, siz
 
 
 #if defined(__i386__) || defined(__x86_64__)
+
 status_t
 get_cpuid(cpuid_info *info, uint32 eaxRegister, uint32 cpuNum)
 {
 	return B_ERROR;
 }
+
 #endif
 
 
