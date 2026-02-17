@@ -8,14 +8,15 @@
 #include <stdio.h>
 
 
-bigtime_t system_time(void) {
+bigtime_t
+system_time(void) {
     struct timeval boottime;
     size_t size = sizeof(boottime);
     struct timeval now;
     struct timezone tz;
     
     if (sysctlbyname("kern.boottime", &boottime, &size, NULL, 0) != 0) {
-        return -1;
+        return B_ERROR;
     }
 
     (void)gettimeofday(&now, &tz);
@@ -27,8 +28,8 @@ bigtime_t system_time(void) {
 }
 
 
-
-unsigned long real_time_clock(void) {
+unsigned long
+real_time_clock(void) {
     struct timeval now;
     struct timezone tz;
     
@@ -38,8 +39,8 @@ unsigned long real_time_clock(void) {
 }
 
 
-
-bigtime_t real_time_clock_usecs(void) {
+bigtime_t
+real_time_clock_usecs(void) {
     struct timeval now;
     struct timezone tz;
     
@@ -49,7 +50,8 @@ bigtime_t real_time_clock_usecs(void) {
 }
 
 
-void set_real_time_clock(unsigned long new_time) {
+void
+set_real_time_clock(unsigned long new_time) {
     struct timeval tv;
     struct timezone tz;
     
