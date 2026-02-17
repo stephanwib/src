@@ -46,16 +46,16 @@ LIST_HEAD(thr_list, haiku_thread);
 pthread_once_t                          init_control           = PTHREAD_ONCE_INIT;
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
-static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
+//static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
 
 
 typedef void* (*pthread_entry) (void*);
 
-// XXX convert to
-// void __attribute__ ((constructor))
-static void
+//static void
+void __attribute__ ((constructor))
 init_main_thread(void)
 {
+	printf("libroot: init_main_thread() called\n");
     struct haiku_thread *ht;
 
     ht = malloc(sizeof(struct haiku_thread));
@@ -81,7 +81,7 @@ init_main_thread(void)
 
     pthread_mutex_lock(&threadss_lock);
     LIST_INSERT_HEAD(&thread_list, ht, ht_entry);
-    has_main_thread = true;
+    //has_main_thread = true;
     pthread_mutex_unlock(&threadss_lock);
 }
 
@@ -126,10 +126,12 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     char namebuf[NAME_MAX];
     void *func_ptr;
 
+	/*
     error = pthread_once(&init_control, init_main_thread);
     if (error)
         return B_NO_MEMORY;
-
+    */
+	
     (void)priority;
     strlcpy(namebuf, name, sizeof(namebuf));
 
@@ -459,10 +461,12 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
     void *source;
     struct haiku_thread *ht;
 
+	/*
     error = pthread_once(&init_control, init_main_thread);
     if (error)
         return B_NO_MEMORY;
-    
+    */
+
     ht = find_haiku_thread_byid((thread_id)_lwp_self());
     if (ht == NULL)
         return B_BAD_THREAD_ID;
