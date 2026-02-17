@@ -98,7 +98,8 @@ static inline int32 atomic_exchange(vint32 *value, int32 oldval, int32 newval)
 }
 
 
-int32 atomic_add(vint32 *value, int32 addvalue)
+int32
+atomic_add(vint32 *value, int32 addvalue)
 {
 	register int32 oldval;
 
@@ -110,7 +111,8 @@ int32 atomic_add(vint32 *value, int32 addvalue)
 }
 
 
-int32 atomic_or(vint32 *value, int32 orvalue)
+int32
+atomic_or(vint32 *value, int32 orvalue)
 {
 	register int32 oldval;
 
@@ -122,7 +124,8 @@ int32 atomic_or(vint32 *value, int32 orvalue)
 }
 
 
-int32 atomic_and(vint32 *value, int32 andvalue)
+int32
+atomic_and(vint32 *value, int32 andvalue)
 {
 	register int32 oldval;
 
@@ -134,7 +137,8 @@ int32 atomic_and(vint32 *value, int32 andvalue)
 }
 
 
-int32 atomic_get(vint32 *value)
+int32
+atomic_get(vint32 *value)
 {
 	return *value;
 }
