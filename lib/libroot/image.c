@@ -117,11 +117,52 @@ get_image_symbol(image_id imid, const char* name, int32 sclass, void** pptr)
 status_t
 _get_image_info(image_id image, image_info *info, size_t size)
 {
-	// TODO: pull this from /proc/<pid>/maps or /proc/self/maps
-	// See also https://github.com/blackle/whereami for public domain code
-
 	printf("_get_image_info(): UNIMPLEMENTED\n");
 	return B_ERROR;
+
+#if 0
+	if (!info || size != sizeof(image_info))
+		return B_BAD_VALUE;
+
+	if (!image)
+		return B_BAD_IMAGE_ID;
+
+	Dl_info dl_info;
+	if (dladdr(image, &dl_info) == 0)
+		return B_BAD_IMAGE_ID;
+
+	void* text_start = dl_info.dli_fbase;
+	void* text_end = NULL;
+	void* data_start = text_start;
+	void* data_end = NULL;
+	char image_path[512] = {0};
+	if (dl_info.dli_fname)
+		strncpy(image_path, dl_info.dli_fname, sizeof(image_path) - 1);
+
+	/* Fill in the image_info structure with best-effort data */
+	info->id = image;
+	info->type = B_LIBRARY_IMAGE;
+	info->sequence = 0;
+	info->init_order = 0;
+	info->init_routine = NULL;
+	info->term_routine = NULL;
+	info->device = 0;
+	info->node = 0;
+
+	if (image_path[0] != '\0') {
+		strncpy(info->name, image_path, MAXPATHLEN - 1);
+		info->name[MAXPATHLEN - 1] = '\0';
+	} else {
+		info->name[0] = '\0';
+	}
+
+	info->text = text_start;
+	info->data = data_start;
+	info->text_size = text_end ? (int32)((char*)text_end - (char*)text_start) : 0;
+	info->data_size = data_end ? (int32)((char*)data_end - (char*)data_start) : 0;
+
+	return B_OK;
+#endif
 }
 
 
