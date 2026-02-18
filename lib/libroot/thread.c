@@ -121,7 +121,7 @@ free_haiku_thread(struct haiku_thread *ht)
 thread_id
 spawn_thread(thread_func func, const char *name, int32 priority, void *data)
 {
-    int error;
+    //int error;
     pthread_t thread;
     pthread_attr_t attr;
     haiku_thread *ht;
@@ -165,7 +165,8 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
         .ht_state = THR_ACTIVE,
     };
 
-    error = pthread_getlwpid_np(thread, &ht->ht_lid);
+    //error = 
+	(void)pthread_getlwpid_np(thread, &ht->ht_lid);
 
     pthread_cond_init(&ht->ht_cv, NULL);
 
