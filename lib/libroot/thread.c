@@ -51,6 +51,8 @@ static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_I
 
 typedef void* (*pthread_entry) (void*);
 
+void init_main_thread(void);
+
 //static void
 void __attribute__ ((constructor))
 init_main_thread(void)
@@ -456,7 +458,6 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 int32_t
 receive_data(thread_id *sender, void *buffer, size_t bufferSize)
 {
-    int error;
     int32_t code;
     void *source;
     struct haiku_thread *ht;
