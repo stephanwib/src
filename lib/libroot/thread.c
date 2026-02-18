@@ -341,8 +341,9 @@ set_thread_priority(thread_id id, int32 priority)
     struct haiku_thread *ht;
 
     ht = find_haiku_thread_byid(id);
-    if (ht == NULL)
+    if (ht == NULL) {
         return B_BAD_THREAD_ID;
+	}
 
 	/* Cannot operate on main lwp (no pthread_t), ignore the request. */
 	if (ht->ht_lid == main_thread_lwpid) {
@@ -354,9 +355,10 @@ set_thread_priority(thread_id id, int32 priority)
     param.sched_priority = priority;
     if (pthread_setschedparam(ht->ht_pt, SCHED_RR, &param) == 0)
         error = B_OK;
-    else
+    else {
         error = B_BAD_THREAD_ID;
-
+	}
+	
 	out:
     pthread_mutex_unlock(&threadss_lock);
     return error;
