@@ -344,6 +344,12 @@ set_thread_priority(thread_id id, int32 priority)
     if (ht == NULL)
         return B_BAD_THREAD_ID;
 
+	/* Cannot operate on main lwp (no pthread_t), ignore the request. */
+	if (ht->ht_lid == main_thread_lwpid) {
+        error = B_OK;
+		goto out;
+	}
+
     struct sched_param param;
     param.sched_priority = priority;
     if (pthread_setschedparam(ht->ht_pt, SCHED_RR, &param) == 0)
@@ -351,6 +357,7 @@ set_thread_priority(thread_id id, int32 priority)
     else
         error = B_BAD_THREAD_ID;
 
+	out:
     pthread_mutex_unlock(&threadss_lock);
     return error;
 }
