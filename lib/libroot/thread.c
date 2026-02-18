@@ -47,11 +47,15 @@ pthread_once_t                          init_control           = PTHREAD_ONCE_IN
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
 //static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
-
+lwpid_t									main_thread_lwpid;
 
 typedef void* (*pthread_entry) (void*);
-
 void init_main_thread(void);
+
+/* NOTE: Some functions that rely on libpthread can not operate von the main lwp,
+ *       since it has no pthread_t.
+ */
+
 
 //static void
 void __attribute__ ((constructor))
@@ -78,6 +82,8 @@ init_main_thread(void)
         .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
+
+	main_thread_lwpid = ht->ht_lid;
 
     pthread_cond_init(&ht->ht_cv, NULL);
 
