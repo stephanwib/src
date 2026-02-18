@@ -198,7 +198,7 @@ printf("acquire_sem absolute timeout: returning immediately...\n");
             }
             else {
                 wait_until_hz = getticks() + mstohz(timeout - uptime_ms);
-			    printf("acquire_sem absolute timeout: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks())
+			    printf("acquire_sem absolute timeout: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks());
 			}
         }
 
