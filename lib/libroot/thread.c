@@ -46,18 +46,17 @@ LIST_HEAD(thr_list, haiku_thread);
 pthread_once_t                          init_control           = PTHREAD_ONCE_INIT;
 static struct thr_list                  thread_list            = LIST_HEAD_INITIALIZER(&thread_list);
 static pthread_mutex_t                  threadss_lock          = PTHREAD_MUTEX_INITIALIZER;
-//static bool                             has_main_thread        = 0; /* LWP of main() thread added to list */
 lwpid_t									main_thread_lwpid;
 
 typedef void* (*pthread_entry) (void*);
 void init_main_thread(void);
 
-/* NOTE: Some functions that rely on libpthread can not operate von the main lwp,
- *       since it has no pthread_t.
+/* NOTES: - Some functions that rely on libpthread can not operate on the main lwp,
+ *          since it has no pthread_t.
+ *        - send_data()/receive_data() work in-process only, but seems to be used cross-process also.
  */
 
 
-//static void
 void __attribute__ ((constructor))
 init_main_thread(void)
 {
@@ -89,7 +88,6 @@ init_main_thread(void)
 
     pthread_mutex_lock(&threadss_lock);
     LIST_INSERT_HEAD(&thread_list, ht, ht_entry);
-    //has_main_thread = true;
     pthread_mutex_unlock(&threadss_lock);
 }
 
@@ -171,7 +169,6 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
         .ht_state = THR_ACTIVE,
     };
 
-    //error = 
 	(void)pthread_getlwpid_np(thread, &ht->ht_lid);
 
     pthread_cond_init(&ht->ht_cv, NULL);
@@ -319,15 +316,8 @@ find_thread(const char *name)
 {
     struct haiku_thread *ht;
 
-    if (name == NULL) {
-
-/*
-        lwpid_t lid;
-	lid = _lwp_self();
-*/
-
-	return (thread_id) _lwp_self();
-    }
+    if (name == NULL)
+        return (thread_id) _lwp_self();
 
     pthread_mutex_lock(&threadss_lock);
     LIST_FOREACH(ht, &thread_list, ht_entry) {
@@ -376,11 +366,6 @@ rename_thread(thread_id id, const char *newName)
     if (ht == NULL)
         return B_BAD_THREAD_ID;
     
-    /* char namebuf[NAME_MAX];
-    * strlcpy(namebuf, newName, sizeof(namebuf));
-    * pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
-    */
-
 	/*
 	 * pthread_setname_np() cannot be used, since the main() thread has no pthread_t structure.
 	 */
