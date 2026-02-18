@@ -189,7 +189,7 @@ khsem_acquire(struct lwp *l, sem_id id, int32_t count, uint32_t flags, int64_t t
 
             getmicrouptime(&uptime);
             uptime_ms = (uptime.tv_sec * (uint64_t)1000) + (uptime.tv_usec / 1000);
-printf("acquire_sem absolute timeout: current uptime (ms) %lu\n", uptime_ms);
+printf("acquire_sem absolute timeout: requested (ms): %lu, current uptime (ms) %lu\n", timeout, uptime_ms);
 			
             if (timeout <= uptime_ms) {
                 mutex_exit(&khs->khs_interlock);
@@ -198,7 +198,7 @@ printf("acquire_sem absolute timeout: returning immediately...\n");
             }
             else {
                 wait_until_hz = getticks() + mstohz(timeout - uptime_ms);
-			    printf("acquire_sem absolute timeout: wait_until_hz: %u, ticks: %u\n", wait_until_hz, getticks());
+			    printf("acquire_sem absolute timeout: wait_until_hz (ticks): %u, curr. ticks: %u\n", wait_until_hz, getticks());
 			}
         }
 
