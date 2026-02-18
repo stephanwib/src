@@ -117,10 +117,8 @@ get_image_symbol(image_id imid, const char* name, int32 sclass, void** pptr)
 status_t
 _get_image_info(image_id image, image_info *info, size_t size)
 {
-	printf("_get_image_info(): UNIMPLEMENTED\n");
-	return B_ERROR;
+	printf("_get_image_info() called, id: %p\n", image);
 
-#if 0
 	if (!info || size != sizeof(image_info))
 		return B_BAD_VALUE;
 
@@ -162,7 +160,6 @@ _get_image_info(image_id image, image_info *info, size_t size)
 	info->data_size = data_end ? (int32)((char*)data_end - (char*)data_start) : 0;
 
 	return B_OK;
-#endif
 }
 
 
@@ -207,7 +204,7 @@ _get_next_image_info(team_id team, int32 *cookie, image_info *info, size_t size)
 	// TODO: pull additional images from /proc/<pid>/maps or /proc/self/maps
 	// See also https://github.com/blackle/whereami for public domain code
 
-	printf("_get_next_image_info(): requested functionality is unimplemented\n");
+	printf("_get_next_image_info(): no info for cookie: %d\n", cookie ? *cookie : -1);
 	return B_ERROR;
 }
 
