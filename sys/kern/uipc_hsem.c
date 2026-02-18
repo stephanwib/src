@@ -217,7 +217,7 @@ printf("acquire_sem absolute timeout: returning immediately...\n");
 
 			return ETIMEDOUT;
 	        }
-	        else
+	        //else
 		        //printf("sem: ticks to wait left: %u", time_left_hz);
 	    }
 		    
