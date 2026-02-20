@@ -7,7 +7,7 @@
 #include <time.h>
 #include <stdio.h>
 
-
+/*
 bigtime_t
 system_time(void) {
     struct timeval boottime;
@@ -26,7 +26,21 @@ system_time(void) {
     suseconds_t microseconds = now.tv_usec - boottime.tv_usec;
     return (bigtime_t)seconds * 1000000 + microseconds;
 }
+*/
 
+
+bigtime_t
+system_time(void)
+{
+    struct timespec ts;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+        return (bigtime_t)0;
+    }
+
+    return (bigtime_t)ts.tv_sec * 1000000LL
+         + (bigtime_t)ts.tv_nsec / 1000LL;
+}
 
 unsigned long
 real_time_clock(void) {
