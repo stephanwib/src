@@ -40,10 +40,10 @@ int handle_sem_error(int error_code) {
         case EINVAL:
             return B_BAD_VALUE;
         case ETIMEDOUT:
-            return B_WOULD_BLOCK;
+            return B_TIMED_OUT;
         case EWOULDBLOCK:
         case EAGAIN:
-            return B_TIMED_OUT;
+            return B_WOULD_BLOCK;
         case ENOMEM:
             return B_NO_MEMORY;
         case ENOSPC:
