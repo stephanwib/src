@@ -194,7 +194,7 @@ printf("acquire_sem absolute timeout: requested (ms): %lu, current uptime (ms) %
             if (timeout <= uptime_ms) {
                 mutex_exit(&khs->khs_interlock);
 printf("acquire_sem absolute timeout: returning immediately...\n");
-                return EWOULDBLOCK;
+                return ETIMEDOUT;
             }
             else {
                 wait_until_hz = getticks() + mstohz(timeout - uptime_ms);
