@@ -139,7 +139,10 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     */
 	
     (void)priority;
-    strlcpy(namebuf, name, sizeof(namebuf));
+	
+    strlcpy(namebuf,
+		    name == NULL ? "" : name,
+		    sizeof(namebuf));
 
     func_ptr = (void*)func;
 
