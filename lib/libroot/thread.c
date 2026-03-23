@@ -317,6 +317,7 @@ on_exit_thread(void (*callback)(void *), void *data)
 thread_id
 find_thread(const char *name)
 {
+	int error;
     struct haiku_thread *ht;
 
     if (name == NULL)
@@ -325,8 +326,11 @@ find_thread(const char *name)
     pthread_mutex_lock(&threadss_lock);
     LIST_FOREACH(ht, &thread_list, ht_entry) {
         char thread_name[NAME_MAX];
-        pthread_getname_np(ht->ht_pt, thread_name, NAME_MAX);
-        if (strcmp(thread_name, name) == 0) {
+		
+        // pthread_getname_np(ht->ht_pt, thread_name, NAME_MAX);
+		
+		error = _lwp_getname(ht->ht_lid, thread_name, NAME_MAX);
+        if (!error && strcmp(thread_name, name) == 0) {
             pthread_mutex_unlock(&threadss_lock);
             return ht->ht_lid;
         }
