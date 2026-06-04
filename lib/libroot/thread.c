@@ -51,8 +51,7 @@ lwpid_t									main_thread_lwpid;
 typedef void* (*pthread_entry) (void*);
 void init_main_thread(void);
 
-/* NOTES: - Some functions that rely on libpthread can not operate on the main lwp,
- *          since it has no pthread_t.
+/* NOTES: 
  *        - send_data()/receive_data() work in-process only, but seems to be used cross-process also.
  */
 
@@ -319,7 +318,6 @@ on_exit_thread(void (*callback)(void *), void *data)
 thread_id
 find_thread(const char *name)
 {
-	int error;
     struct haiku_thread *ht;
 
     if (name == NULL)
@@ -329,10 +327,8 @@ find_thread(const char *name)
     LIST_FOREACH(ht, &thread_list, ht_entry) {
         char thread_name[NAME_MAX];
 		
-        // pthread_getname_np(ht->ht_pt, thread_name, NAME_MAX);
-		
-		error = _lwp_getname(ht->ht_lid, thread_name, NAME_MAX);
-        if (!error && strcmp(thread_name, name) == 0) {
+        pthread_getname_np(ht->ht_pt, thread_name, NAME_MAX);
+        if (strcmp(thread_name, name) == 0) {
             pthread_mutex_unlock(&threadss_lock);
             return ht->ht_lid;
         }
@@ -354,12 +350,6 @@ set_thread_priority(thread_id id, int32 priority)
         return B_BAD_THREAD_ID;
 	}
 
-	/* Cannot operate on main lwp (no pthread_t), ignore the request. */
-	if (ht->ht_lid == main_thread_lwpid) {
-        error = B_OK;
-		goto out;
-	}
-
     struct sched_param param;
     param.sched_priority = priority;
     if (pthread_setschedparam(ht->ht_pt, SCHED_RR, &param) == 0)
@@ -368,7 +358,6 @@ set_thread_priority(thread_id id, int32 priority)
         error = B_BAD_THREAD_ID;
 	}
 	
-	out:
     pthread_mutex_unlock(&threadss_lock);
     return error;
 }
@@ -377,18 +366,16 @@ set_thread_priority(thread_id id, int32 priority)
 status_t
 rename_thread(thread_id id, const char *newName)
 {
-    int error;
     struct haiku_thread *ht;
+	char namebuf[NAME_MAX];
 
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
-    
-	/*
-	 * pthread_setname_np() cannot be used, since the main() thread has no pthread_t structure.
-	 */
-    error = _lwp_setname(ht->ht_lid, newName);
-	
+
+    strlcpy(namebuf, newName, sizeof(namebuf));
+    pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
+
     pthread_mutex_unlock(&threadss_lock);
     return error ? B_ERROR : B_OK;
 }
