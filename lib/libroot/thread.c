@@ -366,6 +366,7 @@ set_thread_priority(thread_id id, int32 priority)
 status_t
 rename_thread(thread_id id, const char *newName)
 {
+	int error;
     struct haiku_thread *ht;
 	char namebuf[NAME_MAX];
 
@@ -374,7 +375,7 @@ rename_thread(thread_id id, const char *newName)
         return B_BAD_THREAD_ID;
 
     strlcpy(namebuf, newName, sizeof(namebuf));
-    pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
+    error = pthread_setname_np(ht->ht_pt, "%s", (void*)namebuf);
 
     pthread_mutex_unlock(&threadss_lock);
     return error ? B_ERROR : B_OK;
