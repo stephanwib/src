@@ -70,7 +70,7 @@ init_main_thread(void)
 	}
 
     *ht = (struct haiku_thread) {
-        .ht_pt = NULL,
+        .ht_pt = pthread_self(),
 
 	    /*  Since NetBSD 10, PIDs and LWP IDs share the same name space.
          *  Hence, the PID of a process is the LWP ID of the main thread.
@@ -81,6 +81,8 @@ init_main_thread(void)
         .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
+
+	printf("init_main_thread: pthread_t of main lwp: %p\n", ht->ht_pt);
 
 	main_thread_lwpid = ht->ht_lid;
 
