@@ -98,6 +98,9 @@ find_haiku_thread_byid(thread_id id)
 {
     haiku_thread *ht;
 
+	if (id < 0)
+		return NULL;
+
     pthread_mutex_lock(&threadss_lock);
     LIST_FOREACH(ht, &thread_list, ht_entry) {
         if (ht->ht_lid == id)
@@ -256,6 +259,11 @@ wait_for_thread(thread_id id, status_t *ret)
     int error;
     struct haiku_thread *ht;
 
+	if (id == (thread_id)main_thread_lwpid) {
+        printf("BUG: wait_for_thread() called on main thread (%d)\n", id);
+		return B_BAD_THREAD_ID;
+	}
+	
     ht = find_haiku_thread_byid(id);
     if (ht == NULL)
         return B_BAD_THREAD_ID;
