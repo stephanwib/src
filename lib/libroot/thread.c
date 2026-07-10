@@ -259,8 +259,18 @@ wait_for_thread(thread_id id, status_t *ret)
     int error;
     struct haiku_thread *ht;
 
+	if (ret == NULL) {
+        printf("BUG: wait_for_thread() called and ret is NULL\n");
+		return B_ERROR;
+	}
+
 	if (id == (thread_id)main_thread_lwpid) {
         printf("BUG: wait_for_thread() called on main thread (%d)\n", id);
+		return B_BAD_THREAD_ID;
+	}
+
+	if (id == find_thread(NULL)) {
+        printf("BUG: wait_for_thread() called on its own thread (%d)\n", id);
 		return B_BAD_THREAD_ID;
 	}
 	
@@ -269,6 +279,10 @@ wait_for_thread(thread_id id, status_t *ret)
         return B_BAD_THREAD_ID;
 
     pthread_mutex_unlock(&threadss_lock);
+
+	
+
+    // XXX add resume thread for compliance
 	
     /* XXX: Possible race with kill_thread() ? */
     if (pthread_join(ht->ht_pt, (void**)ret) == 0)
