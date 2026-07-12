@@ -284,7 +284,7 @@ wait_for_thread(thread_id id, status_t *ret)
     /* XXX: Possible race with kill_thread() ? */
     // if (pthread_join(ht->ht_pt, (void**)ret) == 0)
 
-	if (pthread_join(ht->ht_pt, pt_ret) == 0) {
+	if (pthread_join(ht->ht_pt, &pt_ret) == 0) {
         error = B_OK;
 
 		// XXX Unlinke BeBook says, allow the return value to be null. This seems to match what others are doing.
