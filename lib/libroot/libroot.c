@@ -23,24 +23,42 @@
 //	Authors:		Bill Hayden (hayden@haydentech.com)
 //------------------------------------------------------------------------------
 
-
+ #include <stdlib.h>
 #include "OS.h"
 #include "SupportDefs.h"
 #include "system_revision.h"
 
-void save_arg(int argc, char **argv, char **env);
+//void save_arg(int argc, char **argv, char **env);
+void save_arg(void);
 float __swap_float(float value);
 
 int __libc_argc;
 char** __libc_argv;
-extern char **environ;
+static const char *fake_argv;
+// extern char **environ;
 
+
+/*
 void save_arg(int argc, char **argv, char **env)
 {
 	__libc_argc = argc;
 	__libc_argv = argv;
 }
+*/
+
+void save_arg(void)
+{
+    fake_argv = getprogname();
+	
+	__libc_argc = 1;
+	__libc_argv = &fake_argv;
+}
+
 __attribute__((section(".init_array"))) void *libroot_ctor = &save_arg;
+
+
+
+
 
 
 // Haiku revision (hrev). Will be set when copying libroot.so to the image.
