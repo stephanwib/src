@@ -53,6 +53,7 @@ void init_main_thread(void);
 
 /* NOTES: 
  *        - send_data()/receive_data() work in-process only, but seems to be used cross-process also.
+ *        - return types of Haiku (status_t) und POSIX (void*) threads differ with potentially different storage sizes (4 vs. 8 bytes)
  */
 
 
@@ -258,11 +259,7 @@ wait_for_thread(thread_id id, status_t *ret)
 {
     int error;
     struct haiku_thread *ht;
-
-	if (ret == NULL) {
-        printf("BUG: wait_for_thread() called and ret is NULL\n");
-		return B_ERROR;
-	}
+	void *pt_ret;
 
 	if (id == (thread_id)main_thread_lwpid) {
         printf("BUG: wait_for_thread() called on main thread (%d)\n", id);
@@ -285,8 +282,14 @@ wait_for_thread(thread_id id, status_t *ret)
     // XXX add resume thread for compliance
 	
     /* XXX: Possible race with kill_thread() ? */
-    if (pthread_join(ht->ht_pt, (void**)ret) == 0)
+    // if (pthread_join(ht->ht_pt, (void**)ret) == 0)
+
+	if (pthread_join(ht->ht_pt, pt_ret) == 0) {
         error = B_OK;
+
+		if (ret)
+			*ret = (status_t*)pt_ret;
+	}
     else
         error = B_BAD_THREAD_ID;
 
