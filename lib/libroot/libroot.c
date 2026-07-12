@@ -23,7 +23,8 @@
 //	Authors:		Bill Hayden (hayden@haydentech.com)
 //------------------------------------------------------------------------------
 
- #include <stdlib.h>
+#include <stdlib.h>
+#include <sys/cdefs.h>
 #include "OS.h"
 #include "SupportDefs.h"
 #include "system_revision.h"
@@ -51,7 +52,7 @@ void save_arg(void)
     fake_argv = getprogname();
 	
 	__libc_argc = 1;
-	__libc_argv = (char**)&fake_argv;
+	__libc_argv = &__UNCONST(fake_argv);
 }
 
 __attribute__((section(".init_array"))) void *libroot_ctor = &save_arg;
