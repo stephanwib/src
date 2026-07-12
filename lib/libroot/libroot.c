@@ -52,7 +52,7 @@ void save_arg(void)
     fake_argv = getprogname();
 	
 	__libc_argc = 1;
-	__libc_argv = &__UNCONST(fake_argv);
+	__libc_argv = __UNCONST(&fake_argv);
 }
 
 __attribute__((section(".init_array"))) void *libroot_ctor = &save_arg;
