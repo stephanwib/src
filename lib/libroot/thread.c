@@ -259,7 +259,7 @@ wait_for_thread(thread_id id, status_t *ret)
 {
     int error;
     struct haiku_thread *ht;
-	void *pt_ret;
+	void *pt_ret = NULL;
 
 	if (id == (thread_id)main_thread_lwpid) {
         printf("BUG: wait_for_thread() called on main thread (%d)\n", id);
@@ -287,8 +287,10 @@ wait_for_thread(thread_id id, status_t *ret)
 	if (pthread_join(ht->ht_pt, pt_ret) == 0) {
         error = B_OK;
 
+		// XXX Unlinke BeBook says, allow the return value to be null. This seems to match what others are doing.
+		// XXX DANGER: 8 to 4 byte size conversion, this is cleary not a good solution.
 		if (ret)
-			*ret = (status_t*)pt_ret;
+			*ret = (status_t)(uintptr_t)pt_ret;
 	}
     else
         error = B_BAD_THREAD_ID;
