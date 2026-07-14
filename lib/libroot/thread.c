@@ -116,7 +116,7 @@ static void
 free_haiku_thread(struct haiku_thread *ht)
 {
     if (ht->ht_message == THR_MSG_EXTERN)
-        free(&ht->ht_msg.tm_external_buffer);
+        free(ht->ht_msg.tm_external_buffer);
 
     pthread_cond_destroy(&ht->ht_cv);
 
