@@ -173,6 +173,7 @@ spawn_thread(thread_func func, const char *name, int32 priority, void *data)
     *ht = (struct haiku_thread) {
         .ht_pt = thread,
         .ht_message = THR_MSG_ABSENT,
+		.ht_msg.tm_external_buffer = NULL,
         .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
@@ -466,6 +467,7 @@ send_data(thread_id thread, int32 code, const void *buffer, size_t bufferSize)
 				return B_NO_MEMORY;
 			}
             ht->ht_message = THR_MSG_EXTERN;
+			ht->ht_msg.tm_external_buffer = dest;
         }
         else {
             dest = &ht->ht_msg.tm_buffer;
@@ -525,8 +527,10 @@ receive_data(thread_id *sender, void *buffer, size_t bufferSize)
         memcpy(buffer, source, MIN(ht->ht_msg.tm_size, bufferSize));
     }
 
-    if (ht->ht_message == THR_MSG_EXTERN)
+    if (ht->ht_message == THR_MSG_EXTERN) {
         free(ht->ht_msg.tm_external_buffer);
+	    ht->ht_msg.tm_external_buffer = NULL;
+	}
     
     ht->ht_message = THR_MSG_ABSENT;
 
