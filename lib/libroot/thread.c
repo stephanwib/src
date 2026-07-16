@@ -78,6 +78,7 @@ init_main_thread(void)
         .ht_lid = (lwpid_t)getpid(),
 
         .ht_message = THR_MSG_ABSENT,
+		.ht_msg.tm_external_buffer = NULL,
         .ht_waiters = 0,
         .ht_state = THR_ACTIVE,
     };
