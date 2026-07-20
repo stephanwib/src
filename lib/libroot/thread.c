@@ -245,7 +245,7 @@ exit_thread(status_t status)
     if (ht == NULL)
         return; /* XXX should not happen */   
 
-    pt_ret = (uintptr_t*)(status_t*)status;
+    pt_ret = (void*)(uintptr_t)status;
 	
     if (ht->ht_waiters > 0) {
         ht->ht_state = THR_ENDING;
