@@ -238,21 +238,26 @@ exit_thread(status_t status)
 
     lwpid_t self;
     struct haiku_thread *ht;
+	void *pt_ret = NULL;
 
     self = _lwp_self();
     ht  = find_haiku_thread_byid((thread_id)self);
     if (ht == NULL)
         return; /* XXX should not happen */   
 
+    pt_ret = (uintptr_t)status;
+	
     if (ht->ht_waiters > 0) {
         ht->ht_state = THR_ENDING;
-	pthread_cond_broadcast(&ht->ht_cv);
-	pthread_mutex_unlock(&threadss_lock);
+        pthread_cond_broadcast(&ht->ht_cv);
+        pthread_mutex_unlock(&threadss_lock);
     }
     else
         free_haiku_thread(ht);
 
-    pthread_exit((void *) &status);
+    //pthread_exit((void *) &status);
+
+	pthread_exit(pt_ret);
 
 }
 
