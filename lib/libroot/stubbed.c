@@ -81,7 +81,7 @@ void fs_create_index(void)                  { STUB_WARNING(); }
 
 /* kernel */
 void _kern_transfer_area(void)              { STUB_WARNING(); }
-void _kern_get_safemode_option(void)        { STUB_WARNING(); return B_ERROR; }
+status_t _kern_get_safemode_option(void)        { STUB_WARNING(); return B_ERROR; }
 
 /* disk device */
 void _kern_get_next_disk_device_id(void) { STUB_WARNING(); }
