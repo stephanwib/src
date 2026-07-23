@@ -23,7 +23,7 @@ void find_path_for_path_etc(void);
 void fs_stat_index(void);
 void fs_create_index(void);
 void _kern_transfer_area(void);
-void _kern_get_safemode_option(void);
+status_t _kern_get_safemode_option(void);
 void _kern_get_next_disk_device_id(void);
 void _kern_find_disk_device(void);
 void _kern_find_partition(void);
@@ -81,7 +81,7 @@ void fs_create_index(void)                  { STUB_WARNING(); }
 
 /* kernel */
 void _kern_transfer_area(void)              { STUB_WARNING(); }
-void _kern_get_safemode_option(void)        { STUB_WARNING(); }
+void _kern_get_safemode_option(void)        { STUB_WARNING(); return B_ERROR; }
 
 /* disk device */
 void _kern_get_next_disk_device_id(void) { STUB_WARNING(); }
